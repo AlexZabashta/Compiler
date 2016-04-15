@@ -8,9 +8,9 @@ public class Number extends Token {
 
 	public final int number;
 
-	public Number(String string, Location location) {
+	public Number(int number, Location location) {
 		super(location);
-		this.number = Integer.parseInt(string);
+		this.number = number;
 	}
 
 	@Override

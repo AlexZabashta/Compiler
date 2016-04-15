@@ -16,7 +16,7 @@ public class DoubleQuotedString extends State {
 		}
 
 		if (symbol == '"') {
-			output.add(new Token("dqs", builder.text.toString(), builder.location));
+			output.add(new lex.token.QuotedString(builder.text.toString(), builder.location));
 			builder.text.setLength(0);
 			return START;
 		}

@@ -8,38 +8,7 @@ import lex.Location;
 
 public class Operator extends Token {
 
-	public final String string;
-	public final int priority;
 	private static final Map<String, Integer> operators = new HashMap<String, Integer>();
-
-	public Operator(String string, Location location) {
-		super(location);
-		this.string = string.intern();
-		this.priority = operators.get(this.string);
-	}
-
-	@Override
-	public void printToken(PrintWriter out) {
-		out.print(string);
-	}
-
-	public static boolean isOperator(String string) {
-		return operators.containsKey(string);
-	}
-
-	public static boolean isOperator(char symbol) {
-		return isOperator(Character.toString(symbol));
-	}
-
-	public static int priorityOf(String operator) {
-		Integer priority = operators.get(operator);
-		if (priority == null) {
-			return 14;
-		} else {
-			return priority;
-		}
-	}
-
 	static {
 		operators.put("[", 13);
 		operators.put("]", 13);
@@ -79,6 +48,37 @@ public class Operator extends Token {
 
 		operators.put(";", 0);
 		operators.put(",", 0);
+	}
+	public static boolean isOperator(char symbol) {
+		return isOperator(Character.toString(symbol));
+	}
+
+	public static boolean isOperator(String string) {
+		return operators.containsKey(string);
+	}
+
+	public static int priorityOf(String operator) {
+		Integer priority = operators.get(operator);
+		if (priority == null) {
+			return 14;
+		} else {
+			return priority;
+		}
+	}
+
+	public final int priority;
+
+	public final String string;
+
+	public Operator(String string, Location location) {
+		super(location);
+		this.string = string.intern();
+		this.priority = operators.get(this.string);
+	}
+
+	@Override
+	public void printToken(PrintWriter out) {
+		out.print(string);
 	}
 
 }

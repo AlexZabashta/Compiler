@@ -14,8 +14,6 @@ public abstract class Token extends Node {
 		this.location = location;
 	}
 
-	public abstract void printToken(PrintWriter out);
-
 	@Override
 	public void print(PrintWriter out, int indent) {
 		printIndent(out, indent);
@@ -23,5 +21,7 @@ public abstract class Token extends Node {
 		out.print(' ');
 		out.println(location);
 	}
+
+	public abstract void printToken(PrintWriter out);
 
 }

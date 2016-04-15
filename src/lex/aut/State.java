@@ -3,7 +3,7 @@ package lex.aut;
 import java.util.List;
 
 import lex.Location;
-import lex.Token;
+import lex.BadToken;
 import lex.TokenBuilder;
 
 public abstract class State {
@@ -26,5 +26,5 @@ public abstract class State {
 	public static final EscInStrState ESC_IN_DQ_STRING = new EscInStrState(DQ_STRING);
 	public static final EscInStrState ESC_IN_SQ_STRING = new EscInStrState(SQ_STRING);
 
-	public abstract State nextState(char symbol, List<Token> output, TokenBuilder builder, Location location);
+	public abstract State nextState(char symbol, List<BadToken> output, TokenBuilder builder, Location location);
 }

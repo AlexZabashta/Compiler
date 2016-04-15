@@ -3,7 +3,7 @@ package ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import lex.Token;
+import lex.BadToken;
 
 public class CommaTree {
 	public static BadNode build(BadNode vertex, List<String> errors) {
@@ -13,7 +13,7 @@ public class CommaTree {
 		} else {
 			List<BadNode> seq = new ArrayList<BadNode>();
 
-			Token sep = null;
+			BadToken sep = null;
 			BadNode subSeq = new BadNode("seq", new ArrayList<BadNode>());
 
 			for (BadNode node : vertex.nodes) {

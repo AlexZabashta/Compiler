@@ -3,7 +3,7 @@ package ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import lex.Token;
+import lex.BadToken;
 import misc.KeyWords;
 
 public class KeyWordsTree {
@@ -17,7 +17,7 @@ public class KeyWordsTree {
 		List<BadNode> nodes = vertex.nodes;
 
 		if (nodes == null) {
-			Token token = vertex.token;
+			BadToken token = vertex.token;
 			if (token != null) {
 				if (KeyWords.contains(token.type)) {
 					errors.add("Unexpected key word " + token);
@@ -31,7 +31,7 @@ public class KeyWordsTree {
 		for (int i = 0; i < nodes.size(); i++) {
 			BadNode node = nodes.get(i);
 
-			Token token = node.token;
+			BadToken token = node.token;
 			if (token == null) {
 				vseq.add(build(node, errors));
 				continue;

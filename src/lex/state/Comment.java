@@ -12,7 +12,7 @@ public class Comment extends State {
 	@Override
 	public State nextState(char symbol, List<Token> output, TokenBuilder builder, Location location) {
 		if (Characters.isEndOfLine(symbol)) {
-			output.add(new Token("#", builder.text.toString(), builder.location));
+			output.add(new lex.token.Comment(builder.text.toString(), builder.location));
 			builder.text.setLength(0);
 			return State.START;
 		}

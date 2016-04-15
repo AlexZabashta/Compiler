@@ -4,7 +4,7 @@ import java.util.List;
 
 import ast.BadNode;
 import lex.Location;
-import lex.Token;
+import lex.BadToken;
 import misc.Mangling;
 import misc.Types;
 
@@ -41,7 +41,7 @@ public class Variable {
 		}
 	}
 
-	public static Variable build(Token typeT, String pac, Token nameT) {
+	public static Variable build(BadToken typeT, String pac, BadToken nameT) {
 		if (typeT.type != "str") {
 			throw new RuntimeException("Variable type must be 'str' " + typeT);
 		}
@@ -81,7 +81,7 @@ public class Variable {
 		return temp(type, nl);
 	}
 
-	public static Variable temp(int type, Token token) {
+	public static Variable temp(int type, BadToken token) {
 		if (token == null) {
 			return temp(type);
 		} else {

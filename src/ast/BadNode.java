@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Set;
 
 import lex.Location;
-import lex.Token;
+import lex.BadToken;
 
 public class BadNode {
 	public final String type;
 	public final List<BadNode> nodes;
-	public final Token token;
+	public final BadToken token;
 
 	public Location location() {
 		if (token == null) {
@@ -28,7 +28,7 @@ public class BadNode {
 		}
 	}
 
-	public BadNode(Token token) {
+	public BadNode(BadToken token) {
 		this("leaf", token, null);
 	}
 
@@ -36,7 +36,7 @@ public class BadNode {
 		this(type, null, nodes);
 	}
 
-	public BadNode(String type, Token token, List<BadNode> nodes) {
+	public BadNode(String type, BadToken token, List<BadNode> nodes) {
 		this.type = type.intern();
 		this.nodes = nodes;
 		this.token = token;

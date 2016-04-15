@@ -3,7 +3,7 @@ package lex.aut;
 import java.util.List;
 
 import lex.Location;
-import lex.Token;
+import lex.BadToken;
 import lex.TokenBuilder;
 import misc.Characters;
 import misc.Operators;
@@ -11,7 +11,7 @@ import misc.Operators;
 public class Start extends State {
 
 	@Override
-	public State nextState(char symbol, List<Token> output, TokenBuilder builder, Location location) {
+	public State nextState(char symbol, List<BadToken> output, TokenBuilder builder, Location location) {
 		if (Characters.isBlank(symbol) || Characters.isEndOfLine(symbol)) {
 			return this;
 		}
@@ -44,7 +44,7 @@ public class Start extends State {
 				builder.location = location;
 				return OR;
 			default:
-				output.add(new Token(Character.toString(symbol), location));
+				output.add(new BadToken(Character.toString(symbol), location));
 				return this;
 			}
 		}

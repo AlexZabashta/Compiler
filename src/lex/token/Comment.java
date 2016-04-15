@@ -3,7 +3,6 @@ package lex.token;
 import java.io.PrintWriter;
 
 import lex.Location;
-import misc.Characters;
 
 public class Comment extends Token {
 

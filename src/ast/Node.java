@@ -3,14 +3,14 @@ package ast;
 import java.io.PrintWriter;
 import java.util.List;
 
-import lex.Token;
+import lex.BadToken;
 
 public class Node {
 	public final String type;
 	public final List<Node> nodes;
-	public final Token token;
+	public final BadToken token;
 
-	public Node(Token token) {
+	public Node(BadToken token) {
 		this("leaf", token, null);
 	}
 
@@ -18,7 +18,7 @@ public class Node {
 		this(type, null, nodes);
 	}
 
-	public Node(String type, Token token, List<Node> nodes) {
+	public Node(String type, BadToken token, List<Node> nodes) {
 		this.type = type.intern();
 		this.nodes = nodes;
 		this.token = token;

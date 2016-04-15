@@ -16,7 +16,7 @@ public class Number extends State {
 			return this;
 		}
 
-		output.add(new Token("num", builder.text.toString(), builder.location));
+		output.add(new lex.token.Number(Integer.parseInt(builder.text.toString()), builder.location));
 		builder.text.setLength(0);
 		return START.nextState(symbol, output, builder, location);
 	}

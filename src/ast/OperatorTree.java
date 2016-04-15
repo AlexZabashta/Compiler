@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import lex.Token;
+import lex.BadToken;
 import misc.KeyWords;
 import misc.Operators;
 
@@ -34,7 +34,7 @@ public class OperatorTree {
 					id = size - i - 1;
 				}
 
-				Token token = nodes.get(id).token;
+				BadToken token = nodes.get(id).token;
 				if (token != null && Operators.getPriority(token.type) == p) {
 					opId = id;
 				}
@@ -49,7 +49,7 @@ public class OperatorTree {
 			return new BadNode(vertex.type, vertex.token, opNodes);
 		}
 
-		Token opToken = nodes.get(opId).token;
+		BadToken opToken = nodes.get(opId).token;
 
 		for (BadNode node : nodes) {
 			if (node.type == "root" || KeyWords.contains(node.type)) {

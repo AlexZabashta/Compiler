@@ -10,10 +10,13 @@ import lex.token.Token;
 public class TestLexer {
 
 	public static void main(String[] args) throws IOException {
-		String input = "";
+		String input = "test.src";
 		List<String> errors = new ArrayList<String>();
 		List<Token> tokens = FileTokenizer.split(new File(input), errors);
-		FileTokenizer.print(tokens, new PrintWriter(System.out));
+		PrintWriter out = new PrintWriter(System.out);
+		FileTokenizer.print(tokens, out);
+
+		out.close();
 
 		printErrorsAndClear("Lex", errors);
 

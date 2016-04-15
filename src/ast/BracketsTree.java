@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import lex.Token;
+import lex.BadToken;
 
 public class BracketsTree {
-	public static BadNode build(List<Token> list, List<String> errors) {
+	public static BadNode build(List<BadToken> list, List<String> errors) {
 
 		Stack<BadNode> stack = new Stack<BadNode>();
 		stack.push(new BadNode("root", new ArrayList<BadNode>()));
 
-		for (Token token : list) {
+		for (BadToken token : list) {
 			switch (token.type) {
 			case "#":
 				break;

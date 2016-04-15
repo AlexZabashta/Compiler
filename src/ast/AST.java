@@ -3,10 +3,10 @@ package ast;
 import java.util.Arrays;
 import java.util.List;
 
-import lex.Token;
+import lex.BadToken;
 
 public class AST {
-	public static BadNode build(List<Token> list) {
+	public static BadNode build(List<BadToken> list) {
 		int l = 0, r = list.size() - 1;
 		int[] cb = new int[r + 1];
 		Arrays.fill(cb, -1);
@@ -19,7 +19,7 @@ public class AST {
 					rightIndex[p][i] = rightIndex[p][i + 1];
 				}
 			}
-			Token token = list.get(i);
+			BadToken token = list.get(i);
 			if (token.type == "{") {
 				rightIndex[0][i] = i;
 			}
@@ -39,7 +39,7 @@ public class AST {
 		int sp = 0;
 
 		for (int i = 0; i <= r; i++) {
-			Token token = list.get(i);
+			BadToken token = list.get(i);
 			if (token.type == "{") {
 				type[sp++] = +i;
 			}
@@ -70,7 +70,7 @@ public class AST {
 		return build(l, r, list, cb);
 	}
 
-	public static BadNode build(int l, int r, List<Token> list, int[] cb) {
+	public static BadNode build(int l, int r, List<BadToken> list, int[] cb) {
 
 		return null;
 	}

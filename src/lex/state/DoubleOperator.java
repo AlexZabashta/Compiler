@@ -18,14 +18,13 @@ public class DoubleOperator extends State {
 
 	@Override
 	public State nextState(char symbol, List<Token> output, TokenBuilder builder, Location location) {
-
 		for (char c : follow) {
 			if (symbol == c) {
-				output.add(new Token(first + symbol, builder.location));
+				output.add(new lex.token.Operator(first + symbol, builder.location));
 				return START;
 			}
 		}
-		output.add(new Token(first, builder.location));
+		output.add(new lex.token.Operator(first, builder.location));
 		return START.nextState(symbol, output, builder, location);
 	}
 }
