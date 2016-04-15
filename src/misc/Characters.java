@@ -3,7 +3,7 @@ package misc;
 public class Characters {
 
 	public static boolean isChar(char symbol) {
-		return ('a' <= symbol && symbol <= 'z') || ('A' <= symbol && symbol <= 'Z') || symbol == '.' || symbol == '_';
+		return ('a' <= symbol && symbol <= 'z') || ('A' <= symbol && symbol <= 'Z');
 	}
 
 	public static boolean isDigit(char symbol) {
@@ -39,6 +39,23 @@ public class Characters {
 			return '\f';
 		default:
 			return symbol;
+		}
+	}
+
+	public static String escape(char symbol) {
+		switch (symbol) {
+		case '\t':
+			return "\\t";
+		case '\b':
+			return "\\b";
+		case '\n':
+			return "\\n";
+		case '\r':
+			return "\\r";
+		case '\f':
+			return "\\f";
+		default:
+			return Character.toString(symbol);
 		}
 	}
 

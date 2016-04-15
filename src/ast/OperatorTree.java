@@ -9,17 +9,17 @@ import misc.KeyWords;
 import misc.Operators;
 
 public class OperatorTree {
-	public static Node build(Node vertex, List<String> errors) {
+	public static BadNode build(BadNode vertex, List<String> errors) {
 		if (vertex.nodes == null) {
 			return vertex;
 		}
 
-		List<Node> nodes = vertex.nodes;
+		List<BadNode> nodes = vertex.nodes;
 
 		if (vertex.type == "return") {
-			List<Node> retNodes = new ArrayList<Node>();
-			retNodes.add(build(new Node("()", null, nodes), errors));
-			return new Node(vertex.type, vertex.token, retNodes);
+			List<BadNode> retNodes = new ArrayList<BadNode>();
+			retNodes.add(build(new BadNode("()", null, nodes), errors));
+			return new BadNode(vertex.type, vertex.token, retNodes);
 		}
 
 		int size = nodes.size();
@@ -41,17 +41,17 @@ public class OperatorTree {
 			}
 		}
 
-		List<Node> opNodes = new ArrayList<Node>();
+		List<BadNode> opNodes = new ArrayList<BadNode>();
 		if (opId == -1 || vertex.type == "root" || KeyWords.contains(vertex.type)) {
-			for (Node node : nodes) {
+			for (BadNode node : nodes) {
 				opNodes.add(build(node, errors));
 			}
-			return new Node(vertex.type, vertex.token, opNodes);
+			return new BadNode(vertex.type, vertex.token, opNodes);
 		}
 
 		Token opToken = nodes.get(opId).token;
 
-		for (Node node : nodes) {
+		for (BadNode node : nodes) {
 			if (node.type == "root" || KeyWords.contains(node.type)) {
 				if (node.token == null) {
 					errors.add("Cant aply operator " + opToken + " whith " + node.type);
@@ -62,9 +62,9 @@ public class OperatorTree {
 			}
 		}
 
-		opNodes.add(build(new Node("()", null, nodes.subList(0, opId)), errors));
-		opNodes.add(build(new Node("()", null, nodes.subList(opId + 1, size)), errors));
+		opNodes.add(build(new BadNode("()", null, nodes.subList(0, opId)), errors));
+		opNodes.add(build(new BadNode("()", null, nodes.subList(opId + 1, size)), errors));
 
-		return new Node(opToken.type, opToken, opNodes);
+		return new BadNode(opToken.type, opToken, opNodes);
 	}
 }

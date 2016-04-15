@@ -1,0 +1,46 @@
+str "void" str "tt" ( ) { 
+	str "int" str "a" = num "3" ; 
+	str "int" str "b" = num "4" ; 
+	str "int" str "c" = num "5" ; 
+	str "a" = str "b" [ num "0" ] = str "c" ; 
+} 
+; 
+str "int" str "lol" ( str "string" str "c" , str "int" str "d" ) { 
+	str "retunr" str "a" + str "b" ; 
+} 
+; 
+str "int" str "lol" ( str "int" str "a" , str "int" str "b" ) { 
+	str "retunr" str "a" + str "b" ; 
+} 
+; 
+str "global" ( str "int" str "a" , str "int_2" str "b" ) ; 
+str "void" str "main" ( ) { 
+	str "int" str "a" = num "23" ; 
+	str "int" str "b" = num "0" ; 
+	str "int" str "c" = str "b" = ( str "a" + str "b" ) / ( ( str "a" ) ) * str "a" - str "b" % str "a" ^ str "lol" ( str "b" , str "a" ) || str "a" | str "b" && str "a" & str "b" == str "a" <= str "b" < str "a" > str "b" >= str "a" ; 
+	for ( str "int" str "i" = num "0" ; 
+		{ 
+		( str "i" < str "a" ) 
+	} 
+	; 
+	str "i" = str "i" + num "1" ) { 
+	} 
+	; 
+	for ( { 
+		str "int" str "i" = num "0" ; 
+		str "int" str "j" = num "10" 
+	} 
+	; 
+		{ 
+		( str "i" < str "a" ) 
+	} 
+	; 
+	str "i" = str "i" + num "1" ) { 
+		while ( str "j" >= num "0" ) { 
+			str "j" = str "j" - str "i" - num "1" ; 
+		} 
+	} 
+	; 
+	str "b" = str "a" + str "c" ; 
+} 
+; 

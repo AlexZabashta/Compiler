@@ -9,7 +9,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import lex.aut.State;
+import lex.state.State;
+import lex.token.Operator;
+import lex.token.Token;
 import misc.Characters;
 
 public class FileTokenizer {
@@ -65,44 +67,21 @@ public class FileTokenizer {
 	}
 
 	public static void print(List<Token> list, PrintWriter out) throws IOException {
-
 		int tab = 0;
 
-		boolean needNewLine = false;
-
 		for (Token token : list) {
-
-			if (token.type == "{") {
-				++tab;
-			}
-			if (token.type == "}") {
-				--tab;
-			}
-
-			if (token.type == "}" || "for".equals(token.text) || "else".equals(token.text) || "do".equals(token.text) || "while".equals(token.text) || (token.type != "#" && needNewLine)) {
-				needNewLine = false;
-				out.println();
-				for (int t = 0; t < tab; t++) {
-					out.print('\t');
+			if (token instanceof Operator) {
+				Operator operator = (Operator) token;
+				if (operator.priority == Operator.priorityOf("(")) {
+					if (operator.string == "{" | operator.string == "[" | operator.string == "(") {
+						token.print(out, tab++);
+					} else {
+						token.print(out, --tab);
+					}
+					continue;
 				}
 			}
-
-			if (token.type == "{" || token.type == ";" || token.type == "}") {
-				needNewLine = true;
-			}
-
-			out.print(token.toString(false));
-			out.print(' ');
-
-			if (token.type == "#" && needNewLine) {
-				needNewLine = false;
-				out.println();
-				for (int t = 0; t < tab; t++) {
-					out.print('\t');
-				}
-			}
+			token.print(out, tab);
 		}
-
 	}
-
 }

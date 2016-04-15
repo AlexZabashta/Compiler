@@ -7,14 +7,14 @@ import lex.Token;
 import misc.KeyWords;
 
 public class KeyWordsTree {
-	public static Node build(Node vertex, List<String> errors) {
+	public static BadNode build(BadNode vertex, List<String> errors) {
 
 		if (vertex == null) {
 			errors.add("Find null vertex.");
-			return new Node("seq", null, new ArrayList<Node>());
+			return new BadNode("seq", null, new ArrayList<BadNode>());
 		}
 
-		List<Node> nodes = vertex.nodes;
+		List<BadNode> nodes = vertex.nodes;
 
 		if (nodes == null) {
 			Token token = vertex.token;
@@ -26,10 +26,10 @@ public class KeyWordsTree {
 			return vertex;
 		}
 
-		List<Node> vseq = new ArrayList<Node>();
+		List<BadNode> vseq = new ArrayList<BadNode>();
 
 		for (int i = 0; i < nodes.size(); i++) {
-			Node node = nodes.get(i);
+			BadNode node = nodes.get(i);
 
 			Token token = node.token;
 			if (token == null) {
@@ -40,8 +40,8 @@ public class KeyWordsTree {
 			switch (token.type) {
 			case "while": {
 				if (i + 1 < nodes.size()) {
-					List<Node> whiSeq = new ArrayList<Node>();
-					Node condition = nodes.get(i + 1);
+					List<BadNode> whiSeq = new ArrayList<BadNode>();
+					BadNode condition = nodes.get(i + 1);
 
 					if (!(condition.type == "()" || condition.type == "(;)")) {
 						String s = condition.type;
@@ -56,7 +56,7 @@ public class KeyWordsTree {
 					whiSeq.add(build(condition, errors));
 
 					if (i + 2 < nodes.size()) {
-						Node action = nodes.get(i + 2);
+						BadNode action = nodes.get(i + 2);
 						whiSeq.add(build(action, errors));
 						if (action.type != "{;}") {
 							String s = action.type;
@@ -68,11 +68,11 @@ public class KeyWordsTree {
 
 						i += 2;
 					} else {
-						whiSeq.add(new Node("{;}", null, new ArrayList<Node>()));
+						whiSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
 						i += 1;
 					}
 
-					vseq.add(new Node("while", token, whiSeq));
+					vseq.add(new BadNode("while", token, whiSeq));
 
 				} else {
 					errors.add("Missing condition after " + token);
@@ -82,8 +82,8 @@ public class KeyWordsTree {
 			case "for": {
 
 				if (i + 1 < nodes.size()) {
-					List<Node> forSeq = new ArrayList<Node>();
-					Node pcp = nodes.get(i + 1);
+					List<BadNode> forSeq = new ArrayList<BadNode>();
+					BadNode pcp = nodes.get(i + 1);
 
 					if (!(pcp.type == "()" || pcp.type == "(;)")) {
 						String s = pcp.type;
@@ -101,35 +101,35 @@ public class KeyWordsTree {
 						} else {
 							errors.add("(pre; cond; post) = (null)" + pcp.token);
 						}
-						forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
-						forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
-						forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
+						forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
+						forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
+						forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
 					} else {
 						if (pcp.nodes.isEmpty()) {
-							forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
-							forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
-							forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
+							forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
+							forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
+							forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
 						} else {
 							if (pcp.nodes.size() == 1) {
-								forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
+								forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
 								forSeq.add(build(pcp.nodes.get(0), errors));
-								forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
+								forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
 							} else {
 								if (pcp.nodes.size() == 2) {
-									forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
+									forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
 									forSeq.add(build(pcp.nodes.get(0), errors));
 									forSeq.add(build(pcp.nodes.get(1), errors));
 								} else {
 									forSeq.add(build(pcp.nodes.get(0), errors));
 									forSeq.add(build(pcp.nodes.get(1), errors));
-									forSeq.add(build(new Node("seq", null, pcp.nodes.subList(2, pcp.nodes.size())), errors));
+									forSeq.add(build(new BadNode("seq", null, pcp.nodes.subList(2, pcp.nodes.size())), errors));
 								}
 							}
 						}
 					}
 
 					if (i + 2 < nodes.size()) {
-						Node action = nodes.get(i + 2);
+						BadNode action = nodes.get(i + 2);
 						forSeq.add(build(action, errors));
 						if (action.type != "{;}") {
 							String s = action.type;
@@ -141,11 +141,11 @@ public class KeyWordsTree {
 
 						i += 2;
 					} else {
-						forSeq.add(new Node("{;}", null, new ArrayList<Node>()));
+						forSeq.add(new BadNode("{;}", null, new ArrayList<BadNode>()));
 						i += 1;
 					}
 
-					vseq.add(new Node("for", token, forSeq));
+					vseq.add(new BadNode("for", token, forSeq));
 
 				} else {
 					errors.add("Missing (pre; cond; post) after " + token);
@@ -154,23 +154,23 @@ public class KeyWordsTree {
 			}
 				break;
 			case "continue": {
-				vseq.add(new Node("continue", token, null));
+				vseq.add(new BadNode("continue", token, null));
 			}
 				break;
 			case "break": {
-				vseq.add(new Node("break", token, null));
+				vseq.add(new BadNode("break", token, null));
 			}
 				break;
 			case "return": {
-				vseq.add(build(new Node("return", token, nodes.subList(i + 1, nodes.size())), errors));
+				vseq.add(build(new BadNode("return", token, nodes.subList(i + 1, nodes.size())), errors));
 				i = nodes.size();
 			}
 				break;
 			case "if": {
 				if (i + 1 < nodes.size()) {
-					Node condition = nodes.get(i + 1);
+					BadNode condition = nodes.get(i + 1);
 
-					List<Node> ifSeq = new ArrayList<Node>();
+					List<BadNode> ifSeq = new ArrayList<BadNode>();
 					ifSeq.add(build(condition, errors));
 
 					if (!(condition.type == "()" || condition.type == "(;)")) {
@@ -184,7 +184,7 @@ public class KeyWordsTree {
 					}
 
 					if (i + 2 < nodes.size()) {
-						Node tAct = nodes.get(i + 2);
+						BadNode tAct = nodes.get(i + 2);
 						ifSeq.add(build(tAct, errors));
 
 						if (tAct.type != "{;}") {
@@ -198,10 +198,10 @@ public class KeyWordsTree {
 						}
 
 						if (i + 3 < nodes.size()) {
-							Node els = nodes.get(i + 3);
+							BadNode els = nodes.get(i + 3);
 							if (els.token != null && els.token.type == "else") {
 								if (i + 4 < nodes.size()) {
-									Node fAct = nodes.get(i + 4);
+									BadNode fAct = nodes.get(i + 4);
 									ifSeq.add(build(fAct, errors));
 									if (fAct.type != "{;}") {
 										String s = fAct.type;
@@ -211,19 +211,19 @@ public class KeyWordsTree {
 										}
 										errors.add("Action must be wrapped in {} brackets at " + s);
 									}
-									vseq.add(new Node("if", token, ifSeq));
+									vseq.add(new BadNode("if", token, ifSeq));
 									i += 4;
 								} else {
 									errors.add("Missing action after " + els);
-									vseq.add(new Node("if", token, ifSeq));
+									vseq.add(new BadNode("if", token, ifSeq));
 									i += 2;
 								}
 							} else {
-								vseq.add(new Node("if", token, ifSeq));
+								vseq.add(new BadNode("if", token, ifSeq));
 								i += 2;
 							}
 						} else {
-							vseq.add(new Node("if", token, ifSeq));
+							vseq.add(new BadNode("if", token, ifSeq));
 							i += 2;
 						}
 
@@ -243,7 +243,7 @@ public class KeyWordsTree {
 
 		}
 
-		return new Node(vertex.type, vertex.token, vseq);
+		return new BadNode(vertex.type, vertex.token, vseq);
 
 	}
 }

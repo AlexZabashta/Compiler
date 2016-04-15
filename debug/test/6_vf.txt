@@ -1,0 +1,11 @@
+var(1) test.a from test.src, line 16, column 12
+var(3) test.b from test.src, line 16, column 20
+
+fun test.tt var(0) test.tt from test.src, line 2, column 6
+fun test.lol.c.b var(1) test.lol from test.src, line 9, column 5
+    arg var(2) c from test.src, line 9, column 16
+    arg var(1) d from test.src, line 9, column 23
+fun test.lol.b.b var(1) test.lol from test.src, line 12, column 5
+    arg var(1) a from test.src, line 12, column 13
+    arg var(1) b from test.src, line 12, column 20
+fun test.main var(0) test.main from test.src, line 18, column 6

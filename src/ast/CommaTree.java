@@ -6,17 +6,17 @@ import java.util.List;
 import lex.Token;
 
 public class CommaTree {
-	public static Node build(Node vertex, List<String> errors) {
+	public static BadNode build(BadNode vertex, List<String> errors) {
 
 		if (vertex.nodes == null) {
 			return vertex;
 		} else {
-			List<Node> seq = new ArrayList<Node>();
+			List<BadNode> seq = new ArrayList<BadNode>();
 
 			Token sep = null;
-			Node subSeq = new Node("seq", new ArrayList<Node>());
+			BadNode subSeq = new BadNode("seq", new ArrayList<BadNode>());
 
-			for (Node node : vertex.nodes) {
+			for (BadNode node : vertex.nodes) {
 
 				if (node.token != null) {
 					if (node.token.type == ";") {
@@ -27,7 +27,7 @@ public class CommaTree {
 							errors.add("Expected " + sep.type + " separator at " + node.token);
 						}
 						seq.add(subSeq);
-						subSeq = new Node("seq", new ArrayList<Node>());
+						subSeq = new BadNode("seq", new ArrayList<BadNode>());
 						continue;
 					} else if (node.token.type == ",") {
 						if (sep == null) {
@@ -37,7 +37,7 @@ public class CommaTree {
 							errors.add("Expected " + sep.type + " separator at " + node.token);
 						}
 						seq.add(subSeq);
-						subSeq = new Node("seq", new ArrayList<Node>());
+						subSeq = new BadNode("seq", new ArrayList<BadNode>());
 						continue;
 					}
 				}
@@ -50,40 +50,40 @@ public class CommaTree {
 				if (sep != null && sep.type == ",") {
 					errors.add("Unexpected separator in root node at " + sep);
 				}
-				return new Node(vertex.type, vertex.token, seq);
+				return new BadNode(vertex.type, vertex.token, seq);
 			}
 
 			if (vertex.type == "()") {
 				if (sep == null) {
-					return new Node(vertex.type, vertex.token, seq);
+					return new BadNode(vertex.type, vertex.token, seq);
 				} else {
-					return new Node("(" + sep.type + ")", vertex.token, seq);
+					return new BadNode("(" + sep.type + ")", vertex.token, seq);
 				}
 			}
 
 			if (vertex.type == "{}") {
 				if (sep == null) {
-					return new Node("{;}", vertex.token, seq);
+					return new BadNode("{;}", vertex.token, seq);
 				} else {
 					if (sep.type == ",") {
 						errors.add("Unexpected separator in {} node at " + sep);
 					}
-					return new Node("{;}", vertex.token, seq);
+					return new BadNode("{;}", vertex.token, seq);
 				}
 			}
 
 			if (vertex.type == "[]") {
 				if (sep == null) {
-					return new Node("[;]", vertex.token, seq);
+					return new BadNode("[;]", vertex.token, seq);
 				} else {
 					if (sep.type == ",") {
 						errors.add("Unexpected separator in [] node at " + sep);
 					}
-					return new Node("[;]", vertex.token, seq);
+					return new BadNode("[;]", vertex.token, seq);
 				}
 			}
 
-			return new Node(vertex.type, vertex.token, seq);
+			return new BadNode(vertex.type, vertex.token, seq);
 		}
 	}
 }

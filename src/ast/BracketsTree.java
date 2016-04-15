@@ -7,30 +7,30 @@ import java.util.Stack;
 import lex.Token;
 
 public class BracketsTree {
-	public static Node build(List<Token> list, List<String> errors) {
+	public static BadNode build(List<Token> list, List<String> errors) {
 
-		Stack<Node> stack = new Stack<Node>();
-		stack.push(new Node("root", new ArrayList<Node>()));
+		Stack<BadNode> stack = new Stack<BadNode>();
+		stack.push(new BadNode("root", new ArrayList<BadNode>()));
 
 		for (Token token : list) {
 			switch (token.type) {
 			case "#":
 				break;
 			case "(":
-				stack.push(new Node("()", token, new ArrayList<Node>()));
+				stack.push(new BadNode("()", token, new ArrayList<BadNode>()));
 				break;
 			case "{":
-				stack.push(new Node("{}", token, new ArrayList<Node>()));
+				stack.push(new BadNode("{}", token, new ArrayList<BadNode>()));
 				break;
 			case "[":
-				stack.push(new Node("[]", token, new ArrayList<Node>()));
+				stack.push(new BadNode("[]", token, new ArrayList<BadNode>()));
 				break;
 			case "}":
 				if (stack.size() <= 1) {
 					errors.add("Negative balance of brackets at " + token);
 					break;
 				}
-				Node figSeq = stack.pop();
+				BadNode figSeq = stack.pop();
 				if (figSeq.type != "{}") {
 					errors.add("Expected '" + figSeq.type.charAt(1) + "' at " + token);
 					break;
@@ -42,7 +42,7 @@ public class BracketsTree {
 					errors.add("Negative balance of brackets at " + token);
 					break;
 				}
-				Node braSeq = stack.pop();
+				BadNode braSeq = stack.pop();
 				if (braSeq.type != "()") {
 					errors.add("Expected '" + braSeq.type.charAt(1) + "' at " + token);
 					break;
@@ -54,7 +54,7 @@ public class BracketsTree {
 					errors.add("Negative balance of brackets at " + token);
 					break;
 				}
-				Node sqSeq = stack.pop();
+				BadNode sqSeq = stack.pop();
 				if (sqSeq.type != "[]") {
 					errors.add("Expected '" + sqSeq.type.charAt(1) + "' at " + token);
 					break;
@@ -62,7 +62,7 @@ public class BracketsTree {
 				stack.peek().nodes.add(sqSeq);
 				break;
 			default:
-				stack.peek().nodes.add(new Node(token));
+				stack.peek().nodes.add(new BadNode(token));
 			}
 		}
 
@@ -70,7 +70,7 @@ public class BracketsTree {
 			errors.add("Not enough closing brackets in " + list.get(0).location.file);
 
 			while (stack.size() != 1) {
-				Node top = stack.pop();
+				BadNode top = stack.pop();
 				stack.peek().nodes.add(top);
 			}
 		}

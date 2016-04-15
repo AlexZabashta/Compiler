@@ -2,24 +2,28 @@ package code;
 
 import java.util.List;
 
-import ast.Node;
+import ast.BadNode;
 import lex.Location;
 import lex.Token;
+import misc.Mangling;
 import misc.Types;
 
 public class Variable {
+
+	static int counter = 0;
+
 	public int type;
 	public Location location;
 	public String name;
 	public String pac;
 
-	public static void getVarsDef(String pac, Node vertex, List<Variable> vars, List<String> errors) {
-		if (!(vertex.type == "(,)" || vertex.type == "()")) {
-			errors.add("Vertex type must br (,)");
-		}
-
+	public static void getVarsDef(String pac, BadNode vertex, List<Variable> vars, List<String> errors) {
 		try {
-			for (Node node : vertex.nodes) {
+			if (!(vertex.type == "(,)" || vertex.type == "()")) {
+				throw new RuntimeException("Vertex type must br (,)");
+			}
+
+			for (BadNode node : vertex.nodes) {
 				if (node.type != "seq") {
 					throw new RuntimeException("Sub node type must be seq " + node.type);
 				}
@@ -70,6 +74,28 @@ public class Variable {
 		}
 
 		return new Variable(Types.getType(typeT.text), nameT.location, pac, name);
+	}
+
+	public static Variable temp(int type) {
+		Location nl = null;
+		return temp(type, nl);
+	}
+
+	public static Variable temp(int type, Token token) {
+		if (token == null) {
+			return temp(type);
+		} else {
+			return temp(type, token.location);
+		}
+	}
+
+	public static Variable temp(int type, Location location) {
+		String name = "$" + Mangling.convert(counter++);
+		return new Variable(type, location, name);
+	}
+
+	public Variable(int type, Location location, String name) {
+		this(type, location, null, name);
 	}
 
 	public Variable(int type, Location location, String pac, String name) {

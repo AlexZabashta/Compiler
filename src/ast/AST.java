@@ -6,7 +6,7 @@ import java.util.List;
 import lex.Token;
 
 public class AST {
-	public static Node build(List<Token> list) {
+	public static BadNode build(List<Token> list) {
 		int l = 0, r = list.size() - 1;
 		int[] cb = new int[r + 1];
 		Arrays.fill(cb, -1);
@@ -70,7 +70,7 @@ public class AST {
 		return build(l, r, list, cb);
 	}
 
-	public static Node build(int l, int r, List<Token> list, int[] cb) {
+	public static BadNode build(int l, int r, List<Token> list, int[] cb) {
 
 		return null;
 	}
