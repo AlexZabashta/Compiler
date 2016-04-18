@@ -3,19 +3,26 @@ package lex.token;
 import java.io.PrintWriter;
 
 import lex.Location;
+import misc.Characters;
 
 public class Comment extends Token {
 
-	public final String string;
+    public final String string;
 
-	public Comment(String string, Location location) {
-		super(location);
-		this.string = string.intern();
-	}
+    public Comment(String string, Location location) {
+        super(location);
+        this.string = string.intern();
+    }
 
-	@Override
-	public void printToken(PrintWriter out) {
-		out.print('!');
-		out.print(string);
-	}
+    @Override
+    public void printToken(PrintWriter out) {
+        out.print("!\"");
+        out.print(Characters.escape(string));
+        out.print("\"");
+    }
+
+    @Override
+    public String toString() {
+        return "!\"" + Characters.escape(string) + "\" at " + location;
+    }
 }

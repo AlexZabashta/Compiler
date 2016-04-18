@@ -3,7 +3,7 @@ package lex.token;
 import java.io.PrintWriter;
 
 import lex.Location;
-import tmpast.Node;
+import tmpast.node.Node;
 
 public abstract class Token extends Node {
 

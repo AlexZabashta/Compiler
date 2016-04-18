@@ -9,79 +9,62 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import tmpast.node.Node;
 import lex.state.State;
 import lex.token.Operator;
 import lex.token.Token;
 import misc.Characters;
 
 public class FileTokenizer {
-	public static List<Token> split(File file, List<String> errors) throws IOException {
+    public static List<Node> split(File file, List<String> errors) throws IOException {
 
-		State state = State.START;
-		List<Token> output = new ArrayList<Token>();
-		TokenBuilder tokenBuilder = new TokenBuilder();
+        State state = State.START;
+        List<Token> output = new ArrayList<Token>();
+        TokenBuilder tokenBuilder = new TokenBuilder();
 
-		try (BufferedReader input = new BufferedReader(new FileReader(file))) {
-			String line;
+        try (BufferedReader input = new BufferedReader(new FileReader(file))) {
+            String line;
 
-			for (int lineIndex = 1; (line = input.readLine()) != null; lineIndex++) {
-				int length = line.length();
-				int column = 1;
-				for (int i = 0; i < length; i++) {
-					char symbol = line.charAt(i);
-					Location location = new Location(file.getName(), lineIndex, column);
+            for (int lineIndex = 1; (line = input.readLine()) != null; lineIndex++) {
+                int length = line.length();
+                int column = 1;
+                for (int i = 0; i < length; i++) {
+                    char symbol = line.charAt(i);
+                    Location location = new Location(file.getName(), lineIndex, column);
 
-					if (Characters.isValid(symbol)) {
-						try {
-							state = state.nextState(symbol, output, tokenBuilder, location);
-						} catch (IllegalStateException exception) {
-							errors.add(exception.getMessage());
-							state = State.START;
-							tokenBuilder = new TokenBuilder();
-						}
-					} else {
-						errors.add("Invalid char code " + (int) symbol + " at " + location);
-					}
+                    if (Characters.isValid(symbol)) {
+                        try {
+                            state = state.nextState(symbol, output, tokenBuilder, location);
+                        } catch (IllegalStateException exception) {
+                            errors.add(exception.getMessage());
+                            state = State.START;
+                            tokenBuilder = new TokenBuilder();
+                        }
+                    } else {
+                        errors.add("Invalid char code " + (int) symbol + " at " + location);
+                    }
 
-					if (symbol == '\t') {
-						column += 4;
-					} else {
-						column += 1;
-					}
+                    if (symbol == '\t') {
+                        column += 4;
+                    } else {
+                        column += 1;
+                    }
 
-				}
-				Location location = new Location(file.getName(), lineIndex, column);
+                }
+                Location location = new Location(file.getName(), lineIndex, column);
 
-				try {
-					state = state.nextState('\n', output, tokenBuilder, location);
-				} catch (IllegalStateException exception) {
-					errors.add(exception.getMessage());
-					state = State.START;
-					tokenBuilder = new TokenBuilder();
-				}
+                try {
+                    state = state.nextState('\n', output, tokenBuilder, location);
+                } catch (IllegalStateException exception) {
+                    errors.add(exception.getMessage());
+                    state = State.START;
+                    tokenBuilder = new TokenBuilder();
+                }
 
-			}
-		}
+            }
+        }
 
-		return output;
-	}
+        return (List) output;
+    }
 
-	public static void print(List<Token> list, PrintWriter out) throws IOException {
-		int tab = 0;
-
-		for (Token token : list) {
-			if (token instanceof Operator) {
-				Operator operator = (Operator) token;
-				if (operator.priority == Operator.priorityOf("(")) {
-					if (operator.string == "{" | operator.string == "[" | operator.string == "(") {
-						token.print(out, tab++);
-					} else {
-						token.print(out, --tab);
-					}
-					continue;
-				}
-			}
-			token.print(out, tab);
-		}
-	}
 }
