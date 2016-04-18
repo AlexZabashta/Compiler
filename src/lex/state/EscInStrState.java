@@ -3,7 +3,7 @@ package lex.state;
 import java.util.List;
 
 import lex.Location;
-import lex.token.Token;
+import lex.Token;
 import lex.TokenBuilder;
 import misc.Characters;
 

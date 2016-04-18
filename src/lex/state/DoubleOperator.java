@@ -3,7 +3,7 @@ package lex.state;
 import java.util.List;
 
 import lex.Location;
-import lex.token.Token;
+import lex.Token;
 import lex.TokenBuilder;
 
 public class DoubleOperator extends State {
@@ -20,11 +20,11 @@ public class DoubleOperator extends State {
 	public State nextState(char symbol, List<Token> output, TokenBuilder builder, Location location) {
 		for (char c : follow) {
 			if (symbol == c) {
-				output.add(new lex.token.Operator(first + symbol, builder.location));
+				output.add(new lex.token.pure.Operator(first + symbol, builder.location));
 				return START;
 			}
 		}
-		output.add(new lex.token.Operator(first, builder.location));
+		output.add(new lex.token.pure.Operator(first, builder.location));
 		return START.nextState(symbol, output, builder, location);
 	}
 }

@@ -2,21 +2,16 @@ package lex;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import tmpast.node.Node;
 import lex.state.State;
-import lex.token.Operator;
-import lex.token.Token;
 import misc.Characters;
 
 public class FileTokenizer {
-    public static List<Node> split(File file, List<String> errors) throws IOException {
+    public static List<Token> split(File file, List<String> errors) throws IOException {
 
         State state = State.START;
         List<Token> output = new ArrayList<Token>();
@@ -64,7 +59,7 @@ public class FileTokenizer {
             }
         }
 
-        return (List) output;
+        return output;
     }
 
 }

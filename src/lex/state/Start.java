@@ -3,9 +3,9 @@ package lex.state;
 import java.util.List;
 
 import lex.Location;
+import lex.Token;
 import lex.TokenBuilder;
-import lex.token.Operator;
-import lex.token.Token;
+import lex.token.pure.Operator;
 import misc.Characters;
 
 public class Start extends State {

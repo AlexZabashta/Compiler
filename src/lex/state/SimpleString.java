@@ -3,7 +3,7 @@ package lex.state;
 import java.util.List;
 
 import lex.Location;
-import lex.token.Token;
+import lex.Token;
 import lex.TokenBuilder;
 import misc.Characters;
 
@@ -16,7 +16,7 @@ public class SimpleString extends State {
 			return this;
 		}
 
-		output.add(new lex.token.SimpleString(builder.text.toString(), builder.location));
+		output.add(new lex.token.pure.SimpleString(builder.text.toString(), builder.location));
 		builder.text.setLength(0);
 		return START.nextState(symbol, output, builder, location);
 	}

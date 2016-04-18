@@ -4,10 +4,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import tmpast.TapeFold;
-import tmpast.node.Node;
 import lex.FileTokenizer;
-import lex.token.Token;
+import lex.TapeFold;
+import lex.Token;
 
 public class TestLexer {
 
@@ -15,15 +14,15 @@ public class TestLexer {
         String input = "test.src";
         List<String> errors = new ArrayList<String>();
 
-        List<Node> nodes = FileTokenizer.split(new File(input), errors);
+        List<Token> tokens = FileTokenizer.split(new File(input), errors);
         PrintWriter out = new PrintWriter(System.out);
 
-        nodes = TapeFold.filterComments(nodes);
-        nodes = TapeFold.foldStrings(nodes, errors);
-        nodes = TapeFold.foldTypes(nodes, errors);
-        nodes = TapeFold.foldBrackets(nodes, errors);
+        tokens = TapeFold.filterComments(tokens);
+        tokens = TapeFold.foldStrings(tokens, errors);
+        tokens = TapeFold.foldTypes(tokens, errors);
+        tokens = TapeFold.foldBrackets(tokens, errors);
 
-        TapeFold.print(nodes, out);
+        TapeFold.print(tokens, out);
 
         out.close();
 
