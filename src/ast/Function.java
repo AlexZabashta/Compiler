@@ -2,6 +2,7 @@ package ast;
 
 import java.util.List;
 
+import ast.node.FBracketsNode;
 import lex.token.fold.DeclarationToken;
 import misc.Characters;
 import misc.Type;

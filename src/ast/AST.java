@@ -2,146 +2,243 @@ package ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Spliterator;
 
+import com.sun.accessibility.internal.resources.accessibility;
+
+import ast.node.FBracketsNode;
+import ast.node.ForNode;
+import ast.node.IfNode;
+import ast.node.Leaf;
+import ast.node.Nope;
+import ast.node.ArrayNode;
+import ast.node.BOperatorNode;
+import ast.node.CallNode;
+import ast.node.RBracketsNode;
+import ast.node.UOperatorNode;
+import ast.node.WhileNode;
 import lex.Token;
 import lex.token.fold.BracketsToken;
 import lex.token.fold.BracketsType;
 import lex.token.fold.DeclarationToken;
-import lex.token.fold.TypeToken;
 import lex.token.fold.VarToken;
-import lex.token.key_word.InitToken;
+import lex.token.key_word.ElseToken;
+import lex.token.key_word.ForToken;
+import lex.token.key_word.IfToken;
+import lex.token.key_word.WhileToken;
 import lex.token.pure.Operator;
-import lex.token.pure.SimpleString;
-import misc.Characters;
-import misc.EnumType;
-import misc.Type;
 
 public class AST {
+	public static Node parse(List<Token> tokens, int priority, List<String> errors) {
+		if (tokens.isEmpty()) {
+			return new Nope();
+		}
+		int size = tokens.size();
 
-    public static List<Function> foldGlobal(List<Token> tokens, String pac, List<String> errors) {
+		if (priority < 11) {
 
-        List<Function> functions = new ArrayList<Function>();
+			boolean inv = priority >= 2;
 
-        int size = tokens.size();
+			for (int i = 0; i < size; i++) {
+				int index = i;
+				if (inv) {
+					index = size - i - 1;
+				}
 
-        for (int i = 0; i < size; i++) {
-            Token token = tokens.get(i);
-            try {
-                if (token instanceof InitToken) {
-                    InitToken initToken = (InitToken) token;
+				Token token = tokens.get(index);
 
-                    TypeToken initTypeToken = new TypeToken(new Type(EnumType.VOID, 0), initToken.location);
-                    SimpleString initPac = new SimpleString(pac, initToken.location);
-                    SimpleString initName = new SimpleString("init" + Characters.typeSeparator + "const", initToken.location);
-                    VarToken initVarToken = new VarToken(initPac, initName);
-                    DeclarationToken initDeclaration = new DeclarationToken(initTypeToken, initVarToken);
+				if (token instanceof Operator) {
+					Operator operator = (Operator) token;
+					if (operator.priority == priority) {
+						if (operator.string == ",") {
+							errors.add("Use ';' as separator at " + token);
+						}
 
-                    BracketsToken vars = (BracketsToken) tokens.get(i + 1);
-                    ++i;
+						if (inv) {
+							Node left = parse(tokens.subList(0, index), priority, errors);
+							Node right = parse(tokens.subList(index + 1, size), priority + 1, errors);
+							return new BOperatorNode(left, right, operator);
+						} else {
+							Node left = parse(tokens.subList(0, index), priority + 1, errors);
+							Node right = parse(tokens.subList(index + 1, size), priority, errors);
+							return new BOperatorNode(left, right, operator);
+						}
 
-                    if (vars.type != BracketsType.ROUND) {
-                        errors.add("The variables shuld declared in round brackets");
-                    }
+					}
 
-                    FBracketsNode actions = new FBracketsNode();
-                    try {
-                        BracketsToken action = (BracketsToken) tokens.get(i + 1);
-                        ++i;
-                        if (action.type != BracketsType.FLOWER) {
-                            errors.add("The action shuld  declared in flower brackets");
-                        }
-                        actions = parse(action, errors);
-                    } catch (IndexOutOfBoundsException | ClassCastException fake) {
-                    }
+				}
+			}
 
-                    List<DeclarationToken> gvars = new ArrayList<DeclarationToken>();
+			return parse(tokens, priority + 1, errors);
+		}
 
-                    for (DeclarationToken vard : varDecl(vars, errors)) {
-                        gvars.add(vard.addPac(pac, errors));
-                    }
+		if (size == 1) {
+			Token token = tokens.get(0);
+			if (token instanceof BracketsToken) {
+				BracketsToken bracketsToken = (BracketsToken) token;
 
-                    InitFunction function = new InitFunction(initDeclaration, gvars, actions);
-                    functions.add(function);
+				if (bracketsToken.type == BracketsType.FLOWER) {
+					return new FBracketsNode(parse(bracketsToken.tokens, 0, errors), bracketsToken);
+				}
 
-                    continue;
-                }
+				if (bracketsToken.type != BracketsType.ROUND) {
+					errors.add("Unexpected brackets token " + bracketsToken);
+				}
 
-                if (token instanceof DeclarationToken) {
-                    DeclarationToken declarationToken = (DeclarationToken) token;
-                    declarationToken = declarationToken.addPac(pac, errors);
+				return new RBracketsNode(parse(bracketsToken.tokens, 0, errors), bracketsToken);
+			}
 
-                    BracketsToken vars = (BracketsToken) tokens.get(i + 1);
-                    ++i;
+			return new Leaf(token);
+		}
 
-                    if (vars.type != BracketsType.ROUND) {
-                        errors.add("The variables shuld declared in round brackets");
-                    }
+		Token first = tokens.get(0);
+		if (first instanceof Operator) {
+			Operator operator = (Operator) first;
+			if (operator.priority == 11) {
+				return new UOperatorNode(parse(tokens.subList(1, size), priority, errors), operator);
+			}
+		}
 
-                    BracketsToken action = (BracketsToken) tokens.get(i + 1);
-                    ++i;
-                    if (action.type != BracketsType.FLOWER) {
-                        errors.add("The action shuld  declared in flower brackets");
-                    }
-                    FBracketsNode actions = parse(action, errors);
-                    List<DeclarationToken> lvars = new ArrayList<DeclarationToken>();
+		Token last = tokens.get(size - 1);
+		if (last instanceof BracketsToken) {
+			BracketsToken bracketsToken = (BracketsToken) last;
+			if (bracketsToken.type == BracketsType.SQUARE) {
+				Node array = parse(tokens.subList(0, size - 1), priority, errors);
+				Node index = parse(bracketsToken.tokens, 0, errors);
+				return new ArrayNode(array, index, bracketsToken);
+			}
+		}
 
-                    for (DeclarationToken vard : varDecl(vars, errors)) {
-                        lvars.add(vard.removePac(errors));
-                    }
+		if (size == 2) {
+			try {
+				VarToken varToken = (VarToken) first;
+				BracketsToken bracketsToken = (BracketsToken) last;
+				if (bracketsToken.type != BracketsType.ROUND) {
+					errors.add("Brackets must be round type " + bracketsToken);
+				}
+				return new CallNode(varToken, split(bracketsToken, errors));
+			} catch (ClassCastException fake) {
+			}
+		}
 
-                    Function function = new Function(declarationToken, lvars, actions);
-                    functions.add(function);
+		try {
+			ForToken forToken = (ForToken) tokens.get(0);
+			BracketsToken preStPost = (BracketsToken) tokens.get(1);
+			if (preStPost.type != BracketsType.ROUND) {
+				errors.add("Brackets must be round type " + preStPost);
+			}
+			Node action = parse(tokens.subList(2, size), priority, errors);
+			List<Node> vars = split(preStPost, errors);
 
-                    continue;
-                }
+			if (vars.isEmpty()) {
+				return new ForNode(forToken, action);
+			}
 
-                throw new RuntimeException("Unexpected token type " + token.getClass().getSimpleName());
-            } catch (RuntimeException exception) {
-                errors.add(exception.getMessage() + " at " + token);
-            }
-        }
-        return functions;
-    }
+			if (vars.size() == 1) {
+				return new ForNode(forToken, vars.get(0), action);
+			}
 
-    public static FBracketsNode parse(BracketsToken action, List<String> errors) {
-        FBracketsNode fBracketsNode = new FBracketsNode();
-        return fBracketsNode;
-    }
+			if (vars.size() == 2) {
+				return new ForNode(forToken, vars.get(0), vars.get(1), action);
+			}
 
-    public static List<DeclarationToken> varDecl(BracketsToken vars, List<String> errors) {
-        List<DeclarationToken> list = new ArrayList<DeclarationToken>();
+			if (vars.size() > 3) {
+				errors.add("Too many nodes in () token " + preStPost);
+			}
+			return new ForNode(forToken, vars.get(0), vars.get(1), vars.get(2), action);
 
-        boolean sep = false;
+		} catch (ClassCastException fake) {
+		}
 
-        for (Token token : vars.tokens) {
-            if (token instanceof Operator) {
-                Operator operator = (Operator) token;
-                if (operator.string != ",") {
-                    errors.add("Use '.' separator at " + operator);
-                }
+		try {
+			WhileToken whileToken = (WhileToken) tokens.get(0);
+			BracketsToken state = (BracketsToken) tokens.get(1);
+			if (state.type != BracketsType.ROUND) {
+				errors.add("Brackets must be round type " + state);
+			}
+			Node action = parse(tokens.subList(2, size), priority, errors);
 
-                if (!sep) {
-                    errors.add("Expected var declaration at " + operator);
-                }
-                sep = false;
-                continue;
-            }
+			if (state.tokens.isEmpty()) {
+				return new WhileNode(whileToken, action);
+			} else {
+				return new WhileNode(whileToken, parse(state.tokens, 0, errors), action);
+			}
 
-            if (token instanceof DeclarationToken) {
-                DeclarationToken declarationToken = (DeclarationToken) token;
+		} catch (ClassCastException fake) {
+		}
 
-                if (sep) {
-                    errors.add("Expected separator  at " + declarationToken);
-                }
-                sep = true;
+		try {
+			IfToken ifToken = (IfToken) tokens.get(0);
+			BracketsToken state = (BracketsToken) tokens.get(1);
 
-                list.add(declarationToken);
-                continue;
-            }
+			BracketsToken x = (BracketsToken) tokens.get(2);
+			ElseToken elseToken = (ElseToken) tokens.get(3);
+			BracketsToken y = (BracketsToken) tokens.get(2);
 
-        }
+			if (state.type != BracketsType.ROUND) {
+				errors.add("Brackets must be round type " + state);
+			}
 
-        return list;
-    }
+			if (x.type != BracketsType.FLOWER) {
+				errors.add("Brackets must be  {} type " + x);
+			}
+			if (y.type != BracketsType.FLOWER) {
+				errors.add("Brackets must be  {} type " + y);
+			}
+
+			return new IfNode(ifToken, parseRB(state, errors), parseFB(x, errors), parseFB(y, errors));
+		} catch (ClassCastException | IndexOutOfBoundsException fake) {
+		}
+
+		for (Token token : tokens) {
+			System.err.print(token.toTokenString() + " ");
+		}
+		System.err.println();
+		return new Nope();
+	}
+
+	public static FBracketsNode parseFB(BracketsToken token, List<String> errors) {
+		if (token.type != BracketsType.FLOWER) {
+			errors.add("Expected {} brackets at " + token);
+		}
+		return new FBracketsNode(AST.parse(token.tokens, 0, errors), token);
+	}
+
+	public static RBracketsNode parseRB(BracketsToken token, List<String> errors) {
+		if (token.type != BracketsType.ROUND) {
+			errors.add("Expected () brackets at " + token);
+		}
+		return new RBracketsNode(AST.parse(token.tokens, 0, errors), token);
+	}
+
+	public static List<Node> split(BracketsToken bracketsToken, List<String> errors) {
+		if (bracketsToken.type != BracketsType.ROUND) {
+			errors.add("Expected () brackets at " + bracketsToken);
+		}
+
+		List<Node> vars = new ArrayList<Node>();
+
+		List<Token> tokens = bracketsToken.tokens;
+		int l = 0, n = tokens.size();
+
+		while (l < n) {
+			int r = l;
+			while (r < n && !isSep(tokens.get(r))) {
+				++r;
+			}
+			vars.add(parse(tokens.subList(l, r), 0, errors));
+			l = r + 1;
+		}
+
+		return vars;
+	}
+
+	public static boolean isSep(Token token) {
+		if (token instanceof Operator) {
+			Operator operator = (Operator) token;
+			return operator.string == ",";
+		}
+		return false;
+	}
 
 }

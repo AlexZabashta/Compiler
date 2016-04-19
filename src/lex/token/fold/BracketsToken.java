@@ -26,6 +26,7 @@ public class BracketsToken extends Token {
         for (Token token : tokens) {
             token.print(out, indent + 1);
         }
+        printIndent(out, indent);
         out.println(BracketsType.close(type));
 
     }
