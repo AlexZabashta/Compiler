@@ -1,0 +1,7 @@
+int test.x at test.src, line 13, column 17
+int test.y at test.src, line 13, column 24
+int test.z at test.src, line 13, column 31
+test.test$char.11$char.2$int
+test.test$char.11$char.2$int
+test.fake
+test.init$const

@@ -17,7 +17,11 @@ public class BreakToken extends Token {
 
     @Override
     public String toTokenString() {
-        return "break." + level;
+        if (level == 1) {
+            return "break";
+        } else {
+            return "break." + level;
+        }
     }
 
 }

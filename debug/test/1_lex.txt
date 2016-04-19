@@ -1,46 +1,39 @@
-str "void" str "tt" ( ) { 
-	str "int" str "a" = num "3" ; 
-	str "int" str "b" = num "4" ; 
-	str "int" str "c" = num "5" ; 
-	str "a" = str "b" [ num "0" ] = str "c" ; 
-} 
-; 
-str "int" str "lol" ( str "string" str "c" , str "int" str "d" ) { 
-	str "retunr" str "a" + str "b" ; 
-} 
-; 
-str "int" str "lol" ( str "int" str "a" , str "int" str "b" ) { 
-	str "retunr" str "a" + str "b" ; 
-} 
-; 
-str "global" ( str "int" str "a" , str "int_2" str "b" ) ; 
-str "void" str "main" ( ) { 
-	str "int" str "a" = num "23" ; 
-	str "int" str "b" = num "0" ; 
-	str "int" str "c" = str "b" = ( str "a" + str "b" ) / ( ( str "a" ) ) * str "a" - str "b" % str "a" ^ str "lol" ( str "b" , str "a" ) || str "a" | str "b" && str "a" & str "b" == str "a" <= str "b" < str "a" > str "b" >= str "a" ; 
-	for ( str "int" str "i" = num "0" ; 
-		{ 
-		( str "i" < str "a" ) 
-	} 
-	; 
-	str "i" = str "i" + num "1" ) { 
-	} 
-	; 
-	for ( { 
-		str "int" str "i" = num "0" ; 
-		str "int" str "j" = num "10" 
-	} 
-	; 
-		{ 
-		( str "i" < str "a" ) 
-	} 
-	; 
-	str "i" = str "i" + num "1" ) { 
-		while ( str "j" >= num "0" ) { 
-			str "j" = str "j" - str "i" - num "1" ; 
-		} 
-	} 
-	; 
-	str "b" = str "a" + str "c" ; 
-} 
-; 
+void test test.src, line 1, column 6
+( test.src, line 1, column 10
+    char.11 a test.src, line 1, column 21
+    , test.src, line 1, column 22
+    char.2 b test.src, line 1, column 29
+    , test.src, line 1, column 30
+    int v test.src, line 1, column 36
+)
+{ test.src, line 1, column 39
+    int.4 a test.src, line 4, column 11
+}
+void test test.src, line 6, column 6
+( test.src, line 6, column 10
+    char.11 t test.src, line 6, column 21
+    , test.src, line 6, column 22
+    char.2 w test.src, line 6, column 29
+    , test.src, line 6, column 30
+    int b test.src, line 6, column 36
+)
+{ test.src, line 6, column 39
+    int.4 a test.src, line 9, column 11
+}
+void fake test.src, line 11, column 6
+( test.src, line 11, column 10
+)
+{ test.src, line 11, column 12
+}
+init test.src, line 13, column 1
+( test.src, line 13, column 5
+    int test.x test.src, line 13, column 17
+    , test.src, line 13, column 18
+    int y test.src, line 13, column 24
+    , test.src, line 13, column 25
+    int z test.src, line 13, column 31
+)
+{ test.src, line 13, column 34
+    break test.src, line 14, column 5
+    4 test.src, line 14, column 11
+}

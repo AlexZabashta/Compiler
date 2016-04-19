@@ -69,7 +69,7 @@ public class TapeFold {
         }
 
         if (stack.size() != 1) {
-            errors.add("Not enough closing brackets in " + stack.peek().location);
+            errors.add("Not enough closing brackets at " + stack.peek());
 
             while (stack.size() != 1) {
                 BracketsToken bracketsToken = stack.pop();
@@ -124,7 +124,7 @@ public class TapeFold {
                 if (token instanceof Operator) {
                     Operator operator = (Operator) token;
                     if (operator.string == ".") {
-                        throw new RuntimeException("Unexpected " + token);
+                        throw new RuntimeException("Missing token after '.'");
                     }
                 }
 
@@ -135,6 +135,7 @@ public class TapeFold {
                     case "init": {
                         list.add(new InitToken(str.location));
                     }
+                        break;
                     case "while": {
                         list.add(new WhileToken(str.location));
                     }
@@ -157,14 +158,20 @@ public class TapeFold {
                         break;
                     case "break": {
                         try {
-                            Number number = (Number) tokens.get(i + 1);
-                            ++i;
+                            Operator operator = (Operator) tokens.get(i + 1);
+                            if (operator.string != ".") {
+                                throw new ClassCastException();
+                            }
+                            Number number = (Number) tokens.get(i + 2);
+                            i += 2;
+
                             try {
                                 list.add(new BreakToken(number.number, str.location));
                             } catch (RuntimeException error) {
                                 list.add(new BreakToken(1, str.location));
                                 throw error;
                             }
+
                         } catch (ClassCastException | IndexOutOfBoundsException fake) {
                             list.add(new BreakToken(1, str.location));
                         }
@@ -189,11 +196,11 @@ public class TapeFold {
                             try {
                                 type = Type.get(str.string, number.number);
                             } catch (RuntimeException error) {
-                                errors.add(error.getMessage() + " at " + str.location);
+                                errors.add(error.getMessage() + str);
                                 try {
                                     type = Type.get(str.string, 0);
                                 } catch (RuntimeException error2) {
-                                    errors.add(error2.getMessage() + " at " + str.location);
+                                    errors.add(error2.getMessage() + str);
                                 }
                             }
 
