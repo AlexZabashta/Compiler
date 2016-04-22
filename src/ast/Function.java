@@ -1,16 +1,22 @@
 package ast;
 
+import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import ast.node.FBracketsNode;
 import lex.token.fold.DeclarationToken;
 import misc.Characters;
 import misc.Type;
+import ast.node.op.FBracketsNode;
+import code.Environment;
+import code.FunctionZone;
+import code.Variable;
 
 public class Function {
     public final FBracketsNode action;
     public final DeclarationToken name;
-    public final String string;
+    private final String string;
     public final Type type;
     public final List<DeclarationToken> vars;
 
@@ -31,6 +37,41 @@ public class Function {
 
         this.string = builder.toString();
 
+    }
+
+    public FunctionZone getVisibilityZone(Map<String, DeclarationToken> globalVariables, Map<String, Function> functions, List<String> errors) {
+        FunctionZone zone = new FunctionZone(this);
+
+        Map<String, Variable> localVariables = new HashMap<String, Variable>();
+        for (DeclarationToken var : vars) {
+            zone.createVariable(var, localVariables, errors);
+        }
+        Environment environment = new Environment(localVariables, globalVariables, functions);
+        action.rValue(null, zone, environment, errors);
+        return zone;
+    }
+
+    public void printIndent(PrintWriter out, int indent) {
+        while (--indent >= 0) {
+            out.print("    ");
+        }
+    }
+
+    public void println(PrintWriter out, int indent) {
+        printIndent(out, indent);
+        out.print(name.toTokenString());
+        out.print('(');
+        boolean sep = false;
+        for (DeclarationToken var : vars) {
+            if (sep) {
+                out.print(", ");
+            }
+            out.print(var.toTokenString());
+            sep = true;
+        }
+        out.println(')');
+        action.println(out, indent + 1);
+        out.println();
     }
 
     @Override

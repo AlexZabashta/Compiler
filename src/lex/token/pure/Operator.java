@@ -25,7 +25,6 @@ public class Operator extends Token {
         operators.put("*", 10);
         operators.put("/", 10);
         operators.put("%", 10);
-        operators.put(":", 10);
 
         operators.put("+", 9);
         operators.put("-", 9);

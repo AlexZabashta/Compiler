@@ -1,0 +1,11 @@
+void main(text args) {
+
+	string str = "";
+	
+	for (int i = 0, i < 10, i = i + 1) {
+		str = str + sys.readLine();	
+	} ;
+
+	sys.println(str);
+	
+}

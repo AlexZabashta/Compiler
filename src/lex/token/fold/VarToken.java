@@ -20,9 +20,8 @@ public class VarToken extends Token {
         if (pac == null) {
             return name.toString();
         } else {
-            return pac + "." + name;
+            return pac.toTokenString() + "." + name;
         }
-
     }
 
     @Override

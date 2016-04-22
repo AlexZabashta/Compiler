@@ -16,11 +16,11 @@ import lex.token.key_word.ElseToken;
 import lex.token.key_word.ForToken;
 import lex.token.key_word.IfToken;
 import lex.token.key_word.InitToken;
-import lex.token.key_word.Logic;
+import lex.token.key_word.BoolToken;
 import lex.token.key_word.ReturnToken;
 import lex.token.key_word.WhileToken;
 import lex.token.pure.Comment;
-import lex.token.pure.Number;
+import lex.token.pure.NumberToken;
 import lex.token.pure.Operator;
 import lex.token.pure.SimpleString;
 import misc.EnumType;
@@ -134,11 +134,11 @@ public class TapeFold {
 
 					switch (str.string) {
 					case "true": {
-						list.add(new Logic(true, str.location));
+						list.add(new BoolToken(true, str.location));
 					}
 						break;
 					case "false": {
-						list.add(new Logic(false, str.location));
+						list.add(new BoolToken(false, str.location));
 					}
 						break;
 					case "init": {
@@ -171,7 +171,7 @@ public class TapeFold {
 							if (operator.string != ".") {
 								throw new ClassCastException();
 							}
-							Number number = (Number) tokens.get(i + 2);
+							NumberToken number = (NumberToken) tokens.get(i + 2);
 							i += 2;
 
 							try {
@@ -198,7 +198,7 @@ public class TapeFold {
 							if (operator.string != ".") {
 								throw new ClassCastException();
 							}
-							Number number = (Number) tokens.get(i + 2);
+							NumberToken number = (NumberToken) tokens.get(i + 2);
 							i += 2;
 
 							Type type = new Type(EnumType.VOID, 0);

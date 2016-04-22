@@ -15,7 +15,7 @@ public class Characters {
     }
 
     public static boolean isBlank(char symbol) {
-        return symbol == '\t' || symbol == ' ';
+        return symbol == '\t' || symbol == '?' || symbol == ' ';
     }
 
     public static boolean isValid(char symbol) {

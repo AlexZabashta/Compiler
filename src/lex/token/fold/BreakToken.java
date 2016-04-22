@@ -5,7 +5,7 @@ import lex.Token;
 
 public class BreakToken extends Token {
 
-    final int level;
+    public final int level;
 
     public BreakToken(int level, Location location) {
         super(location);

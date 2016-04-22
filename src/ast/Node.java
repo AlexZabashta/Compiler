@@ -1,14 +1,21 @@
 package ast;
 
 import java.io.PrintWriter;
+import java.util.List;
 
-public abstract class Node {
+import code.Environment;
+import code.VisibilityZone;
 
-	public abstract void printTree(PrintWriter out, int indent);
+public interface Node {
 
-	public void printIndent(PrintWriter out, int indent) {
-		while (--indent >= 0) {
-			out.print("    ");
-		}
-	}
+    public void action(VisibilityZone z, Environment e, List<String> errors);
+
+    public void print(PrintWriter out);
+
+    public void printIndent(PrintWriter out, int indent);
+
+    public void println(PrintWriter out, int indent);
+
+    public abstract void printTree(PrintWriter out, int indent);
+
 }

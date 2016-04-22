@@ -19,11 +19,11 @@ public class SingleQuotedString extends State {
 			String text = builder.text.toString();
 
 			if (text.length() == 1) {
-				output.add(new lex.token.pure.SingleCharString(text.charAt(0), builder.location));
+				output.add(new lex.token.pure.CharToken(text.charAt(0), builder.location));
 				builder.text.setLength(0);
 				return START;
 			} else {
-				output.add(new lex.token.pure.SingleCharString(text.charAt(0), builder.location));
+				output.add(new lex.token.pure.CharToken(text.charAt(0), builder.location));
 				if (text.isEmpty()) {
 					throw new IllegalStateException("Single quoted string is empty at " + location);
 				} else {
