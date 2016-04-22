@@ -1,6 +1,7 @@
 package code.act;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 import lex.Token;
 import code.Action;
@@ -27,4 +28,11 @@ public class IfFalseJump extends Action {
         out.println("if (" + state + " == false) jump to " + target);
     }
 
+    @Override
+    public void asm(List<String> programText, List<String> errors) {
+        programText.add(label() + ":" + comment());
+        programText.add("        mov eax, [esp + " + (state.distance(parent) * 4) + "]");
+        programText.add("        cmp eax, eax");
+        programText.add("        je " + target);
+    }
 }

@@ -1,10 +1,12 @@
 package code.act;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 import lex.Token;
 import code.Action;
 import code.Variable;
+import code.VisibilityZone;
 
 public class Break extends Action {
 
@@ -24,6 +26,25 @@ public class Break extends Action {
     public void println(PrintWriter out, int indent) {
         printLabel(out, indent);
         out.println("break");
+    }
+
+    @Override
+    public void asm(List<String> programText, List<String> errors) {
+        VisibilityZone cur = parent;
+        int sp = 0;
+
+        Nop nop = null;
+
+        for (int n = level; n > 0; n--) {
+            sp += cur.numberOfVars();
+            nop = cur.end();
+            cur = cur.parent();
+        }
+
+        programText.add(label() + ":" + comment());
+        programText.add("        add esp, " + (sp * 4));
+        programText.add("        jmp " + nop.label());
+
     }
 
 }

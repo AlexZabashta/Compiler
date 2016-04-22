@@ -5,17 +5,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import code.act.Nop;
+import javafx.scene.Parent;
 import lex.Token;
 import lex.token.fold.DeclarationToken;
 import misc.Type;
 
 public class VisibilityZone extends Action {
 
-    private final List<Action> actions = new ArrayList<Action>();
+    protected final List<Action> actions = new ArrayList<Action>();
     private final List<String> decVars = new ArrayList<String>();
     public final int level;
-    int numberOfVars = 0;
-    public final VisibilityZone parent;
+
+    private Nop end = null;
+
+    public Nop end() {
+        if (end == null) {
+            Nop nop = new Nop();
+            addAction(nop);
+            end = nop;
+        }
+        return end;
+    }
+
+    public int numberOfVars() {
+        return vars.size();
+    }
+
     protected FunctionZone root;
 
     private final List<Variable> vars = new ArrayList<Variable>();
@@ -28,16 +44,36 @@ public class VisibilityZone extends Action {
         this.visible = true;
     }
 
+    public VisibilityZone parent() {
+        return parent;
+    }
+
+    public FunctionZone root() {
+        return root;
+    }
+
     public VisibilityZone(VisibilityZone parent, boolean visible, Token token) {
         super(token);
+        this.parent = parent;
         this.level = parent.level + 1;
         this.visible = visible;
-        this.parent = parent;
         this.root = parent.root;
     }
 
     public void addAction(Action action) {
+        if (end != null) {
+            throw new RuntimeException("Visibility zone " + label() + " is already end");
+        }
+
         actions.add(action);
+        if (action.parent == null) {
+            action.parent = this;
+        }
+
+        if (action.parent != this) {
+            throw new RuntimeException("Can't add outer action " + action + " to " + this);
+        }
+
     }
 
     public Variable createVariable(DeclarationToken token, Map<String, Variable> localVariables, List<String> errors) {
@@ -59,6 +95,26 @@ public class VisibilityZone extends Action {
         localVariables.put(name, var);
         zone.decVars.add(name);
         return var;
+    }
+
+    @Override
+    public void asm(List<String> programText, List<String> errors) {
+        end();
+        programText.add(label() + ":" + comment());
+
+        for (Variable variable : vars) {
+            if (variable.type.level == 0) {
+                programText.add("        push dword 0");
+            } else {
+                programText.add("        push dword emptyarray");
+            }
+        }
+
+        for (Action action : actions) {
+            action.asm(programText, errors);
+        }
+
+        programText.add("        add esp, " + (numberOfVars() * 4));
     }
 
     public Variable createVariable(Type type) {
@@ -118,13 +174,9 @@ public class VisibilityZone extends Action {
         }
     }
 
-    public FunctionZone root() {
-        return root;
-    }
-
     public VisibilityZone subZone(boolean visible, Token token) {
         VisibilityZone zone = new VisibilityZone(this, visible, token);
-        actions.add(zone);
+        addAction(zone);
         return zone;
     }
 

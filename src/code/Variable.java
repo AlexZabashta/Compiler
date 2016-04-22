@@ -14,6 +14,29 @@ public class Variable {
         this.index = index;
     }
 
+    public int distance(VisibilityZone from) {
+        VisibilityZone to = visibilityZone, cur = from;
+        int distance = 0;
+
+        while (cur != null) {
+            if (to == cur) {
+                if (cur.parent == null) {
+                    distance += 1;
+                }
+                distance += cur.numberOfVars() - index - 1;
+                break;
+            }
+            distance += cur.numberOfVars();
+            cur = cur.parent;
+        }
+
+        if (cur == null) {
+            throw new RuntimeException("Can't find " + this + " from " + from);
+        }
+
+        return distance;
+    }
+
     @Override
     public String toString() {
         return "<" + visibilityZone.label() + " " + index + " " + type + ">";

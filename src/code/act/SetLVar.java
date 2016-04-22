@@ -1,6 +1,7 @@
 package code.act;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 import lex.Token;
 import code.Action;
@@ -13,13 +14,19 @@ public class SetLVar extends Action {
         super(token);
         this.dst = dst;
         this.src = src;
-
     }
 
     @Override
     public void println(PrintWriter out, int indent) {
         printLabel(out, indent);
         out.println(dst + " = " + src);
+    }
+
+    @Override
+    public void asm(List<String> programText, List<String> errors) {
+        programText.add(label() + ":" + comment());
+        programText.add("        mov eax, [esp + " + (src.distance(parent) * 4) + "]");
+        programText.add("        mov [esp + " + (dst.distance(parent) * 4) + "], eax");
     }
 
 }

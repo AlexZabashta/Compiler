@@ -1,6 +1,7 @@
 package code;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 import lex.Token;
 
@@ -10,9 +11,19 @@ public abstract class Action {
     public final Token token;
     private static int nextLabel = 0;
 
+    protected VisibilityZone parent;
+
+    public String comment() {
+        if (token == null) {
+            return "";
+        } else {
+            return "     ;" + token.toString();
+        }
+    }
+
     public String label() {
         if (label == null) {
-            label = "$label" + (++nextLabel);
+            label = "act" + (++nextLabel);
         }
         return label;
     }
@@ -50,4 +61,6 @@ public abstract class Action {
         }
     }
 
+    public void asm(List<String> programText, List<String> errors) {
+    }
 }

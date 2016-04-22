@@ -47,7 +47,9 @@ public class Function {
             zone.createVariable(var, localVariables, errors);
         }
         Environment environment = new Environment(localVariables, globalVariables, functions);
+
         action.rValue(null, zone, environment, errors);
+
         return zone;
     }
 

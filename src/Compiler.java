@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import code.FunctionZone;
 import code.VisibilityZone;
 import lex.FileTokenizer;
 import lex.TapeFold;
@@ -25,15 +28,17 @@ import lex.token.pure.QuotedString;
 import misc.Characters;
 import misc.EnumType;
 import misc.LittleEndian;
+import misc.Type;
 import ast.Headers;
 import ast.Function;
 import ast.InitFunction;
+import ast.SystemFunction;
 import ast.node.leaf.QuotedStringNode;
 
 public class Compiler {
 
     static String defaultDebug = "debug";
-    static String defaultResult = "result.asm";
+    static String defaultResult = "result";
 
     public static void createFolder(String name) throws IOException {
         File folder = new File(name);
@@ -65,12 +70,6 @@ public class Compiler {
             }
 
             List<byte[]> vals = new ArrayList<byte[]>();
-            {
-                ByteBuffer buffer = ByteBuffer.allocate(8);
-                buffer.put(LittleEndian.encode(-1));
-                buffer.put(LittleEndian.encode(0));
-                vals.add(buffer.array());
-            }
 
             List<DeclarationToken> vars = new ArrayList<DeclarationToken>();
             Map<String, DeclarationToken> varMap = new HashMap<String, DeclarationToken>();
@@ -93,153 +92,219 @@ public class Compiler {
                 enter = enter.substring(0, enter.length() - 4);
             }
 
-            if (enter.equals("sys")) {
+            String sys = "sys";
+            if (enter.equals(sys)) {
                 throw new RuntimeException("Main pac can't be \"sys\"");
             }
 
             queue.add(enter);
-
-            boolean hasErrors = false;
             List<String> errors = new ArrayList<String>();
 
-            while (!queue.isEmpty()) {
-                String pac = queue.poll().toLowerCase().intern();
-                if (pac == "sys") {
-                    continue;
-                }
+            List<String> programData = new ArrayList<>();
+            List<String> programText = new ArrayList<>();
 
-                if (pacs.add(pac)) {
+            try {
+                System.err.println("Load '" + sys + ".asm':");
 
-                    try {
-                        System.err.println("Parse '" + pac + "' sourse:");
+                boolean text = true;
 
-                        if (pac.isEmpty()) {
-                            throw new Exception("Empty sourse name.");
+                try (BufferedReader reader = new BufferedReader(new FileReader(new File("sys.asm")))) {
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        if (line.isEmpty()) {
+                            continue;
                         }
 
-                        for (char c : pac.toCharArray()) {
-                            if (c == '.' || !Characters.isChar(c)) {
-                                throw new Exception("Invalid chars in name \"" + Characters.escape(pac) + "\"");
+                        if (line.startsWith(";text")) {
+                            line = line.substring(";text ".length());
+
+                            String[] str = line.split(" ");
+
+                            Type ftype = Type.get(str[0], Integer.parseInt(str[1]));
+
+                            String fname = str[2];
+
+                            int alen = (str.length - 3) / 2;
+
+                            Type[] atype = new Type[alen];
+
+                            for (int i = 0; i < alen; i++) {
+                                atype[i] = Type.get(str[i * 2 + 3], Integer.parseInt(str[i * 2 + 4]));
                             }
+
+                            Function sysFun = new SystemFunction(ftype, fname, atype);
+
+                            funMap.put(sysFun.toString(), sysFun);
+
+                            programText.add(";" + line);
+                            text = true;
+                            continue;
                         }
 
-                        List<Token> tokens = FileTokenizer.split(new File(pac + ".src"), errors);
-                        tokens = TapeFold.filterComments(tokens);
-
-                        tokens = TapeFold.foldStrings(tokens, errors);
-
-                        for (Token token : tokens) {
-                            try {
-                                VarToken varToken = (VarToken) token;
-                                queue.add(varToken.pac.string);
-                                continue;
-                            } catch (ClassCastException | NullPointerException fake) {
-                            }
-
-                            try {
-                                ConstValue val = (ConstValue) token;
-                                val.setValIndex(vals.size());
-                                vals.add(val.getConstValue());
-                                continue;
-                            } catch (ClassCastException fake) {
-                            }
-
+                        if (line.startsWith(";data")) {
+                            text = false;
+                            continue;
                         }
 
-                        tokens = TapeFold.foldTypes(tokens, errors);
-                        tokens = TapeFold.foldBrackets(tokens, errors);
-
-                        hasErrors |= printErrorsAndClear("Lexer errors:", errors);
-
-                        String outFolder = null;
-                        if (debug != null) {
-                            outFolder = debug + File.separatorChar + pac + File.separatorChar;
-                            createFolder(outFolder);
+                        if (text) {
+                            programText.add(line);
+                        } else {
+                            programData.add(line);
                         }
 
-                        if (outFolder != null) {
-                            try (PrintWriter out = new PrintWriter(new File(outFolder + "1_lex.txt"))) {
-                                TapeFold.print(tokens, out);
-                            }
-                        }
-
-                        List<Function> functions = Headers.foldGlobal(tokens, pac, errors);
-                        if (outFolder != null) {
-                            try (PrintWriter out = new PrintWriter(new File(outFolder + "2_dec.txt"))) {
-
-                                for (Function function : functions) {
-                                    if (function instanceof InitFunction) {
-                                        InitFunction initFunction = (InitFunction) function;
-                                        for (DeclarationToken token : initFunction.vars) {
-                                            out.println(token);
-                                        }
-                                    }
-                                }
-
-                                for (Function function : functions) {
-                                    out.println(function.type + " " + function);
-                                }
-                            }
-                        }
-
-                        for (Function function : functions) {
-                            if (function instanceof InitFunction) {
-                                InitFunction initFunction = (InitFunction) function;
-                                for (DeclarationToken token : initFunction.vars) {
-                                    {
-                                        String key = token.varToken.toTokenString();
-                                        DeclarationToken dtoken = varMap.get(key);
-                                        if (dtoken == null) {
-                                            varMap.put(key, token);
-                                            vars.add(token);
-                                        } else {
-                                            errors.add("Duplicate global variable " + token + " and " + dtoken);
-                                        }
-                                    }
-
-                                }
-                            }
-                            {
-                                String key = function.toString();
-                                Function val = funMap.get(key);
-
-                                if (val == null) {
-                                    funMap.put(key, function);
-                                    funs.add(function);
-                                } else {
-                                    errors.add("Duplicate function " + function.name + " and " + val.name);
-                                }
-                            }
-
-                            if (function.toString().equals(enter + ".main" + Characters.typeSeparator + "char.2")) {
-                                mainf = function;
-                            }
-                        }
-
-                        hasErrors |= printErrorsAndClear("AST errors:", errors);
-
-                        if (hasErrors) {
-                            throw new Exception(pac + " has errors");
-                        }
-                        System.err.println("Success!");
-                    } catch (Exception exception) {
-                        System.err.println(exception.getMessage());
                     }
                 }
+
+                // for (Function function : StandardFunctions.getFunctions()) {
+                // funMap.put(function.toString(), function);
+                // }
+
+                if (printErrorsAndClear("Loader errors:", errors)) {
+                    throw new Exception("sys.asm has errors");
+                }
+
+                System.err.println("Success!");
+            } catch (Exception exception) {
+                System.err.println(exception.getMessage());
             }
 
+            while (sys != null) {
+                while (!queue.isEmpty()) {
+                    String pac = queue.poll().toLowerCase().intern();
+
+                    if (pacs.add(pac)) {
+                        boolean hasErrors = false;
+
+                        try {
+                            System.err.println("Parse '" + pac + "' sourse:");
+
+                            if (pac.isEmpty()) {
+                                throw new Exception("Empty sourse name.");
+                            }
+
+                            for (char c : pac.toCharArray()) {
+                                if (c == '.' || !Characters.isChar(c)) {
+                                    throw new Exception("Invalid chars in name \"" + Characters.escape(pac) + "\"");
+                                }
+                            }
+
+                            List<Token> tokens = FileTokenizer.split(new File(pac + ".src"), errors);
+                            tokens = TapeFold.filterComments(tokens);
+
+                            tokens = TapeFold.foldStrings(tokens, errors);
+
+                            for (Token token : tokens) {
+                                try {
+                                    VarToken varToken = (VarToken) token;
+                                    queue.add(varToken.pac.string);
+                                    continue;
+                                } catch (ClassCastException | NullPointerException fake) {
+                                }
+
+                                try {
+                                    ConstValue val = (ConstValue) token;
+                                    val.setValIndex(vals.size());
+                                    vals.add(val.getConstValue());
+                                    continue;
+                                } catch (ClassCastException fake) {
+                                }
+
+                            }
+
+                            tokens = TapeFold.foldTypes(tokens, errors);
+                            tokens = TapeFold.foldBrackets(tokens, errors);
+
+                            hasErrors |= printErrorsAndClear("Lexer errors:", errors);
+
+                            String outFolder = null;
+                            if (debug != null) {
+                                outFolder = debug + File.separatorChar + pac + File.separatorChar;
+                                createFolder(outFolder);
+                            }
+
+                            if (outFolder != null) {
+                                try (PrintWriter out = new PrintWriter(new File(outFolder + "1_lex.txt"))) {
+                                    TapeFold.print(tokens, out);
+                                }
+                            }
+
+                            List<Function> functions = Headers.foldGlobal(tokens, pac, errors);
+                            if (outFolder != null) {
+                                try (PrintWriter out = new PrintWriter(new File(outFolder + "2_dec.txt"))) {
+
+                                    for (Function function : functions) {
+                                        if (function instanceof InitFunction) {
+                                            InitFunction initFunction = (InitFunction) function;
+                                            for (DeclarationToken token : initFunction.vars) {
+                                                out.println(token);
+                                            }
+                                        }
+                                    }
+
+                                    for (Function function : functions) {
+                                        out.println(function.type + " " + function);
+                                    }
+                                }
+                            }
+
+                            for (Function function : functions) {
+                                if (function instanceof InitFunction) {
+                                    InitFunction initFunction = (InitFunction) function;
+                                    for (DeclarationToken token : initFunction.vars) {
+                                        {
+                                            String key = token.varToken.toTokenString();
+                                            DeclarationToken dtoken = varMap.get(key);
+                                            if (dtoken == null) {
+                                                varMap.put(key, token);
+                                                vars.add(token);
+                                            } else {
+                                                errors.add("Duplicate global variable " + token + " and " + dtoken);
+                                            }
+                                        }
+
+                                    }
+                                }
+                                {
+                                    String key = function.toString();
+                                    Function val = funMap.get(key);
+
+                                    if (val == null) {
+                                        funMap.put(key, function);
+                                        funs.add(function);
+                                    } else {
+                                        errors.add("Duplicate function " + function.name + " and " + val.name);
+                                    }
+                                }
+
+                                if (function.toString().equals(enter + ".main")) {
+                                    mainf = function;
+                                }
+                            }
+
+                            hasErrors |= printErrorsAndClear("AST errors:", errors);
+
+                            if (hasErrors) {
+                                throw new Exception(pac + " has errors");
+                            }
+                            System.err.println("Success!");
+                        } catch (Exception exception) {
+                            System.err.println(exception.getMessage());
+                        }
+                    }
+                }
+
+                queue.add(sys);
+                sys = null;
+            }
             System.err.println("Build program:");
 
             if (mainf == null) {
-                errors.add("Can't find void " + enter + ".main(char.2) function");
+                errors.add("Can't find void " + enter + ".main() function");
             } else {
                 if (mainf.type.type != EnumType.VOID) {
                     errors.add("The 'main' must be void function");
                 }
-            }
-
-            for (Function function : StandardFunctions.getFunctions()) {
-                funMap.put(function.toString(), function);
             }
 
             if (debug != null) {
@@ -259,21 +324,101 @@ public class Compiler {
                         function.println(out, 0);
                     }
                 }
+            }
 
-                int index = 0;
-                for (Function function : funs) {
-                    try (PrintWriter out = new PrintWriter(new File(debug + File.separator + (index++) + " " + function + "fun.txt"))) {
-                        VisibilityZone visibilityZone = function.getVisibilityZone(varMap, funMap, errors);
+            for (Function function : funs) {
+                FunctionZone visibilityZone = function.getVisibilityZone(varMap, funMap, errors);
+
+                if (debug != null) {
+                    try (PrintWriter out = new PrintWriter(new File(debug + File.separator + function + " fun.txt"))) {
                         visibilityZone.println(out, 2);
                     }
                 }
+
+                if (function == mainf) {
+                    programText.add("_main:");
+                    programText.add("        pusha");
+                }
+
+                visibilityZone.asm(programText, errors);
+
+                if (function == mainf) {
+                    programText.add("        popa");
+                    programText.add("        xor eax, eax");
+                }
+                programText.add("    ret");
+                programText.add("");
+
             }
 
-            hasErrors |= printErrorsAndClear("Builder errors:", errors);
-            if (hasErrors) {
+            if (printErrorsAndClear("Builder errors:", errors)) {
                 throw new Exception("Program has errors");
             }
             System.err.println("Success!");
+
+            for (int i = 0; i < vals.size(); i++) {
+                byte[] array = vals.get(i);
+
+                StringBuilder builder = new StringBuilder();
+
+                builder.append("    val");
+                builder.append(i);
+                builder.append(" db ");
+
+                boolean sep = false;
+
+                for (byte b : array) {
+                    if (sep) {
+                        builder.append(',');
+                    }
+                    sep = true;
+
+                    if (b > 0) {
+                        char c = (char) b;
+
+                        if (c != '\'' && c != '\"' && c != '\\') {
+                            if ((' ' <= c && c <= ']') || ('a' <= c && c <= '}')) {
+                                builder.append("'");
+                                builder.append(c);
+                                builder.append("'");
+                                continue;
+                            }
+                        }
+                    }
+                    builder.append(b);
+                }
+                programData.add(builder.toString());
+            }
+
+            try {
+                System.err.println("Write '" + enter + ".asm':");
+
+                try (PrintWriter out = new PrintWriter(new File(enter + ".asm"))) {
+
+                    out.println("global _main");
+                    out.println("extern _printf");
+                    out.println("extern _getchar");
+                    out.println("extern _malloc");
+                    out.println("extern _putchar");
+                    out.println();
+                    out.println("section .text");
+
+                    for (String line : programText) {
+                        out.println("    " + line);
+                    }
+
+                    out.println();
+
+                    out.println("section .data");
+                    for (String line : programData) {
+                        out.println("    " + line);
+                    }
+                }
+
+                System.err.println("Success!");
+            } catch (Exception exception) {
+                System.err.println(exception.getMessage());
+            }
 
         } catch (Exception exception) {
             System.err.println(exception.getMessage());

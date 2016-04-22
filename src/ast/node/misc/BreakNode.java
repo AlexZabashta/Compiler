@@ -28,7 +28,7 @@ public class BreakNode extends AbstractNode {
                 --n;
             }
             ++m;
-            cur = cur.parent;
+            cur = cur.parent();
         }
 
         if (n == 0) {

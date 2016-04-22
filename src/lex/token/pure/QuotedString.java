@@ -37,7 +37,10 @@ public class QuotedString extends Token implements ConstValue {
     public byte[] getConstValue() {
         int len = string.length();
 
-        ByteBuffer buffer = ByteBuffer.allocate(len * 4);
+        ByteBuffer buffer = ByteBuffer.allocate((len + 2) * 4);
+
+        buffer.put(LittleEndian.encode(-1));
+        buffer.put(LittleEndian.encode(len));
 
         for (int i = 0; i < len; i++) {
             buffer.put(LittleEndian.encode(string.charAt(i)));
