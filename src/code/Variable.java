@@ -1,6 +1,5 @@
 package code;
 
-import misc.EnumType;
 import misc.Type;
 
 public class Variable {
@@ -9,6 +8,9 @@ public class Variable {
     public final int index;
 
     public Variable(Type type, VisibilityZone visibilityZone, int index) {
+        if (type.idVoid()) {
+            throw new RuntimeException("Can't create void variable");
+        }
         this.type = type;
         this.visibilityZone = visibilityZone;
         this.index = index;

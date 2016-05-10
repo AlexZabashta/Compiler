@@ -10,6 +10,8 @@ import ast.node.op.FBracketsNode;
 import code.Environment;
 import code.FunctionZone;
 import code.Variable;
+import exception.Log;
+import exception.ParseException;
 
 public class InitFunction extends Function {
 
@@ -18,11 +20,11 @@ public class InitFunction extends Function {
     }
 
     @Override
-    public FunctionZone getVisibilityZone(Map<String, DeclarationToken> globalVariables, Map<String, Function> functions, List<String> errors) {
+    public FunctionZone getVisibilityZone(Map<String, DeclarationToken> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
         FunctionZone zone = new FunctionZone(this);
         Map<String, Variable> localVariables = new HashMap<String, Variable>();
         Environment environment = new Environment(localVariables, globalVariables, functions);
-        action.rValue(null, zone, environment, errors);
+        action.rValue(null, zone, environment, log);
         return zone;
     }
 

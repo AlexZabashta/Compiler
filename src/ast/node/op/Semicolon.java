@@ -1,7 +1,6 @@
 package ast.node.op;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.pure.Operator;
 import misc.Type;
@@ -11,6 +10,9 @@ import ast.node.RValue;
 import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class Semicolon extends AbstractNode implements RValue {
 
@@ -24,8 +26,10 @@ public class Semicolon extends AbstractNode implements RValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
-        rValue(null, z, e, errors);
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
+        VisibilityZone zone = z.subZone(false, operator);
+        left.action(zone, e, log);
+        right.action(zone, e, log);
     }
 
     @Override
@@ -53,25 +57,20 @@ public class Semicolon extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable var, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable var, VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone zone = z.subZone(false, operator);
-        left.action(zone, e, errors);
+        left.action(zone, e, log);
 
-        if (var == null || var.type.idVoid()) {
-            right.action(zone, e, errors);
-        } else {
-            try {
-                RValue rval = (RValue) right;
-                Type type = rval.type(e);
+        try {
+            RValue rval = (RValue) right;
+            Type type = rval.type(e);
 
-                if (type.idVoid()) {
-                    throw new ClassCastException();
-                }
-                rval.rValue(var, zone, e, errors);
-            } catch (ClassCastException fake) {
-                errors.add("Can't convert void type to " + var.type + "at " + operator);
+            if (type.idVoid()) {
+                throw new ClassCastException();
             }
-
+            rval.rValue(var, zone, e, log);
+        } catch (ClassCastException fake) {
+            log.addException(new SemanticException("Expected R-Value after", operator));
         }
 
     }
@@ -88,6 +87,16 @@ public class Semicolon extends AbstractNode implements RValue {
         } catch (ClassCastException fake) {
             return new Type();
         }
+    }
+
+    @Override
+    public boolean isRValue() {
+        return right.isRValue();
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

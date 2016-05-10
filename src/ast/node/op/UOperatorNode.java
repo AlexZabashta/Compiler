@@ -15,6 +15,9 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class UOperatorNode extends AbstractNode implements RValue {
 
@@ -27,46 +30,18 @@ public class UOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
-        rValue(null, z, e, errors);
-    }
-
-    public void not(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         Type type = node.type(e);
         if (type.idVoid()) {
-            errors.add("Can't take 'not' from void type " + operator);
+            log.addException(new SemanticException("Expected R-value", operator));
             return;
         }
 
         if (type.level != 0) {
-            errors.add("Can't take 'not' from array type " + operator);
+            log.addException(new SemanticException("Expected not array R-value", operator));
             return;
         }
-
-        if (dst == null || dst.type.idVoid()) {
-            node.action(z, e, errors);
-        } else {
-
-            VisibilityZone zone = z.subZone(false, operator);
-            Variable var = zone.createVariable(node.type(e));
-            node.rValue(var, zone, e, errors);
-
-            List<Variable> args = new ArrayList<Variable>();
-            args.add(var);
-
-            String funStr = Values.toStringType("sys.not", args);
-
-            Function fun = e.f.get(funStr);
-
-            if (fun == null) {
-                errors.add("Can't find " + funStr + " at " + operator);
-                return;
-            }
-
-            if (Values.cmp(dst.type, fun.type, errors, operator)) {
-                zone.addAction(new CallFunction(dst, funStr, args, null, operator));
-            }
-        }
+        node.action(z, e, log);
     }
 
     @Override
@@ -83,51 +58,48 @@ public class UOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
-        switch (operator.string) {
-        case "~": {
-            not(dst, z, e, errors);
-        }
-            break;
-        case "#": {
-            size(dst, z, e, errors);
-        }
-            break;
-        default:
-            throw new RuntimeException("Unknown unary operator " + operator);
-        }
-    }
-
-    public void size(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         Type type = node.type(e);
         if (type.idVoid()) {
-            errors.add("Can't take size from void type " + operator);
+            log.addException(new SemanticException("Expected R-value", operator));
             return;
         }
 
-        if (dst == null || dst.type.idVoid()) {
-            node.action(z, e, errors);
-        } else {
+        if (type.level != 0) {
+            log.addException(new SemanticException("Expected not array R-value", operator));
+            return;
+        }
 
-            VisibilityZone zone = z.subZone(false, operator);
-            Variable var = zone.createVariable(node.type(e));
-            node.rValue(var, zone, e, errors);
+        VisibilityZone zone = z.subZone(false, operator);
+        Variable var = zone.createVariable(node.type(e));
+        node.rValue(var, zone, e, log);
 
-            List<Variable> args = new ArrayList<Variable>();
-            args.add(var);
+        List<Variable> args = new ArrayList<Variable>();
+        args.add(var);
 
-            String funStr = Values.toStringType("sys.size", args);
+        String funStr = Values.toStringType("sys." + funName(), args);
 
-            Function fun = e.f.get(funStr);
+        Function fun = e.f.get(funStr);
 
-            if (fun == null) {
-                errors.add("Can't find " + funStr + " at " + operator);
-                return;
-            }
+        if (fun == null) {
+            log.addException(new SemanticException("Can't find " + funStr + " declaration", operator));
+            return;
+        }
 
-            if (Values.cmp(dst.type, fun.type, errors, operator)) {
-                zone.addAction(new CallFunction(dst, funStr, args, null, operator));
-            }
+        if (Values.cmp(dst.type, fun.type, log, operator)) {
+            zone.addAction(new CallFunction(dst, funStr, args, null, operator));
+        }
+
+    }
+
+    public String funName() {
+        switch (operator.string) {
+        case "~":
+            return "not";
+        case "#":
+            return "size";
+        default:
+            throw new RuntimeException("Unknown unary operator " + operator);
         }
     }
 
@@ -147,6 +119,16 @@ public class UOperatorNode extends AbstractNode implements RValue {
             throw new RuntimeException("Unknown unary operator " + operator);
         }
 
+    }
+
+    @Override
+    public boolean isRValue() {
+        return node.isRValue();
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

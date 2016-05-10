@@ -20,6 +20,7 @@ import lex.token.pure.CharToken;
 import lex.token.pure.NumberToken;
 import lex.token.pure.Operator;
 import lex.token.pure.QuotedString;
+import lex.token.pure.SimpleString;
 import ast.node.LValue;
 import ast.node.RValue;
 import ast.node.leaf.BoolNode;
@@ -44,6 +45,10 @@ import ast.node.op.FBracketsNode;
 import ast.node.op.RBracketsNode;
 import ast.node.op.Semicolon;
 import ast.node.op.UOperatorNode;
+import exception.ASTException;
+import exception.Log;
+import exception.ParseException;
+import exception.SyntaxesException;
 
 public class AST {
     public static boolean isSep(Token token) {
@@ -54,12 +59,26 @@ public class AST {
         return false;
     }
 
-    public static Node parse(String pac, List<Token> tokens, int priority, List<String> errors) {
+    public static Node parse(SimpleString pac, List<Token> tokens, int priority, Log log) throws ParseException {
         if (tokens.isEmpty()) {
             return new Nop();
         }
 
         int size = tokens.size();
+        Token first = tokens.get(0);
+
+        if ((priority == 1) && (first instanceof ReturnToken)) {
+            ReturnToken returnToken = (ReturnToken) first;
+            Node node = parse(pac, tokens.subList(1, size), priority, log);
+            try {
+                return new ReturnVNode((RValue) node, returnToken);
+            } catch (ClassCastException fake) {
+                log.addException(new ASTException("Expected R-value after", returnToken));
+                ErrorNode errorNode = new ErrorNode();
+                errorNode.nodes.add(node);
+                return errorNode;
+            }
+        }
 
         if (priority < 11) {
 
@@ -77,17 +96,17 @@ public class AST {
                     Operator operator = (Operator) token;
                     if (operator.priority == priority) {
                         if (operator.string == ",") {
-                            errors.add("Use ';' as separator at " + token);
+                            log.addException(new SyntaxesException("Expected ';' as separator", token));
                             operator = new Operator(";", operator.location);
                         }
                         Node left, right;
 
                         if (inv) {
-                            left = parse(pac, tokens.subList(0, index), priority, errors);
-                            right = parse(pac, tokens.subList(index + 1, size), priority + 1, errors);
+                            left = parse(pac, tokens.subList(0, index), priority, log);
+                            right = parse(pac, tokens.subList(index + 1, size), priority + 1, log);
                         } else {
-                            left = parse(pac, tokens.subList(0, index), priority + 1, errors);
-                            right = parse(pac, tokens.subList(index + 1, size), priority, errors);
+                            left = parse(pac, tokens.subList(0, index), priority + 1, log);
+                            right = parse(pac, tokens.subList(index + 1, size), priority, log);
                         }
 
                         if (operator.string == ";") {
@@ -98,7 +117,7 @@ public class AST {
                             try {
                                 return new Assignment((LValue) left, (RValue) right, operator);
                             } catch (ClassCastException fake) {
-                                errors.add("Expected L-value before and R-value after " + operator);
+                                log.addException(new ASTException("Expected L-value before and R-value after", token));
                                 ErrorNode node = new ErrorNode();
                                 node.nodes.add(left);
                                 node.nodes.add(right);
@@ -109,7 +128,7 @@ public class AST {
                         try {
                             return new BOperatorNode((RValue) left, (RValue) right, operator);
                         } catch (ClassCastException fake) {
-                            errors.add("Expected R-value before and after " + operator);
+                            log.addException(new ASTException("Expected R-value before and after", operator));
                             ErrorNode node = new ErrorNode();
                             node.nodes.add(left);
                             node.nodes.add(right);
@@ -120,19 +139,17 @@ public class AST {
                 }
             }
 
-            return parse(pac, tokens, priority + 1, errors);
+            return parse(pac, tokens, priority + 1, log);
         }
-
-        Token first = tokens.get(0);
 
         if (size == 1) {
             if (first instanceof BracketsToken) {
                 BracketsToken bracketsToken = (BracketsToken) first;
 
                 if (bracketsToken.type == BracketsType.FLOWER) {
-                    return parseFB(pac, bracketsToken, errors);
+                    return parseFB(pac, bracketsToken, log);
                 } else {
-                    return parseRB(pac, bracketsToken, errors);
+                    return parseRB(pac, bracketsToken, log);
                 }
             }
 
@@ -176,33 +193,20 @@ public class AST {
             } catch (ClassCastException fake) {
             }
 
-            errors.add("Unexpected token " + first);
+            log.addException(new SyntaxesException("Unexpected token", first));
 
             return new Nop();
-        }
-
-        if (first instanceof ReturnToken) {
-            ReturnToken returnToken = (ReturnToken) first;
-            Node node = parse(pac, tokens.subList(1, size), priority, errors);
-            try {
-                return new ReturnVNode((RValue) node, returnToken);
-            } catch (ClassCastException fake) {
-                errors.add("Expected R-value  after " + returnToken);
-                ErrorNode errorNode = new ErrorNode();
-                errorNode.nodes.add(node);
-                return errorNode;
-            }
         }
 
         if (first instanceof Operator) {
             Operator operator = (Operator) first;
             if (operator.priority == 11) {
-                Node node = parse(pac, tokens.subList(1, size), priority, errors);
+                Node node = parse(pac, tokens.subList(1, size), priority, log);
 
                 try {
                     return new UOperatorNode((RValue) node, operator);
                 } catch (ClassCastException fake) {
-                    errors.add("Expected R-value  after " + operator);
+                    log.addException(new ASTException("Expected R-value after", operator));
                     ErrorNode errorNode = new ErrorNode();
                     errorNode.nodes.add(node);
                     return errorNode;
@@ -214,13 +218,13 @@ public class AST {
         if (last instanceof BracketsToken) {
             BracketsToken bracketsToken = (BracketsToken) last;
             if (bracketsToken.type == BracketsType.SQUARE) {
-                Node array = parse(pac, tokens.subList(0, size - 1), priority, errors);
-                Node index = parse(pac, bracketsToken.tokens, 0, errors);
+                Node array = parse(pac, tokens.subList(0, size - 1), priority, log);
+                Node index = parse(pac, bracketsToken.tokens, 0, log);
 
                 try {
                     return new ArrayNode((RValue) array, (RValue) index, bracketsToken);
                 } catch (ClassCastException fake) {
-                    errors.add("Expected R-value at " + bracketsToken);
+                    log.addException(new ASTException("Expected R-value in brackets", bracketsToken));
                     ErrorNode errorNode = new ErrorNode();
                     errorNode.nodes.add(array);
                     errorNode.nodes.add(index);
@@ -235,13 +239,13 @@ public class AST {
                 VarToken varToken = (VarToken) first;
 
                 if (varToken.pac == null) {
-                    varToken = varToken.addPac(pac, errors);
+                    varToken = varToken.addPac(pac, log);
                 }
                 BracketsToken bracketsToken = (BracketsToken) last;
                 if (bracketsToken.type != BracketsType.ROUND) {
-                    errors.add("Brackets must be round type " + bracketsToken);
+                    log.addException(new ASTException("Expected round brackets", bracketsToken));
                 }
-                List<Node> vars = split(pac, bracketsToken, errors);
+                List<Node> vars = split(pac, bracketsToken, log);
 
                 try {
                     List<RValue> args = new ArrayList<RValue>();
@@ -250,7 +254,7 @@ public class AST {
                     }
                     return new CallNode(varToken, args);
                 } catch (ClassCastException fake) {
-                    errors.add("Expected R-value as argument's of function " + varToken);
+                    log.addException(new ASTException("Expected R-value as argument's of function", bracketsToken));
                     ErrorNode errorNode = new ErrorNode();
                     errorNode.nodes.addAll(vars);
                     return errorNode;
@@ -264,12 +268,12 @@ public class AST {
             ForToken forToken = (ForToken) tokens.get(0);
             BracketsToken preStPost = (BracketsToken) tokens.get(1);
             if (preStPost.type != BracketsType.ROUND) {
-                errors.add("Brackets must be round type " + preStPost);
+                log.addException(new ASTException("Expected round brackets", preStPost));
             }
-            Node action = parse(pac, tokens.subList(2, size), priority, errors);
-            List<Node> vars = split(pac, preStPost, errors);
+            Node action = parse(pac, tokens.subList(2, size), priority, log);
+            List<Node> vars = split(pac, preStPost, log);
             if (vars.size() > 3) {
-                errors.add("Too many nodes in () token " + preStPost);
+                log.addException(new ASTException("Too many nodes in brackets", preStPost));
                 ErrorNode errorNode = new ErrorNode();
                 errorNode.nodes.addAll(vars);
                 errorNode.nodes.add(action);
@@ -293,7 +297,7 @@ public class AST {
                     return new ForNode(forToken, vars.get(0), (RValue) vars.get(1), vars.get(2), action);
                 }
             } catch (ClassCastException f2) {
-                errors.add("Expected empty or R-value as state " + preStPost);
+                log.addException(new ASTException("Expected empty or R-value as state", preStPost));
                 ErrorNode errorNode = new ErrorNode();
                 errorNode.nodes.addAll(vars);
                 errorNode.nodes.add(action);
@@ -306,16 +310,16 @@ public class AST {
         try {
             WhileToken whileToken = (WhileToken) tokens.get(0);
             BracketsToken state = (BracketsToken) tokens.get(1);
-            Node action = parse(pac, tokens.subList(2, size), priority, errors);
+            Node action = parse(pac, tokens.subList(2, size), priority, log);
             if (state.tokens.isEmpty()) {
                 RBracketsNode stateNode = new RBracketsNode(new BoolNode(new BoolToken(false, whileToken.location)), state);
                 return new WhileNode(whileToken, stateNode, action);
             } else {
-                RBracketsNode stateNode = parseRB(pac, state, errors);
+                RBracketsNode stateNode = parseRB(pac, state, log);
                 if (stateNode.node instanceof RValue) {
                     return new WhileNode(whileToken, stateNode, action);
                 } else {
-                    errors.add("Expected empty or R-value as state " + state);
+                    log.addException(new ASTException("Expected empty or R-value as state", state));
                     ErrorNode errorNode = new ErrorNode();
                     errorNode.nodes.add(stateNode);
                     errorNode.nodes.add(action);
@@ -334,14 +338,14 @@ public class AST {
                 ElseToken elseToken = (ElseToken) tokens.get(3);
                 BracketsToken y = (BracketsToken) tokens.get(4);
 
-                RBracketsNode stateNode = parseRB(pac, state, errors);
+                RBracketsNode stateNode = parseRB(pac, state, log);
 
                 if (x.type == BracketsType.ROUND) {
 
-                    RBracketsNode xa = parseRB(pac, x, errors);
-                    RBracketsNode ya = parseRB(pac, y, errors);
+                    RBracketsNode xa = parseRB(pac, x, log);
+                    RBracketsNode ya = parseRB(pac, y, log);
                     if (!(stateNode.node instanceof RValue)) {
-                        errors.add("Expected empty or R-value as state " + state);
+                        log.addException(new ASTException("Expected empty or R-value as state", state));
                         ErrorNode errorNode = new ErrorNode();
                         errorNode.nodes.add(stateNode);
                         errorNode.nodes.add(xa);
@@ -352,10 +356,10 @@ public class AST {
                     return new IfNode(ifToken, stateNode, xa, ya);
                 } else {
 
-                    FBracketsNode xa = parseFB(pac, x, errors);
-                    FBracketsNode ya = parseFB(pac, y, errors);
+                    FBracketsNode xa = parseFB(pac, x, log);
+                    FBracketsNode ya = parseFB(pac, y, log);
                     if (!(stateNode.node instanceof RValue)) {
-                        errors.add("Expected empty or R-value as state " + state);
+                        log.addException(new ASTException("Expected empty or R-value as state", state));
                         ErrorNode errorNode = new ErrorNode();
                         errorNode.nodes.add(stateNode);
                         errorNode.nodes.add(xa);
@@ -375,13 +379,13 @@ public class AST {
                 BracketsToken state = (BracketsToken) tokens.get(1);
                 BracketsToken x = (BracketsToken) tokens.get(2);
 
-                RBracketsNode stateNode = parseRB(pac, state, errors);
+                RBracketsNode stateNode = parseRB(pac, state, log);
 
                 if (x.type == BracketsType.ROUND) {
-                    RBracketsNode xa = parseRB(pac, x, errors);
+                    RBracketsNode xa = parseRB(pac, x, log);
                     RBracketsNode ya = new RBracketsNode(new Nop(), new BracketsToken(BracketsType.ROUND, ifToken.location));
                     if (!(stateNode.node instanceof RValue)) {
-                        errors.add("Expected empty or R-value as state " + state);
+                        log.addException(new ASTException("Expected empty or R-value as state", state));
                         ErrorNode errorNode = new ErrorNode();
                         errorNode.nodes.add(stateNode);
                         errorNode.nodes.add(xa);
@@ -389,10 +393,10 @@ public class AST {
                     }
                     return new IfNode(ifToken, stateNode, xa, ya);
                 } else {
-                    FBracketsNode xa = parseFB(pac, x, errors);
+                    FBracketsNode xa = parseFB(pac, x, log);
                     FBracketsNode ya = new FBracketsNode(new Nop(), new BracketsToken(BracketsType.FLOWER, ifToken.location));
                     if (!(stateNode.node instanceof RValue)) {
-                        errors.add("Expected empty or R-value as state " + state);
+                        log.addException(new ASTException("Expected empty or R-value as state", state));
                         ErrorNode errorNode = new ErrorNode();
                         errorNode.nodes.add(stateNode);
                         errorNode.nodes.add(xa);
@@ -416,34 +420,34 @@ public class AST {
             builder.append(token.toTokenString());
         }
 
-        errors.add("Unexpected tokens combination " + builder + " at " + location);
+        log.addException(new SyntaxesException("Unexpected tokens combination", builder.toString(), location));
 
         ErrorNode errorNode = new ErrorNode();
 
         for (int i = 0; i < size; i++) {
-            errorNode.nodes.add(parse(pac, tokens.subList(i, i + 1), 0, errors));
+            errorNode.nodes.add(parse(pac, tokens.subList(i, i + 1), 0, log));
         }
 
         return errorNode;
     }
 
-    public static FBracketsNode parseFB(String pac, BracketsToken token, List<String> errors) {
+    public static FBracketsNode parseFB(SimpleString pac, BracketsToken token, Log log) throws ParseException {
         if (token.type != BracketsType.FLOWER) {
-            errors.add("Expected {} brackets at " + token);
+            log.addException(new SyntaxesException("Expected {} brackets", token));
         }
-        return new FBracketsNode(AST.parse(pac, token.tokens, 0, errors), token);
+        return new FBracketsNode(AST.parse(pac, token.tokens, 0, log), token);
     }
 
-    public static RBracketsNode parseRB(String pac, BracketsToken token, List<String> errors) {
+    public static RBracketsNode parseRB(SimpleString pac, BracketsToken token, Log log) throws ParseException {
         if (token.type != BracketsType.ROUND) {
-            errors.add("Expected () brackets at " + token);
+            log.addException(new SyntaxesException("Expected () brackets", token));
         }
-        return new RBracketsNode(AST.parse(pac, token.tokens, 0, errors), token);
+        return new RBracketsNode(AST.parse(pac, token.tokens, 0, log), token);
     }
 
-    public static List<Node> split(String pac, BracketsToken bracketsToken, List<String> errors) {
+    public static List<Node> split(SimpleString pac, BracketsToken bracketsToken, Log log) throws ParseException {
         if (bracketsToken.type != BracketsType.ROUND) {
-            errors.add("Expected () brackets at " + bracketsToken);
+            log.addException(new SyntaxesException("Expected () brackets", bracketsToken));
         }
 
         List<Node> vars = new ArrayList<Node>();
@@ -456,7 +460,7 @@ public class AST {
             while (r < n && !isSep(tokens.get(r))) {
                 ++r;
             }
-            vars.add(parse(pac, tokens.subList(l, r), 0, errors));
+            vars.add(parse(pac, tokens.subList(l, r), 0, log));
             l = r + 1;
         }
 

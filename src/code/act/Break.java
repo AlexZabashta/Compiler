@@ -3,6 +3,7 @@ package code.act;
 import java.io.PrintWriter;
 import java.util.List;
 
+import asm.Command;
 import lex.Token;
 import code.Action;
 import code.Variable;
@@ -29,7 +30,7 @@ public class Break extends Action {
     }
 
     @Override
-    public void asm(List<String> programText, List<String> errors) {
+    public void asm(List<Command> programText) {
         VisibilityZone cur = parent;
         int sp = 0;
 

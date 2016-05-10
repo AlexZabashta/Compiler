@@ -2,6 +2,7 @@ package code;
 
 import java.util.List;
 
+import asm.Command;
 import ast.Function;
 
 public class FunctionZone extends VisibilityZone {
@@ -15,12 +16,12 @@ public class FunctionZone extends VisibilityZone {
     }
 
     @Override
-    public void asm(List<String> programText, List<String> errors) {
+    public void asm(List<Command> programText) {
         end();
         programText.add(label() + ":" + comment());
 
         for (Action action : actions) {
-            action.asm(programText, errors);
+            action.asm(programText);
         }
     }
 

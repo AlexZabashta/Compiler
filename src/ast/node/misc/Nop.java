@@ -1,16 +1,16 @@
 package ast.node.misc;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import ast.node.AbstractNode;
 import code.Environment;
 import code.VisibilityZone;
+import exception.Log;
 
 public class Nop extends AbstractNode {
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) {
         z.addAction(new code.act.Nop());
     }
 
@@ -33,6 +33,16 @@ public class Nop extends AbstractNode {
     @Override
     public String toString() {
         return "nop";
+    }
+
+    @Override
+    public boolean isRValue() {
+        return false;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

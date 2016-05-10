@@ -1,7 +1,6 @@
 package ast.node.misc;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.key_word.ReturnToken;
 import ast.node.AbstractNode;
@@ -10,6 +9,9 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.Break;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class ReturnVNode extends AbstractNode {
 
@@ -22,14 +24,14 @@ public class ReturnVNode extends AbstractNode {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone rz = z.subZone(false, returnToken);
         Variable res = z.root().result;
 
-        if (res == null || res.type.idVoid()) {
-            errors.add("Can't return value in void function at " + returnToken);
+        if (res == null) {
+            log.addException(new SemanticException("Can't return value in void function", returnToken));
         } else {
-            node.rValue(res, rz, e, errors);
+            node.rValue(res, rz, e, log);
             z.addAction(new Break(z.level + 1, null, returnToken));
         }
 
@@ -52,6 +54,16 @@ public class ReturnVNode extends AbstractNode {
     @Override
     public String toString() {
         return returnToken.toString();
+    }
+
+    @Override
+    public boolean isRValue() {
+        return false;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

@@ -1,13 +1,15 @@
 package ast.node.misc;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.fold.BreakToken;
 import ast.node.AbstractNode;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.Break;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class BreakNode extends AbstractNode {
 
@@ -18,7 +20,7 @@ public class BreakNode extends AbstractNode {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         int n = breakToken.level, m = 0;
 
         VisibilityZone cur = z;
@@ -34,7 +36,7 @@ public class BreakNode extends AbstractNode {
         if (n == 0) {
             z.addAction(new Break(m, null, breakToken));
         } else {
-            errors.add(n + " visibility zones remain at " + breakToken);
+            log.addException(new SemanticException(n + " visibility zones remain", breakToken));
         }
     }
 
@@ -52,6 +54,16 @@ public class BreakNode extends AbstractNode {
     @Override
     public String toString() {
         return breakToken.toString();
+    }
+
+    @Override
+    public boolean isRValue() {
+        return false;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

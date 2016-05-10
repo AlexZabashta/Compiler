@@ -15,6 +15,7 @@ import java.util.Set;
 
 import code.FunctionZone;
 import code.VisibilityZone;
+import exception.Log;
 import lex.FileTokenizer;
 import lex.TapeFold;
 import lex.Token;
@@ -98,6 +99,8 @@ public class Compiler {
             }
 
             queue.add(enter);
+
+            Log log = new Log(true);
             List<String> errors = new ArrayList<String>();
 
             List<String> programData = new ArrayList<>();
@@ -189,7 +192,7 @@ public class Compiler {
                                 }
                             }
 
-                            List<Token> tokens = FileTokenizer.split(new File(pac + ".src"), errors);
+                            List<Token> tokens = FileTokenizer.split(new File(pac + ".src"), log);
                             tokens = TapeFold.filterComments(tokens);
 
                             tokens = TapeFold.foldStrings(tokens, errors);
@@ -340,7 +343,7 @@ public class Compiler {
                     programText.add("        pusha");
                 }
 
-                visibilityZone.asm(programText, errors);
+                visibilityZone.asm(programText);
 
                 if (function == mainf) {
                     programText.add("        popa");

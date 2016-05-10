@@ -1,16 +1,16 @@
 package ast.node;
 
-import java.util.List;
-
 import ast.Node;
 import misc.Type;
 import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
+import exception.Log;
+import exception.ParseException;
 
 public interface RValue extends Node {
 
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors);
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException;
 
     public Type type(Environment e);
 }

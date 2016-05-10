@@ -48,4 +48,14 @@ public class ErrorNode extends AbstractNode {
         return "error";
     }
 
+    @Override
+    public boolean isRValue() {
+        return false;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
+    }
+
 }

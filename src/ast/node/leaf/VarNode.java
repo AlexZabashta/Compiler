@@ -1,7 +1,6 @@
 package ast.node.leaf;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.fold.DeclarationToken;
 import lex.token.fold.VarToken;
@@ -15,6 +14,9 @@ import code.VisibilityZone;
 import code.act.LoadGVar;
 import code.act.SetGVar;
 import code.act.SetLVar;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class VarNode extends AbstractNode implements LRValue {
     public final VarToken token;
@@ -24,15 +26,15 @@ public class VarNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public void lValue(Variable src, VisibilityZone z, Environment e, List<String> errors) {
+    public void lValue(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
         if (token.pac == null) {
             Variable dst = e.lv.get(token.toTokenString());
             if (dst == null) {
-                errors.add("Cant find declaration of " + token.toTokenString());
+                log.addException(new SemanticException("Cant find declaration", token));
                 return;
             }
 
-            if (Values.cmp(dst.type, src.type, errors, token)) {
+            if (Values.cmp(dst.type, src.type, log, token)) {
                 z.addAction(new SetLVar(dst, src, token));
             }
 
@@ -40,11 +42,11 @@ public class VarNode extends AbstractNode implements LRValue {
             DeclarationToken declarationToken = e.gv.get(token.toTokenString());
 
             if (declarationToken == null) {
-                errors.add("Cant find declaration of " + token);
+                log.addException(new SemanticException("Cant find declaration", token));
                 return;
             }
 
-            if (Values.cmp(declarationToken, src.type, errors)) {
+            if (Values.cmp(declarationToken, src.type, log)) {
                 z.addAction(new SetGVar(token.toTokenString(), src, null, declarationToken));
             }
         }
@@ -63,15 +65,15 @@ public class VarNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         if (token.pac == null) {
             Variable src = e.lv.get(token.toTokenString());
             if (src == null) {
-                errors.add("Cant find declaration of " + token.toTokenString());
+                log.addException(new SemanticException("Cant find declaration", token));
                 return;
             }
 
-            if (Values.cmp(dst.type, src.type, errors, token)) {
+            if (Values.cmp(dst.type, src.type, log, token)) {
                 z.addAction(new SetLVar(dst, src, token));
             }
 
@@ -79,11 +81,11 @@ public class VarNode extends AbstractNode implements LRValue {
             DeclarationToken declarationToken = e.gv.get(token.toTokenString());
 
             if (declarationToken == null) {
-                errors.add("Cant find declaration of " + token);
+                log.addException(new SemanticException("Cant find declaration", token));
                 return;
             }
 
-            if (Values.cmp(dst.type, declarationToken, errors)) {
+            if (Values.cmp(dst.type, declarationToken, log)) {
                 z.addAction(new LoadGVar(dst, token.toTokenString(), declarationToken));
             }
         }
@@ -102,6 +104,16 @@ public class VarNode extends AbstractNode implements LRValue {
                 return declarationToken.typeToken.type;
             }
         }
-        return new Type();
+        return null;
+    }
+
+    @Override
+    public boolean isRValue() {
+        return true;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return true;
     }
 }

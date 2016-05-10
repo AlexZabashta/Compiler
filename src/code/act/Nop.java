@@ -3,6 +3,7 @@ package code.act;
 import java.io.PrintWriter;
 import java.util.List;
 
+import asm.Command;
 import lex.Token;
 import code.Action;
 
@@ -23,7 +24,7 @@ public class Nop extends Action {
     }
 
     @Override
-    public void asm(List<String> programText, List<String> errors) {
+    public void asm(List<Command> programText) {
         programText.add(label() + ":" + comment());
         programText.add("        nop");
 

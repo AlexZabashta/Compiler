@@ -3,6 +3,7 @@ package code;
 import java.io.PrintWriter;
 import java.util.List;
 
+import asm.Command;
 import lex.Token;
 
 public abstract class Action {
@@ -61,6 +62,6 @@ public abstract class Action {
         }
     }
 
-    public void asm(List<String> programText, List<String> errors) {
+    public void asm(List<Command> programText) {
     }
 }

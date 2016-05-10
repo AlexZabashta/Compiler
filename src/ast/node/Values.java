@@ -7,6 +7,9 @@ import lex.token.fold.DeclarationToken;
 import misc.Characters;
 import misc.Type;
 import code.Variable;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class Values {
 
@@ -22,23 +25,23 @@ public class Values {
         return builder.toString();
     }
 
-    public static boolean cmp(Type dstType, Type srcType, List<String> errors, Token token) {
+    public static boolean cmp(Type dstType, Type srcType, Log log, Token token) throws ParseException {
         if (dstType.equals(srcType)) {
             return true;
         }
-        errors.add("Type mismatch " + srcType + " -> " + dstType + " at " + token);
+        log.addException(new SemanticException("Type mismatch " + srcType + " -> " + dstType, token));
         return false;
     }
 
-    public static boolean cmp(Variable dst, Variable src, List<String> errors, Token token) {
-        return cmp(dst.type, src.type, errors, token);
+    public static boolean cmp(Variable dst, Variable src, Log log, Token token) throws ParseException {
+        return cmp(dst.type, src.type, log, token);
     }
 
-    public static boolean cmp(Type dstType, DeclarationToken srcDec, List<String> errors) {
-        return cmp(dstType, srcDec.typeToken.type, errors, srcDec);
+    public static boolean cmp(Type dstType, DeclarationToken srcDec, Log log) throws ParseException {
+        return cmp(dstType, srcDec.typeToken.type, log, srcDec);
     }
 
-    public static boolean cmp(DeclarationToken dstDec, Type srcType, List<String> errors) {
-        return cmp(dstDec.typeToken.type, srcType, errors, dstDec);
+    public static boolean cmp(DeclarationToken dstDec, Type srcType, Log log) throws ParseException {
+        return cmp(dstDec.typeToken.type, srcType, log, dstDec);
     }
 }

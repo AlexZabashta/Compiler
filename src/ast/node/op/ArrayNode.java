@@ -16,6 +16,9 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class ArrayNode extends AbstractNode implements LRValue {
 
@@ -29,25 +32,37 @@ public class ArrayNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
-        rValue(null, z, e, errors);
-    }
-
-    @Override
-    public void lValue(Variable src, VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone zone = z.subZone(false, token);
 
         Type arrayType = array.type(e);
 
         if (arrayType.idVoid()) {
-            errors.add("Can't cast void to array " + token);
+            log.addException(new SemanticException("Can't cast void to array", token));
             return;
         }
 
         Variable a = zone.createVariable(arrayType);
-        array.rValue(a, zone, e, errors);
+        array.rValue(a, zone, e, log);
         Variable i = zone.createVariable(new Type(EnumType.INT));
-        index.rValue(i, zone, e, errors);
+        index.rValue(i, zone, e, log);
+    }
+
+    @Override
+    public void lValue(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+        VisibilityZone zone = z.subZone(false, token);
+
+        Type arrayType = array.type(e);
+
+        if (arrayType.idVoid()) {
+            log.addException(new SemanticException("Can't cast void to array", token));
+            return;
+        }
+
+        Variable a = zone.createVariable(arrayType);
+        array.rValue(a, zone, e, log);
+        Variable i = zone.createVariable(new Type(EnumType.INT));
+        index.rValue(i, zone, e, log);
 
         List<Variable> args = new ArrayList<Variable>();
         args.add(a);
@@ -57,17 +72,17 @@ public class ArrayNode extends AbstractNode implements LRValue {
         Function fun = e.f.get(funStr);
 
         if (fun == null) {
-            errors.add("Can't find " + funStr + " at " + token);
+            log.addException(new SemanticException("Can't find " + funStr, token));
             return;
         }
 
         if (arrayType.level == 0) {
-            if (Values.cmp(new Type(EnumType.BOOL), src.type, errors, token)) {
+            if (Values.cmp(new Type(EnumType.BOOL), src.type, log, token)) {
                 zone.addAction(new CallFunction(null, funStr, args, null, token));
             }
         } else {
             Type type = new Type(arrayType.type, arrayType.level - 1);
-            if (Values.cmp(type, src.type, errors, token)) {
+            if (Values.cmp(type, src.type, log, token)) {
                 zone.addAction(new CallFunction(null, funStr, args, null, token));
             }
         }
@@ -90,20 +105,20 @@ public class ArrayNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone zone = z.subZone(false, token);
 
         Type arrayType = array.type(e);
 
         if (arrayType.idVoid()) {
-            errors.add("Can't cast void to array " + token);
+            log.addException(new SemanticException("Can't cast void to array", token));
             return;
         }
 
         Variable a = zone.createVariable(arrayType);
-        array.rValue(a, zone, e, errors);
+        array.rValue(a, zone, e, log);
         Variable i = zone.createVariable(new Type(EnumType.INT));
-        index.rValue(i, zone, e, errors);
+        index.rValue(i, zone, e, log);
 
         List<Variable> args = new ArrayList<Variable>();
         args.add(a);
@@ -113,18 +128,13 @@ public class ArrayNode extends AbstractNode implements LRValue {
         Function fun = e.f.get(funStr);
 
         if (fun == null) {
-            errors.add("Can't find " + funStr + " at " + token);
+            log.addException(new SemanticException("Can't find " + funStr, token));
             return;
         }
 
-        if (dst == null || dst.type.idVoid()) {
-            dst = null;
-        }
-
-        if (dst == null || Values.cmp(dst.type, fun.type, errors, token)) {
+        if (Values.cmp(dst.type, fun.type, log, token)) {
             zone.addAction(new CallFunction(dst, funStr, args, null, token));
         }
-
     }
 
     @Override
@@ -140,6 +150,16 @@ public class ArrayNode extends AbstractNode implements LRValue {
         } else {
             return new Type(type.type, type.level - 1);
         }
+    }
+
+    @Override
+    public boolean isRValue() {
+        return array.isRValue();
+    }
+
+    @Override
+    public boolean isLValue() {
+        return array.isLValue();
     }
 
 }

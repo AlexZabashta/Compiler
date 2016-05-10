@@ -9,9 +9,12 @@ import java.util.List;
 
 import lex.state.State;
 import misc.Characters;
+import exception.Log;
+import exception.ParseException;
+import exception.SyntaxesException;
 
 public class FileTokenizer {
-    public static List<Token> split(File file, List<String> errors) throws IOException {
+    public static List<Token> split(File file, Log log) throws IOException, ParseException {
 
         State state = State.START;
         List<Token> output = new ArrayList<Token>();
@@ -23,20 +26,20 @@ public class FileTokenizer {
             for (int lineIndex = 1; (line = input.readLine()) != null; lineIndex++) {
                 int length = line.length();
                 int column = 1;
-                for (int i = 0; i < length; i++) {
-                    char symbol = line.charAt(i);
+                for (int i = 0; i <= length; i++) {
+                    char symbol = i == length ? '\n' : line.charAt(i);
                     Location location = new Location(file.getName(), lineIndex, column);
 
                     if (Characters.isValid(symbol)) {
                         try {
                             state = state.nextState(symbol, output, tokenBuilder, location);
-                        } catch (IllegalStateException exception) {
-                            errors.add(exception.getMessage());
+                        } catch (SyntaxesException exception) {
+                            log.addException(exception);
                             state = State.START;
                             tokenBuilder = new TokenBuilder();
                         }
                     } else {
-                        errors.add("Invalid char code " + (int) symbol + " at " + location);
+                        log.addException(new SyntaxesException("Invalid char", "code " + ((int) symbol), location));
                     }
 
                     if (symbol == '\t') {
@@ -45,15 +48,6 @@ public class FileTokenizer {
                         column += 1;
                     }
 
-                }
-                Location location = new Location(file.getName(), lineIndex, column);
-
-                try {
-                    state = state.nextState('\n', output, tokenBuilder, location);
-                } catch (IllegalStateException exception) {
-                    errors.add(exception.getMessage());
-                    state = State.START;
-                    tokenBuilder = new TokenBuilder();
                 }
 
             }

@@ -1,19 +1,23 @@
 package ast.node.op;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.Token;
 import misc.Type;
 import ast.Node;
 import ast.node.AbstractNode;
+import ast.node.LRValue;
+import ast.node.LValue;
 import ast.node.RValue;
 import ast.node.misc.Nop;
 import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
-public class FBracketsNode extends AbstractNode implements RValue {
+public class FBracketsNode extends AbstractNode implements LRValue {
 
     public final Node node;
     public final Token token;
@@ -29,8 +33,10 @@ public class FBracketsNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
-        rValue(null, z, e, errors);
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
+        VisibilityZone zone = z.subZone(true, token);
+        node.action(zone, e, log);
+        zone.removeAll(e.lv);
     }
 
     @Override
@@ -58,18 +64,16 @@ public class FBracketsNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone zone = z.subZone(true, token);
-        if (dst == null || dst.type.idVoid()) {
-            node.action(zone, e, errors);
-        } else {
-            try {
-                RValue rval = (RValue) node;
-                rval.rValue(dst, zone, e, errors);
-            } catch (ClassCastException fakse) {
-                errors.add("Unexpected void in " + token);
-            }
+
+        try {
+            RValue rval = (RValue) node;
+            rval.rValue(dst, zone, e, log);
+        } catch (ClassCastException fakse) {
+            log.addException(new SemanticException("Expected R-value in brackets", token));
         }
+
         zone.removeAll(e.lv);
     }
 
@@ -85,6 +89,30 @@ public class FBracketsNode extends AbstractNode implements RValue {
         } catch (ClassCastException fakse) {
             return new Type();
         }
+    }
+
+    @Override
+    public boolean isRValue() {
+        return node.isRValue();
+    }
+
+    @Override
+    public boolean isLValue() {
+        return node.isLValue();
+    }
+
+    @Override
+    public void lValue(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+        VisibilityZone zone = z.subZone(true, token);
+
+        try {
+            LValue lval = (LValue) node;
+            lval.lValue(src, zone, e, log);
+        } catch (ClassCastException fakse) {
+            log.addException(new SemanticException("Expected L-value in brackets", token));
+        }
+
+        zone.removeAll(e.lv);
     }
 
 }

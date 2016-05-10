@@ -12,6 +12,8 @@ import ast.node.op.FBracketsNode;
 import code.Environment;
 import code.FunctionZone;
 import code.Variable;
+import exception.Log;
+import exception.ParseException;
 
 public class Function {
     public final FBracketsNode action;
@@ -39,16 +41,16 @@ public class Function {
 
     }
 
-    public FunctionZone getVisibilityZone(Map<String, DeclarationToken> globalVariables, Map<String, Function> functions, List<String> errors) {
+    public FunctionZone getVisibilityZone(Map<String, DeclarationToken> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
         FunctionZone zone = new FunctionZone(this);
 
         Map<String, Variable> localVariables = new HashMap<String, Variable>();
         for (DeclarationToken var : vars) {
-            zone.createVariable(var, localVariables, errors);
+            zone.createVariable(var, localVariables, log);
         }
         Environment environment = new Environment(localVariables, globalVariables, functions);
 
-        action.rValue(null, zone, environment, errors);
+        action.rValue(null, zone, environment, log);
 
         return zone;
     }

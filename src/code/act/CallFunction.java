@@ -3,6 +3,7 @@ package code.act;
 import java.io.PrintWriter;
 import java.util.List;
 
+import asm.Command;
 import lex.Token;
 import code.Action;
 import code.Variable;
@@ -42,7 +43,7 @@ public class CallFunction extends Action {
     }
 
     @Override
-    public void asm(List<String> programText, List<String> errors) {
+    public void asm(List<Command> programText) {
         int sp = 0;
         programText.add(label() + ":" + comment());
 

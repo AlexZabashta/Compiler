@@ -1,7 +1,6 @@
 package ast.node.misc;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.key_word.IfToken;
 import misc.EnumType;
@@ -16,6 +15,9 @@ import code.Variable;
 import code.VisibilityZone;
 import code.act.IfFalseJump;
 import code.act.Jump;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class IfNode extends AbstractNode implements RValue {
 
@@ -31,11 +33,11 @@ public class IfNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone iz = z.subZone(false, ifToken);
         Variable s = iz.createVariable(new Type(EnumType.BOOL));
 
-        state.rValue(s, iz, e, errors);
+        state.rValue(s, iz, e, log);
         IfFalseJump elseJump = new IfFalseJump(s);
         Jump jump = new Jump();
 
@@ -46,11 +48,11 @@ public class IfNode extends AbstractNode implements RValue {
         jump.target = fend.label();
 
         iz.addAction(elseJump);
-        x.action(iz, e, errors);
+        x.action(iz, e, log);
 
         iz.addAction(jump);
         iz.addAction(tend);
-        y.action(iz, e, errors);
+        y.action(iz, e, log);
         iz.addAction(fend);
     }
 
@@ -89,7 +91,7 @@ public class IfNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             RValue xVal = (RValue) x;
             RValue yVal = (RValue) y;
@@ -97,7 +99,7 @@ public class IfNode extends AbstractNode implements RValue {
             VisibilityZone iz = z.subZone(false, ifToken);
             Variable s = iz.createVariable(new Type(EnumType.BOOL));
 
-            state.rValue(s, iz, e, errors);
+            state.rValue(s, iz, e, log);
             IfFalseJump elseJump = new IfFalseJump(s);
             Jump jump = new Jump();
 
@@ -108,16 +110,16 @@ public class IfNode extends AbstractNode implements RValue {
             jump.target = fend.label();
 
             iz.addAction(elseJump);
-            xVal.rValue(dst, iz, e, errors);
+            xVal.rValue(dst, iz, e, log);
 
             iz.addAction(jump);
             iz.addAction(tend);
 
-            yVal.rValue(dst, iz, e, errors);
+            yVal.rValue(dst, iz, e, log);
 
             iz.addAction(fend);
         } catch (ClassCastException fake) {
-            errors.add("Unexpected void node at " + ifToken);
+            log.addException(new SemanticException("Unexpected void node", ifToken));
         }
     }
 
@@ -133,5 +135,15 @@ public class IfNode extends AbstractNode implements RValue {
         } catch (ClassCastException fake) {
         }
         return new Type();
+    }
+
+    @Override
+    public boolean isRValue() {
+        return x.isRValue() && y.isRValue();
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 }

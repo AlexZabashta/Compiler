@@ -16,6 +16,9 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class CallNode extends AbstractNode implements RValue {
 
@@ -28,8 +31,27 @@ public class CallNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
-        rValue(null, z, e, errors);
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
+        String funStr = fun(e);
+        Function function = e.f.get(funStr);
+
+        if (function == null) {
+            log.addException(new SemanticException("Cant find function declaration", fun));
+            return;
+        }
+        List<Variable> args = new ArrayList<Variable>();
+
+        VisibilityZone fz = z.subZone(false, fun);
+
+        for (RValue node : vars) {
+            VisibilityZone az = fz.subZone(false, fun);
+
+            Variable var = fz.createVariable(node.type(e));
+
+            node.rValue(var, az, e, log);
+            args.add(var);
+        }
+        fz.addAction(new CallFunction(null, funStr, args, null, fun));
     }
 
     public String fun(Environment e) {
@@ -72,12 +94,12 @@ public class CallNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         String funStr = fun(e);
         Function function = e.f.get(funStr);
 
         if (function == null) {
-            errors.add("Cant find " + funStr + " at " + fun);
+            log.addException(new SemanticException("Cant find function declaration", fun));
             return;
         }
         List<Variable> args = new ArrayList<Variable>();
@@ -89,16 +111,11 @@ public class CallNode extends AbstractNode implements RValue {
 
             Variable var = fz.createVariable(node.type(e));
 
-            node.rValue(var, az, e, errors);
+            node.rValue(var, az, e, log);
             args.add(var);
         }
-
-        if (dst == null || dst.type.idVoid()) {
-            fz.addAction(new CallFunction(null, funStr, args, null, fun));
-        } else {
-            if (Values.cmp(dst.type, function.type, errors, fun)) {
-                fz.addAction(new CallFunction(dst, funStr, args, null, fun));
-            }
+        if (Values.cmp(dst.type, function.type, log, fun)) {
+            fz.addAction(new CallFunction(dst, funStr, args, null, fun));
         }
     }
 
@@ -113,9 +130,19 @@ public class CallNode extends AbstractNode implements RValue {
         Function function = e.f.get(fun);
 
         if (function == null) {
-            throw new RuntimeException("Cant find " + fun);
+            return null;
         }
 
         return function.type;
+    }
+
+    @Override
+    public boolean isRValue() {
+        return true;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 }

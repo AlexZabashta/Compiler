@@ -15,6 +15,9 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class BOperatorNode extends AbstractNode implements RValue {
 
@@ -28,8 +31,41 @@ public class BOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
-        rValue(null, z, e, errors);
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
+        Type lt = left.type(e);
+        Type rt = right.type(e);
+
+        if (lt.idVoid()) {
+            log.addException(new SemanticException("Unexpected void before operator", operator));
+        }
+
+        if (rt.idVoid()) {
+            log.addException(new SemanticException("Unexpected void after operator", operator));
+        }
+
+        if (lt.idVoid() || rt.idVoid()) {
+            return;
+        }
+
+        VisibilityZone zone = z.subZone(false, operator);
+        Variable lvar = zone.createVariable(lt);
+        Variable rvar = zone.createVariable(rt);
+
+        left.rValue(lvar, zone, e, log);
+        right.rValue(rvar, zone, e, log);
+
+        List<Variable> args = new ArrayList<Variable>();
+        args.add(lvar);
+        args.add(rvar);
+
+        String funStr = Values.toStringType(funName(), args);
+
+        Function fun = e.f.get(funStr);
+
+        if (fun == null) {
+            log.addException(new SemanticException("Can't find " + funStr + " declaration", operator));
+            return;
+        }
     }
 
     public String funName() {
@@ -87,16 +123,16 @@ public class BOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         Type lt = left.type(e);
         Type rt = right.type(e);
 
         if (lt.idVoid()) {
-            errors.add("Unexpected void before " + operator);
+            log.addException(new SemanticException("Unexpected void before operator", operator));
         }
 
         if (rt.idVoid()) {
-            errors.add("Unexpected void after " + operator);
+            log.addException(new SemanticException("Unexpected void after operator", operator));
         }
 
         if (lt.idVoid() || rt.idVoid()) {
@@ -107,8 +143,8 @@ public class BOperatorNode extends AbstractNode implements RValue {
         Variable lvar = zone.createVariable(lt);
         Variable rvar = zone.createVariable(rt);
 
-        left.rValue(lvar, zone, e, errors);
-        right.rValue(rvar, zone, e, errors);
+        left.rValue(lvar, zone, e, log);
+        right.rValue(rvar, zone, e, log);
 
         List<Variable> args = new ArrayList<Variable>();
         args.add(lvar);
@@ -119,15 +155,11 @@ public class BOperatorNode extends AbstractNode implements RValue {
         Function fun = e.f.get(funStr);
 
         if (fun == null) {
-            errors.add("Can't find " + funStr + " at " + operator);
+            log.addException(new SemanticException("Can't find " + funStr + " declaration", operator));
             return;
         }
 
-        if (dst == null || dst.type.idVoid()) {
-            dst = null;
-        }
-
-        if (dst == null || Values.cmp(dst.type, fun.type, errors, operator)) {
+        if (Values.cmp(dst.type, fun.type, log, operator)) {
             zone.addAction(new CallFunction(dst, funStr, args, null, operator));
         }
 
@@ -148,5 +180,15 @@ public class BOperatorNode extends AbstractNode implements RValue {
         } catch (RuntimeException fake) {
             return right.type(e);
         }
+    }
+
+    @Override
+    public boolean isRValue() {
+        return left.isRValue() && right.isRValue();
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 }

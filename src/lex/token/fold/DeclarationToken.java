@@ -1,8 +1,9 @@
 package lex.token.fold;
 
-import java.util.List;
-
 import lex.Token;
+import lex.token.pure.SimpleString;
+import exception.Log;
+import exception.ParseException;
 
 public class DeclarationToken extends Token {
 
@@ -20,12 +21,12 @@ public class DeclarationToken extends Token {
         return typeToken.toTokenString() + " " + varToken.toTokenString();
     }
 
-    public DeclarationToken addPac(String pac, List<String> errors) {
-        return new DeclarationToken(typeToken, varToken.addPac(pac, errors));
+    public DeclarationToken addPac(SimpleString pac, Log log) throws ParseException {
+        return new DeclarationToken(typeToken, varToken.addPac(pac, log));
     }
 
-    public DeclarationToken removePac(List<String> errors) {
-        return new DeclarationToken(typeToken, varToken.removePac(errors));
+    public DeclarationToken removePac(Log log) throws ParseException {
+        return new DeclarationToken(typeToken, varToken.removePac(log));
     }
 
 }

@@ -1,7 +1,6 @@
 package ast.node.op;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.pure.Operator;
 import misc.Type;
@@ -11,6 +10,9 @@ import ast.node.RValue;
 import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class Assignment extends AbstractNode implements RValue {
 
@@ -29,8 +31,19 @@ public class Assignment extends AbstractNode implements RValue {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
-        rValue(null, z, e, errors);
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
+        VisibilityZone zone = z.subZone(false, operator);
+        Type type = type(e);
+
+        if (type.idVoid()) {
+            log.addException(new SemanticException("Can't assign void type", operator));
+            return;
+        }
+
+        Variable var = zone.createVariable(type);
+
+        right.rValue(var, zone, e, log);
+        left.lValue(var, zone, e, log);
     }
 
     @Override
@@ -51,21 +64,17 @@ public class Assignment extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable var, VisibilityZone z, Environment e, List<String> errors) {
+    public void rValue(Variable var, VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone zone = z.subZone(false, operator);
         Type type = type(e);
 
         if (type.idVoid()) {
-            errors.add("Can't assign void type at " + operator);
+            log.addException(new SemanticException("Can't assign void type", operator));
             return;
         }
 
-        if (var == null || var.type.idVoid()) {
-            var = zone.createVariable(type);
-        }
-
-        right.rValue(var, zone, e, errors);
-        left.lValue(var, zone, e, errors);
+        right.rValue(var, zone, e, log);
+        left.lValue(var, zone, e, log);
     }
 
     @Override
@@ -76,6 +85,16 @@ public class Assignment extends AbstractNode implements RValue {
     @Override
     public Type type(Environment e) {
         return right.type(e);
+    }
+
+    @Override
+    public boolean isRValue() {
+        return right.isRValue();
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

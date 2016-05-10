@@ -1,7 +1,6 @@
 package ast.node.misc;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.key_word.WhileToken;
 import misc.EnumType;
@@ -16,6 +15,8 @@ import code.VisibilityZone;
 import code.act.IfFalseJump;
 import code.act.IfTrueJump;
 import code.act.Jump;
+import exception.Log;
+import exception.ParseException;
 
 public class WhileNode extends AbstractNode {
 
@@ -30,7 +31,7 @@ public class WhileNode extends AbstractNode {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone wz = z.subZone(true, whileToken);
 
         Variable s = wz.createVariable(new Type(EnumType.BOOL));
@@ -42,10 +43,10 @@ public class WhileNode extends AbstractNode {
 
         wz.addAction(jump);
         wz.addAction(wnop);
-        action.action(wz, e, errors);
+        action.action(wz, e, log);
         wz.addAction(snop);
 
-        state.rValue(s, wz, e, errors);
+        state.rValue(s, wz, e, log);
 
         IfTrueJump elseJump = new IfTrueJump(s);
         elseJump.target = wnop.label();
@@ -82,5 +83,15 @@ public class WhileNode extends AbstractNode {
     @Override
     public String toString() {
         return whileToken.toString();
+    }
+
+    @Override
+    public boolean isRValue() {
+        return false;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 }

@@ -1,7 +1,6 @@
 package ast.node.misc;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.key_word.ReturnToken;
 import ast.node.AbstractNode;
@@ -9,6 +8,10 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.Break;
+import exception.ASTException;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
 
 public class ReturnNode extends AbstractNode {
 
@@ -19,13 +22,13 @@ public class ReturnNode extends AbstractNode {
     }
 
     @Override
-    public void action(VisibilityZone z, Environment e, List<String> errors) {
+    public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         Variable res = z.root().result;
 
-        if (res == null || res.type.idVoid()) {
+        if (res == null) {
             z.addAction(new Break(z.level + 1, null, returnToken));
         } else {
-            errors.add("Missing return value after " + returnToken);
+            log.addException(new SemanticException("Missing return value", returnToken));
         }
     }
 
@@ -43,6 +46,16 @@ public class ReturnNode extends AbstractNode {
     @Override
     public String toString() {
         return returnToken.toString();
+    }
+
+    @Override
+    public boolean isRValue() {
+        return false;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

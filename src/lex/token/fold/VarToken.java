@@ -1,9 +1,10 @@
 package lex.token.fold;
 
-import java.util.List;
-
 import lex.Token;
 import lex.token.pure.SimpleString;
+import exception.Log;
+import exception.ParseException;
+import exception.SyntaxesException;
 
 public class VarToken extends Token {
 
@@ -33,21 +34,21 @@ public class VarToken extends Token {
         }
     }
 
-    public VarToken addPac(String pac, List<String> errors) {
+    public VarToken addPac(SimpleString pac, Log log) throws ParseException {
         if (this.pac != null) {
-            if (this.pac.string.equals(pac)) {
+            if (this.pac.string.equals(pac.string)) {
                 return this;
             }
-            errors.add("Unexpected pac name \"" + this.pac.string + "\" in \"" + pac + "\" pac at " + location);
+            log.addException(new SyntaxesException("Can't declare outer global varible here", this.pac));
         }
-        return new VarToken(new SimpleString(pac, location), name);
+        return new VarToken(pac, name);
     }
 
-    public VarToken removePac(List<String> errors) {
+    public VarToken removePac(Log log) throws ParseException {
         if (pac == null) {
             return this;
         } else {
-            errors.add("Can't declare global varible at " + location);
+            log.addException(new SyntaxesException("Can't declare global varible here", this.pac));
             return new VarToken(null, name);
         }
     }

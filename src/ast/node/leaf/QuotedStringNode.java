@@ -1,7 +1,6 @@
 package ast.node.leaf;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import lex.token.pure.QuotedString;
 import misc.EnumType;
@@ -13,6 +12,8 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.LoadConst;
+import exception.Log;
+import exception.ParseException;
 
 public class QuotedStringNode extends AbstractNode implements RValue {
     public final QuotedString token;
@@ -33,8 +34,8 @@ public class QuotedStringNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, List<String> errors) {
-        if (Values.cmp(dst.type, type(e), errors, token)) {
+    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+        if (Values.cmp(dst.type, type(e), log, token)) {
             z.addAction(new LoadConst(dst, token.getValIndex(), null, token));
         }
     }
@@ -42,6 +43,16 @@ public class QuotedStringNode extends AbstractNode implements RValue {
     @Override
     public Type type(Environment e) {
         return new Type(EnumType.CHAR, 1);
+    }
+
+    @Override
+    public boolean isRValue() {
+        return true;
+    }
+
+    @Override
+    public boolean isLValue() {
+        return false;
     }
 
 }

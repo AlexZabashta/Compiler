@@ -5,11 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import code.act.Nop;
-import javafx.scene.Parent;
+import asm.Command;
 import lex.Token;
 import lex.token.fold.DeclarationToken;
 import misc.Type;
+import code.act.Nop;
+import exception.Log;
+import exception.ParseException;
+import exception.SemanticException;
+import exception.SyntaxesException;
 
 public class VisibilityZone extends Action {
 
@@ -76,9 +80,9 @@ public class VisibilityZone extends Action {
 
     }
 
-    public Variable createVariable(DeclarationToken token, Map<String, Variable> localVariables, List<String> errors) {
+    public Variable createVariable(DeclarationToken token, Map<String, Variable> localVariables, Log log) throws ParseException {
         if (token.varToken.pac != null) {
-            errors.add("Can't declare global varible at " + token);
+            log.addException(new SemanticException("Can't declare global varible here", token));
         }
 
         VisibilityZone zone = getVisibleParent();
@@ -87,7 +91,7 @@ public class VisibilityZone extends Action {
         Variable var = localVariables.get(name);
 
         if (var != null) {
-            errors.add("Duplicate local variable " + token);
+            log.addException(new SemanticException("Duplicate local variable", token));
             return var;
         }
 
@@ -98,7 +102,7 @@ public class VisibilityZone extends Action {
     }
 
     @Override
-    public void asm(List<String> programText, List<String> errors) {
+    public void asm(List<Command> programText) {
         end();
         programText.add(label() + ":" + comment());
 
@@ -111,7 +115,7 @@ public class VisibilityZone extends Action {
         }
 
         for (Action action : actions) {
-            action.asm(programText, errors);
+            action.asm(programText);
         }
 
         programText.add("        add esp, " + (numberOfVars() * 4));
