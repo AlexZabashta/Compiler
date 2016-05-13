@@ -14,7 +14,6 @@ import code.Action;
 import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
-import code.act.IfFalseJump;
 import code.act.IfTrueJump;
 import code.act.Jump;
 import exception.Log;
@@ -48,14 +47,14 @@ public class ForNode extends AbstractNode {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone fz = z.subZone(true, forToken);
+        VisibilityZone fz = z.subZone(true, forToken.toString());
 
         Variable s = fz.createVariable(new Type(EnumType.BOOL));
 
         Jump jump = new Jump();
         Action wnop = new code.act.Nop();
         Action snop = new code.act.Nop();
-        jump.target = snop.label();
+        jump.target = snop.label;
 
         pre.action(fz, e, log);
 
@@ -65,10 +64,10 @@ public class ForNode extends AbstractNode {
         post.action(fz, e, log);
 
         fz.addAction(snop);
-        state.rValue(s, fz, e, log);
+        state.getVariable(s, fz, e, log);
 
         IfTrueJump elseJump = new IfTrueJump(s);
-        elseJump.target = wnop.label();
+        elseJump.target = wnop.label;
 
         fz.addAction(elseJump);
 
@@ -113,16 +112,6 @@ public class ForNode extends AbstractNode {
     @Override
     public String toString() {
         return forToken.toString();
-    }
-
-    @Override
-    public boolean isRValue() {
-        return false;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
     }
 
 }

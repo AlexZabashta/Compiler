@@ -2,15 +2,14 @@ package asm.com;
 
 import java.io.IOException;
 
-import lex.Token;
 import asm.Command;
 import asm.Register;
 import asm.State;
 
 public class CallGetChar extends Command {
 
-    public CallGetChar(String label, Token token) {
-        super(label, token);
+    public CallGetChar(String label, String comment) {
+        super(label, comment);
     }
 
     @Override

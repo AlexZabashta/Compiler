@@ -35,14 +35,4 @@ public class Nop extends AbstractNode {
         return "nop";
     }
 
-    @Override
-    public boolean isRValue() {
-        return false;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
-    }
-
 }

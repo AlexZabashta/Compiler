@@ -1,6 +1,5 @@
 package asm.com;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 import asm.mem.Memory;
@@ -9,8 +8,8 @@ public class Cmp extends Command {
 
     public final Memory l, r;
 
-    public Cmp(Memory l, Memory r, String label, Token token) {
-        super(label, token);
+    public Cmp(Memory l, Memory r, String label, String comment) {
+        super(label, comment);
         this.l = l;
         this.r = r;
         if (l.useRam() && r.useRam()) {

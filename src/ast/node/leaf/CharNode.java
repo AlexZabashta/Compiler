@@ -34,9 +34,9 @@ public class CharNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         if (Values.cmp(dst.type, type(e), log, token)) {
-            z.addAction(new LoadConst(dst, token.getValIndex(), null, token));
+            z.addAction(new LoadConst(dst, token.getValIndex(), null, token.toString()));
         }
     }
 
@@ -45,13 +45,4 @@ public class CharNode extends AbstractNode implements RValue {
         return new Type(EnumType.CHAR);
     }
 
-    @Override
-    public boolean isRValue() {
-        return true;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
-    }
 }

@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import lex.Token;
+import asm.mem.ConstInt;
 import code.Action;
 import code.Variable;
 
@@ -14,7 +14,7 @@ public class IfTrueJump extends Action {
     public final Variable state;
 
     public IfTrueJump(Variable state) {
-        super(null);
+        super(null, null);
         this.state = state;
     }
 
@@ -31,10 +31,9 @@ public class IfTrueJump extends Action {
 
     @Override
     public void asm(List<Command> programText) {
-        programText.add(label() + ":" + comment());
-        programText.add("        mov eax, [esp + " + (state.distance(parent) * 4) + "]");
-        programText.add("        cmp eax, eax");
-        programText.add("        jne " + target);
+        programText.add(start());
+        programText.add(new asm.com.Cmp(state.memory(), new ConstInt(0), null, comment));
+        programText.add(new asm.com.Jne(target, null, comment));
     }
 
 }

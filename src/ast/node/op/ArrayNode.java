@@ -9,7 +9,7 @@ import misc.EnumType;
 import misc.Type;
 import ast.Function;
 import ast.node.AbstractNode;
-import ast.node.LRValue;
+import ast.node.LValue;
 import ast.node.RValue;
 import ast.node.Values;
 import code.Environment;
@@ -20,7 +20,7 @@ import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
 
-public class ArrayNode extends AbstractNode implements LRValue {
+public class ArrayNode extends AbstractNode implements LValue, RValue {
 
     public final RValue array, index;
     public final Token token;
@@ -33,8 +33,6 @@ public class ArrayNode extends AbstractNode implements LRValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, token);
-
         Type arrayType = array.type(e);
 
         if (arrayType.idVoid()) {
@@ -42,49 +40,18 @@ public class ArrayNode extends AbstractNode implements LRValue {
             return;
         }
 
-        Variable a = zone.createVariable(arrayType);
-        array.rValue(a, zone, e, log);
-        Variable i = zone.createVariable(new Type(EnumType.INT));
-        index.rValue(i, zone, e, log);
-    }
+        Type indexType = index.type(e);
 
-    @Override
-    public void lValue(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, token);
-
-        Type arrayType = array.type(e);
-
-        if (arrayType.idVoid()) {
-            log.addException(new SemanticException("Can't cast void to array", token));
+        if (indexType.idVoid()) {
+            log.addException(new SemanticException("Can't cast void to index", token));
             return;
         }
 
-        Variable a = zone.createVariable(arrayType);
-        array.rValue(a, zone, e, log);
-        Variable i = zone.createVariable(new Type(EnumType.INT));
-        index.rValue(i, zone, e, log);
+        String funStr = Values.toString("get", arrayType, indexType);
 
-        List<Variable> args = new ArrayList<Variable>();
-        args.add(a);
-        args.add(i);
-        args.add(src);
-        String funStr = Values.toStringType("set", args);
-        Function fun = e.f.get(funStr);
-
-        if (fun == null) {
-            log.addException(new SemanticException("Can't find " + funStr, token));
-            return;
-        }
-
-        if (arrayType.level == 0) {
-            if (Values.cmp(new Type(EnumType.BOOL), src.type, log, token)) {
-                zone.addAction(new CallFunction(null, funStr, args, null, token));
-            }
-        } else {
-            Type type = new Type(arrayType.type, arrayType.level - 1);
-            if (Values.cmp(type, src.type, log, token)) {
-                zone.addAction(new CallFunction(null, funStr, args, null, token));
-            }
+        if (e.getFunction(funStr, log, token) != null) {
+            array.action(z.subZone(false, token.toString()), e, log);
+            index.action(z.subZone(false, token.toString()), e, log);
         }
     }
 
@@ -105,39 +72,6 @@ public class ArrayNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, token);
-
-        Type arrayType = array.type(e);
-
-        if (arrayType.idVoid()) {
-            log.addException(new SemanticException("Can't cast void to array", token));
-            return;
-        }
-
-        Variable a = zone.createVariable(arrayType);
-        array.rValue(a, zone, e, log);
-        Variable i = zone.createVariable(new Type(EnumType.INT));
-        index.rValue(i, zone, e, log);
-
-        List<Variable> args = new ArrayList<Variable>();
-        args.add(a);
-        args.add(i);
-        String funStr = Values.toStringType("get", args);
-
-        Function fun = e.f.get(funStr);
-
-        if (fun == null) {
-            log.addException(new SemanticException("Can't find " + funStr, token));
-            return;
-        }
-
-        if (Values.cmp(dst.type, fun.type, log, token)) {
-            zone.addAction(new CallFunction(dst, funStr, args, null, token));
-        }
-    }
-
-    @Override
     public String toString() {
         return token.toString();
     }
@@ -153,13 +87,71 @@ public class ArrayNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public boolean isRValue() {
-        return array.isRValue();
+    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+        Type arrayType = array.type(e);
+
+        if (arrayType.idVoid()) {
+            log.addException(new SemanticException("Can't cast void to array", token));
+            return;
+        }
+
+        Type indexType = index.type(e);
+
+        if (indexType.idVoid()) {
+            log.addException(new SemanticException("Can't cast void to index", token));
+            return;
+        }
+
+        VisibilityZone zone = z.subZone(false, null);
+        Variable a = zone.createVariable(arrayType);
+        array.getVariable(a, zone.subZone(false, null), e, log);
+        Variable i = zone.createVariable(indexType);
+        index.getVariable(i, zone.subZone(false, null), e, log);
+
+        List<Variable> args = new ArrayList<Variable>();
+        args.add(a);
+        args.add(i);
+        args.add(src);
+        String funStr = Values.toString("set", args);
+
+        Function fun = e.getFunction(funStr, log, token);
+
+        if (fun != null) {
+            zone.addAction(new CallFunction(null, funStr, args, null, token.toString()));
+        }
     }
 
     @Override
-    public boolean isLValue() {
-        return array.isLValue();
-    }
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+        Type arrayType = array.type(e);
 
+        if (arrayType.idVoid()) {
+            log.addException(new SemanticException("Can't cast void to array", token));
+            return;
+        }
+
+        Type indexType = index.type(e);
+
+        if (indexType.idVoid()) {
+            log.addException(new SemanticException("Can't cast void to index", token));
+            return;
+        }
+
+        VisibilityZone zone = z.subZone(false, null);
+        Variable a = zone.createVariable(arrayType);
+        array.getVariable(a, zone.subZone(false, null), e, log);
+        Variable i = zone.createVariable(indexType);
+        index.getVariable(i, zone.subZone(false, null), e, log);
+
+        List<Variable> args = new ArrayList<Variable>();
+        args.add(a);
+        args.add(i);
+        String funStr = Values.toString("get", args);
+
+        Function fun = e.getFunction(funStr, log, token);
+
+        if (Values.cmp(dst.type, fun.type, log, token)) {
+            zone.addAction(new CallFunction(dst, funStr, args, null, token.toString()));
+        }
+    }
 }

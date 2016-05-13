@@ -25,14 +25,14 @@ public class ReturnVNode extends AbstractNode {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone rz = z.subZone(false, returnToken);
+        VisibilityZone rz = z.subZone(false, returnToken.toString());
         Variable res = z.root().result;
 
         if (res == null) {
             log.addException(new SemanticException("Can't return value in void function", returnToken));
         } else {
-            node.rValue(res, rz, e, log);
-            z.addAction(new Break(z.level + 1, null, returnToken));
+            node.getVariable(res, rz, e, log);
+            z.addAction(new Break(z.level + 1, null, returnToken.toString()));
         }
 
     }
@@ -54,16 +54,6 @@ public class ReturnVNode extends AbstractNode {
     @Override
     public String toString() {
         return returnToken.toString();
-    }
-
-    @Override
-    public boolean isRValue() {
-        return false;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
     }
 
 }

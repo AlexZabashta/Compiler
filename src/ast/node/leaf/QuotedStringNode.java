@@ -34,25 +34,15 @@ public class QuotedStringNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         if (Values.cmp(dst.type, type(e), log, token)) {
-            z.addAction(new LoadConst(dst, token.getValIndex(), null, token));
+            z.addAction(new LoadConst(dst, token.getValIndex(), null, token.toString()));
         }
     }
 
     @Override
     public Type type(Environment e) {
         return new Type(EnumType.CHAR, 1);
-    }
-
-    @Override
-    public boolean isRValue() {
-        return true;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
     }
 
 }

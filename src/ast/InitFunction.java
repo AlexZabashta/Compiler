@@ -24,7 +24,7 @@ public class InitFunction extends Function {
         FunctionZone zone = new FunctionZone(this);
         Map<String, Variable> localVariables = new HashMap<String, Variable>();
         Environment environment = new Environment(localVariables, globalVariables, functions);
-        action.rValue(null, zone, environment, log);
+        action.action(zone, environment, log);
         return zone;
     }
 

@@ -6,28 +6,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import exception.Log;
-import exception.ParseException;
-import exception.SyntaxesException;
 import lex.token.fold.BracketsToken;
 import lex.token.fold.BracketsType;
 import lex.token.fold.BreakToken;
 import lex.token.fold.DeclarationToken;
 import lex.token.fold.TypeToken;
 import lex.token.fold.VarToken;
+import lex.token.key_word.BoolToken;
 import lex.token.key_word.ElseToken;
 import lex.token.key_word.ForToken;
 import lex.token.key_word.IfToken;
 import lex.token.key_word.InitToken;
-import lex.token.key_word.BoolToken;
 import lex.token.key_word.ReturnToken;
-import lex.token.key_word.WhileToken;
 import lex.token.pure.Comment;
 import lex.token.pure.NumberToken;
 import lex.token.pure.Operator;
 import lex.token.pure.SimpleString;
 import misc.EnumType;
 import misc.Type;
+import exception.Log;
+import exception.ParseException;
+import exception.SyntaxesException;
 
 public class TapeFold {
 
@@ -138,10 +137,7 @@ public class TapeFold {
                     list.add(new InitToken(str.location));
                 }
                     break;
-                case "while": {
-                    list.add(new WhileToken(str.location));
-                }
-                    break;
+                case "while":
                 case "for": {
                     list.add(new ForToken(str.location));
                 }

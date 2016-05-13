@@ -8,11 +8,9 @@ public abstract class AsmLine {
 
     public String label, comment;
 
-    public AsmLine(String label, Token token) {
+    public AsmLine(String label, String comment) {
         this.label = label;
-        if (token != null) {
-            this.comment = token.toString();
-        }
+        this.comment = comment;
     }
 
     public abstract String toStringYASM_WIN_32();

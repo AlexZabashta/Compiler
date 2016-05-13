@@ -15,7 +15,6 @@ import lex.token.key_word.ElseToken;
 import lex.token.key_word.ForToken;
 import lex.token.key_word.IfToken;
 import lex.token.key_word.ReturnToken;
-import lex.token.key_word.WhileToken;
 import lex.token.pure.CharToken;
 import lex.token.pure.NumberToken;
 import lex.token.pure.Operator;
@@ -37,7 +36,6 @@ import ast.node.misc.IfNode;
 import ast.node.misc.Nop;
 import ast.node.misc.ReturnNode;
 import ast.node.misc.ReturnVNode;
-import ast.node.misc.WhileNode;
 import ast.node.op.ArrayNode;
 import ast.node.op.Assignment;
 import ast.node.op.BOperatorNode;
@@ -304,28 +302,6 @@ public class AST {
                 return errorNode;
             }
 
-        } catch (ClassCastException | IndexOutOfBoundsException fake) {
-        }
-
-        try {
-            WhileToken whileToken = (WhileToken) tokens.get(0);
-            BracketsToken state = (BracketsToken) tokens.get(1);
-            Node action = parse(pac, tokens.subList(2, size), priority, log);
-            if (state.tokens.isEmpty()) {
-                RBracketsNode stateNode = new RBracketsNode(new BoolNode(new BoolToken(false, whileToken.location)), state);
-                return new WhileNode(whileToken, stateNode, action);
-            } else {
-                RBracketsNode stateNode = parseRB(pac, state, log);
-                if (stateNode.node instanceof RValue) {
-                    return new WhileNode(whileToken, stateNode, action);
-                } else {
-                    log.addException(new ASTException("Expected empty or R-value as state", state));
-                    ErrorNode errorNode = new ErrorNode();
-                    errorNode.nodes.add(stateNode);
-                    errorNode.nodes.add(action);
-                    return errorNode;
-                }
-            }
         } catch (ClassCastException | IndexOutOfBoundsException fake) {
         }
 

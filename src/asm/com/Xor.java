@@ -1,6 +1,5 @@
 package asm.com;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 import asm.mem.Memory;
@@ -11,8 +10,8 @@ public class Xor extends Command {
     public final RWMemory dst;
     public final Memory src;
 
-    public Xor(RWMemory dst, Memory src, String label, Token token) {
-        super(label, token);
+    public Xor(RWMemory dst, Memory src, String label, String comment) {
+        super(label, comment);
         this.dst = dst;
         this.src = src;
         if (src.useRam() && dst.useRam()) {

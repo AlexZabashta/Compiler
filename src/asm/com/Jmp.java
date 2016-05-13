@@ -2,7 +2,6 @@ package asm.com;
 
 import java.util.Objects;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 
@@ -10,8 +9,8 @@ public class Jmp extends Command {
 
     public final String target;
 
-    public Jmp(String target, String label, Token token) {
-        super(label, token);
+    public Jmp(String target, String label, String comment) {
+        super(label, comment);
         this.target = Objects.requireNonNull(target);
     }
 

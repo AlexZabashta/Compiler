@@ -2,14 +2,13 @@ package asm.com;
 
 import java.io.IOException;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 
 public class CallPutChar extends Command {
 
-    public CallPutChar(String label, Token token) {
-        super(label, token);
+    public CallPutChar(String label, String comment) {
+        super(label, comment);
     }
 
     @Override

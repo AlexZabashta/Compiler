@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import lex.Token;
 import code.Action;
 import code.Variable;
 
@@ -12,8 +11,8 @@ public class SetGVar extends Action {
     public final Variable src;
     public final String dst;
 
-    public SetGVar(String dst, Variable src, String label, Token token) {
-        super(label, token);
+    public SetGVar(String dst, Variable src, String label, String comment) {
+        super(label, comment);
         this.dst = dst;
         this.src = src;
 

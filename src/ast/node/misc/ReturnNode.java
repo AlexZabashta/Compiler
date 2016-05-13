@@ -8,7 +8,6 @@ import code.Environment;
 import code.Variable;
 import code.VisibilityZone;
 import code.act.Break;
-import exception.ASTException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
@@ -26,7 +25,7 @@ public class ReturnNode extends AbstractNode {
         Variable res = z.root().result;
 
         if (res == null) {
-            z.addAction(new Break(z.level + 1, null, returnToken));
+            z.addAction(new Break(z.level + 1, null, returnToken.toString()));
         } else {
             log.addException(new SemanticException("Missing return value", returnToken));
         }
@@ -46,16 +45,6 @@ public class ReturnNode extends AbstractNode {
     @Override
     public String toString() {
         return returnToken.toString();
-    }
-
-    @Override
-    public boolean isRValue() {
-        return false;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
     }
 
 }

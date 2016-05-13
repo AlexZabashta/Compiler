@@ -9,6 +9,6 @@ import exception.ParseException;
 
 public interface LValue extends Node {
 
-    public void lValue(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException;
+    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException;
 
 }

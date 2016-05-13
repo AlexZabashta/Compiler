@@ -13,13 +13,25 @@ import exception.SemanticException;
 
 public class Values {
 
-    public static String toStringType(String prefix, List<Variable> vars) {
+    public static String toString(String prefix, List<Variable> vars) {
         StringBuilder builder = new StringBuilder();
 
         builder.append(prefix);
         for (Variable var : vars) {
             builder.append(Characters.typeSeparator);
             builder.append(var.type);
+        }
+
+        return builder.toString();
+    }
+
+    public static String toString(String prefix, Type... types) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(prefix);
+        for (Type type : types) {
+            builder.append(Characters.typeSeparator);
+            builder.append(type);
         }
 
         return builder.toString();

@@ -4,17 +4,16 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import lex.Token;
+import asm.com.Jmp;
 import code.Action;
-import code.Variable;
 import code.VisibilityZone;
 
 public class Break extends Action {
 
     public final int level;
 
-    public Break(int level, String label, Token token) {
-        super(label, token);
+    public Break(int level, String label, String comment) {
+        super(label, comment);
         this.level = level;
     }
 
@@ -31,21 +30,18 @@ public class Break extends Action {
 
     @Override
     public void asm(List<Command> programText) {
+        programText.add(start());
         VisibilityZone cur = parent;
-        int sp = 0;
 
         Nop nop = null;
 
         for (int n = level; n > 0; n--) {
-            sp += cur.numberOfVars();
+            cur.freeVars(programText);
             nop = cur.end();
             cur = cur.parent();
         }
 
-        programText.add(label() + ":" + comment());
-        programText.add("        add esp, " + (sp * 4));
-        programText.add("        jmp " + nop.label());
-
+        programText.add(new Jmp(nop.label, null, comment));
     }
 
 }

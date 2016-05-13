@@ -18,7 +18,6 @@ import code.VisibilityZone;
 import code.act.CallFunction;
 import exception.Log;
 import exception.ParseException;
-import exception.SemanticException;
 
 public class CallNode extends AbstractNode implements RValue {
 
@@ -33,25 +32,24 @@ public class CallNode extends AbstractNode implements RValue {
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         String funStr = fun(e);
-        Function function = e.f.get(funStr);
+        Function function = e.getFunction(funStr, log, fun);
 
         if (function == null) {
-            log.addException(new SemanticException("Cant find function declaration", fun));
             return;
         }
         List<Variable> args = new ArrayList<Variable>();
 
-        VisibilityZone fz = z.subZone(false, fun);
+        VisibilityZone fz = z.subZone(false, fun.toString());
 
         for (RValue node : vars) {
-            VisibilityZone az = fz.subZone(false, fun);
+            VisibilityZone az = fz.subZone(false, fun.toString());
 
             Variable var = fz.createVariable(node.type(e));
 
-            node.rValue(var, az, e, log);
+            node.getVariable(var, az, e, log);
             args.add(var);
         }
-        fz.addAction(new CallFunction(null, funStr, args, null, fun));
+        fz.addAction(new CallFunction(null, funStr, args, null, fun.toString()));
     }
 
     public String fun(Environment e) {
@@ -94,28 +92,27 @@ public class CallNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         String funStr = fun(e);
-        Function function = e.f.get(funStr);
+        Function function = e.getFunction(funStr, log, fun);
 
         if (function == null) {
-            log.addException(new SemanticException("Cant find function declaration", fun));
             return;
         }
         List<Variable> args = new ArrayList<Variable>();
 
-        VisibilityZone fz = z.subZone(false, fun);
+        VisibilityZone fz = z.subZone(false, fun.toString());
 
         for (RValue node : vars) {
-            VisibilityZone az = fz.subZone(false, fun);
+            VisibilityZone az = fz.subZone(false, fun.toString());
 
             Variable var = fz.createVariable(node.type(e));
 
-            node.rValue(var, az, e, log);
+            node.getVariable(var, az, e, log);
             args.add(var);
         }
         if (Values.cmp(dst.type, function.type, log, fun)) {
-            fz.addAction(new CallFunction(dst, funStr, args, null, fun));
+            fz.addAction(new CallFunction(dst, funStr, args, null, fun.toString()));
         }
     }
 
@@ -136,13 +133,4 @@ public class CallNode extends AbstractNode implements RValue {
         return function.type;
     }
 
-    @Override
-    public boolean isRValue() {
-        return true;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
-    }
 }

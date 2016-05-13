@@ -10,7 +10,7 @@ public class FunctionZone extends VisibilityZone {
     public final Variable result;
 
     public FunctionZone(Function function) {
-        super(function.toString(), function.name);
+        super(function.toString(), function.name.toString());
         super.root = this;
         this.result = new Variable(function.type, this, -1);
     }
@@ -18,11 +18,15 @@ public class FunctionZone extends VisibilityZone {
     @Override
     public void asm(List<Command> programText) {
         end();
-        programText.add(label() + ":" + comment());
-
+        programText.add(new asm.com.Nop(label, comment));
+        // TODO SAVE REGISTERS
+        
         for (Action action : actions) {
             action.asm(programText);
         }
+
+        programText.add(new asm.com.Ret(null, null));
+
     }
 
 }

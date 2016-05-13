@@ -4,16 +4,15 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import lex.Token;
+import asm.mem.ConstInt;
 import code.Action;
-import code.Variable;
 
 public class Jump extends Action {
 
     public String target;
 
     public Jump() {
-        super(null);
+        super(null, null);
     }
 
     @Override
@@ -29,8 +28,8 @@ public class Jump extends Action {
 
     @Override
     public void asm(List<Command> programText) {
-        programText.add(label() + ":" + comment());
-        programText.add("        jmp " + target);
+        programText.add(start());
+        programText.add(new asm.com.Jmp(target, null, comment));
     }
 
 }

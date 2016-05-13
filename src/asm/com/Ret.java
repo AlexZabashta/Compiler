@@ -1,13 +1,12 @@
 package asm.com;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 
 public class Ret extends Command {
 
-    public Ret(String label, Token token) {
-        super(label, token);
+    public Ret(String label, String comment) {
+        super(label, comment);
 
     }
 

@@ -10,7 +10,7 @@ import exception.ParseException;
 
 public interface RValue extends Node {
 
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException;
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException;
 
     public Type type(Environment e);
 }

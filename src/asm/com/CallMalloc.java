@@ -1,14 +1,13 @@
 package asm.com;
 
-import lex.Token;
 import asm.Command;
 import asm.Register;
 import asm.State;
 
 public class CallMalloc extends Command {
 
-    public CallMalloc(String label, Token token) {
-        super(label, token);
+    public CallMalloc(String label, String comment) {
+        super(label, comment);
     }
 
     @Override

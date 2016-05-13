@@ -1,13 +1,12 @@
 package asm.com;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 
 public class CallFree extends Command {
 
-    public CallFree(String label, Token token) {
-        super(label, token);
+    public CallFree(String label, String comment) {
+        super(label, comment);
     }
 
     @Override

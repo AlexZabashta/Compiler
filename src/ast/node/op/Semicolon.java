@@ -27,9 +27,8 @@ public class Semicolon extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, operator);
-        left.action(zone, e, log);
-        right.action(zone, e, log);
+        left.action(z.subZone(false, operator.toString()), e, log);
+        right.action(z.subZone(false, operator.toString()), e, log);
     }
 
     @Override
@@ -57,25 +56,6 @@ public class Semicolon extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable var, VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, operator);
-        left.action(zone, e, log);
-
-        try {
-            RValue rval = (RValue) right;
-            Type type = rval.type(e);
-
-            if (type.idVoid()) {
-                throw new ClassCastException();
-            }
-            rval.rValue(var, zone, e, log);
-        } catch (ClassCastException fake) {
-            log.addException(new SemanticException("Expected R-Value after", operator));
-        }
-
-    }
-
-    @Override
     public String toString() {
         return operator.toString();
     }
@@ -90,13 +70,20 @@ public class Semicolon extends AbstractNode implements RValue {
     }
 
     @Override
-    public boolean isRValue() {
-        return right.isRValue();
-    }
+    public void getVariable(Variable var, VisibilityZone z, Environment e, Log log) throws ParseException {
+        left.action(z.subZone(false, operator.toString()), e, log);
 
-    @Override
-    public boolean isLValue() {
-        return false;
+        try {
+            RValue rval = (RValue) right;
+            Type type = rval.type(e);
+
+            if (type.idVoid()) {
+                throw new ClassCastException();
+            }
+            rval.getVariable(var, z.subZone(false, operator.toString()), e, log);
+        } catch (ClassCastException fake) {
+            log.addException(new SemanticException("Expected R-Value after", operator));
+        }
     }
 
 }

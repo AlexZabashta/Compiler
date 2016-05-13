@@ -6,7 +6,6 @@ import lex.Token;
 import misc.Type;
 import ast.Node;
 import ast.node.AbstractNode;
-import ast.node.LRValue;
 import ast.node.LValue;
 import ast.node.RValue;
 import code.Environment;
@@ -16,7 +15,7 @@ import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
 
-public class RBracketsNode extends AbstractNode implements LRValue {
+public class RBracketsNode extends AbstractNode implements LValue, RValue {
 
     public final Node node;
     public final Token token;
@@ -28,7 +27,8 @@ public class RBracketsNode extends AbstractNode implements LRValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        node.action(z, e, log);
+        VisibilityZone zone = z.subZone(false, token.toString());
+        node.action(zone, e, log);
     }
 
     @Override
@@ -47,19 +47,6 @@ public class RBracketsNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, token);
-
-        try {
-            RValue rval = (RValue) node;
-            rval.rValue(dst, zone, e, log);
-        } catch (ClassCastException fakse) {
-            log.addException(new SemanticException("Expected R-value in brackets", token));
-        }
-
-    }
-
-    @Override
     public String toString() {
         return token.toString();
     }
@@ -74,24 +61,26 @@ public class RBracketsNode extends AbstractNode implements LRValue {
     }
 
     @Override
-    public void lValue(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, token);
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+        VisibilityZone zone = z.subZone(false, token.toString());
+
         try {
-            LValue lval = (LValue) node;
-            lval.lValue(src, zone, e, log);
+            RValue rval = (RValue) node;
+            rval.getVariable(dst, zone, e, log);
         } catch (ClassCastException fakse) {
-            log.addException(new SemanticException("Expected L-value in brackets", token));
+            log.addException(new SemanticException("Expected R-value in brackets", token));
         }
     }
 
     @Override
-    public boolean isRValue() {
-        return node.isRValue();
-    }
-
-    @Override
-    public boolean isLValue() {
-        return node.isLValue();
+    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+        VisibilityZone zone = z.subZone(false, token.toString());
+        try {
+            LValue lval = (LValue) node;
+            lval.setVariable(src, zone, e, log);
+        } catch (ClassCastException fakse) {
+            log.addException(new SemanticException("Expected L-value in brackets", token));
+        }
     }
 
 }

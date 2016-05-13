@@ -47,24 +47,11 @@ public class BOperatorNode extends AbstractNode implements RValue {
             return;
         }
 
-        VisibilityZone zone = z.subZone(false, operator);
-        Variable lvar = zone.createVariable(lt);
-        Variable rvar = zone.createVariable(rt);
+        String funStr = Values.toString(funName(), lt, rt);
 
-        left.rValue(lvar, zone, e, log);
-        right.rValue(rvar, zone, e, log);
-
-        List<Variable> args = new ArrayList<Variable>();
-        args.add(lvar);
-        args.add(rvar);
-
-        String funStr = Values.toStringType(funName(), args);
-
-        Function fun = e.f.get(funStr);
-
-        if (fun == null) {
-            log.addException(new SemanticException("Can't find " + funStr + " declaration", operator));
-            return;
+        if (e.getFunction(funStr, log, operator) != null) {
+            left.action(z.subZone(false, operator.toString()), e, log);
+            right.action(z.subZone(false, operator.toString()), e, log);
         }
     }
 
@@ -81,7 +68,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         case "%":
             return "sys.mod";
         case "^":
-            return "sys.partialXor";
+            return "sys.xor";
         case "&":
             return "sys.and";
         case "&&":
@@ -123,49 +110,6 @@ public class BOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        Type lt = left.type(e);
-        Type rt = right.type(e);
-
-        if (lt.idVoid()) {
-            log.addException(new SemanticException("Unexpected void before operator", operator));
-        }
-
-        if (rt.idVoid()) {
-            log.addException(new SemanticException("Unexpected void after operator", operator));
-        }
-
-        if (lt.idVoid() || rt.idVoid()) {
-            return;
-        }
-
-        VisibilityZone zone = z.subZone(false, operator);
-        Variable lvar = zone.createVariable(lt);
-        Variable rvar = zone.createVariable(rt);
-
-        left.rValue(lvar, zone, e, log);
-        right.rValue(rvar, zone, e, log);
-
-        List<Variable> args = new ArrayList<Variable>();
-        args.add(lvar);
-        args.add(rvar);
-
-        String funStr = Values.toStringType(funName(), args);
-
-        Function fun = e.f.get(funStr);
-
-        if (fun == null) {
-            log.addException(new SemanticException("Can't find " + funStr + " declaration", operator));
-            return;
-        }
-
-        if (Values.cmp(dst.type, fun.type, log, operator)) {
-            zone.addAction(new CallFunction(dst, funStr, args, null, operator));
-        }
-
-    }
-
-    @Override
     public String toString() {
         return operator.toString();
     }
@@ -183,12 +127,40 @@ public class BOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public boolean isRValue() {
-        return left.isRValue() && right.isRValue();
-    }
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+        Type lt = left.type(e);
+        Type rt = right.type(e);
 
-    @Override
-    public boolean isLValue() {
-        return false;
+        if (lt.idVoid()) {
+            log.addException(new SemanticException("Unexpected void before operator", operator));
+        }
+
+        if (rt.idVoid()) {
+            log.addException(new SemanticException("Unexpected void after operator", operator));
+        }
+
+        if (lt.idVoid() || rt.idVoid()) {
+            return;
+        }
+
+        VisibilityZone zone = z.subZone(false, operator.toString());
+        Variable lvar = zone.createVariable(lt);
+        left.getVariable(lvar, zone.subZone(false, null), e, log);
+
+        Variable rvar = zone.createVariable(rt);
+        right.getVariable(rvar, zone.subZone(false, null), e, log);
+
+        List<Variable> args = new ArrayList<Variable>();
+        args.add(lvar);
+        args.add(rvar);
+
+        String funStr = Values.toString(funName(), args);
+
+        Function fun = e.getFunction(funStr, log, operator);
+
+        if (Values.cmp(dst.type, fun.type, log, operator)) {
+            zone.addAction(new CallFunction(dst, funStr, args, null, operator.toString()));
+        }
+
     }
 }

@@ -22,11 +22,11 @@ import exception.ParseException;
 
 public class ParseFile {
 
-    public static List<Function> parse(String pac, Queue<SimpleString> pacs, List<byte[]> vals, String debug, Log log) throws IOException, ParseException {
-        return parse(new SimpleString(pac, null), pacs, vals, debug, log);
+    public static List<Function> parse(String path, String pac, Queue<SimpleString> pacs, List<byte[]> vals, String debug, Log log) throws IOException, ParseException {
+        return parse(path, new SimpleString(pac, null), pacs, vals, debug, log);
     }
 
-    public static List<Function> parse(SimpleString pac, Queue<SimpleString> pacs, List<byte[]> vals, String debug, Log log) throws IOException, ParseException {
+    public static List<Function> parse(String path, SimpleString pac, Queue<SimpleString> pacs, List<byte[]> vals, String debug, Log log) throws IOException, ParseException {
         if (pac.string.isEmpty()) {
             log.addException(new ParseException("Empty pac name ", pac));
             return new ArrayList<Function>();
@@ -54,7 +54,7 @@ public class ParseFile {
 
         List<Token> tokens = null;
         try {
-            tokens = FileTokenizer.split(new File(pac + ".src"), log);
+            tokens = FileTokenizer.split(new File(path + pac + ".src"), log);
         } catch (FileNotFoundException exception) {
             log.addException(new ParseException("Can't find pac", pac));
             return new ArrayList<Function>();
@@ -66,9 +66,11 @@ public class ParseFile {
             for (Token token : tokens) {
                 try {
                     VarToken varToken = (VarToken) token;
-                    pacs.add(varToken.pac);
+                    if (varToken.pac != null) {
+                        pacs.add(varToken.pac);
+                    }
                     continue;
-                } catch (ClassCastException | NullPointerException fake) {
+                } catch (ClassCastException fake) {
                 }
             }
         }

@@ -32,7 +32,7 @@ public class Assignment extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, operator);
+        VisibilityZone zone = z.subZone(false, operator.toString());
         Type type = type(e);
 
         if (type.idVoid()) {
@@ -41,9 +41,8 @@ public class Assignment extends AbstractNode implements RValue {
         }
 
         Variable var = zone.createVariable(type);
-
-        right.rValue(var, zone, e, log);
-        left.lValue(var, zone, e, log);
+        right.getVariable(var, zone, e, log);
+        left.setVariable(var, zone, e, log);
     }
 
     @Override
@@ -64,20 +63,6 @@ public class Assignment extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable var, VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, operator);
-        Type type = type(e);
-
-        if (type.idVoid()) {
-            log.addException(new SemanticException("Can't assign void type", operator));
-            return;
-        }
-
-        right.rValue(var, zone, e, log);
-        left.lValue(var, zone, e, log);
-    }
-
-    @Override
     public String toString() {
         return operator.toString();
     }
@@ -88,13 +73,9 @@ public class Assignment extends AbstractNode implements RValue {
     }
 
     @Override
-    public boolean isRValue() {
-        return right.isRValue();
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+        right.getVariable(dst, z.subZone(false, operator.toString()), e, log);
+        left.setVariable(dst, z.subZone(false, operator.toString()), e, log);
     }
 
 }

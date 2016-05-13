@@ -41,7 +41,13 @@ public class UOperatorNode extends AbstractNode implements RValue {
             log.addException(new SemanticException("Expected not array R-value", operator));
             return;
         }
-        node.action(z, e, log);
+
+        String funStr = Values.toString(funName(), type);
+
+        if (e.getFunction(funStr, log, operator) != null) {
+            node.action(z.subZone(false, operator.toString()), e, log);
+        }
+
     }
 
     @Override
@@ -57,47 +63,12 @@ public class UOperatorNode extends AbstractNode implements RValue {
         node.printTree(out, indent + 1);
     }
 
-    @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        Type type = node.type(e);
-        if (type.idVoid()) {
-            log.addException(new SemanticException("Expected R-value", operator));
-            return;
-        }
-
-        if (type.level != 0) {
-            log.addException(new SemanticException("Expected not array R-value", operator));
-            return;
-        }
-
-        VisibilityZone zone = z.subZone(false, operator);
-        Variable var = zone.createVariable(node.type(e));
-        node.rValue(var, zone, e, log);
-
-        List<Variable> args = new ArrayList<Variable>();
-        args.add(var);
-
-        String funStr = Values.toStringType("sys." + funName(), args);
-
-        Function fun = e.f.get(funStr);
-
-        if (fun == null) {
-            log.addException(new SemanticException("Can't find " + funStr + " declaration", operator));
-            return;
-        }
-
-        if (Values.cmp(dst.type, fun.type, log, operator)) {
-            zone.addAction(new CallFunction(dst, funStr, args, null, operator));
-        }
-
-    }
-
     public String funName() {
         switch (operator.string) {
         case "~":
-            return "not";
+            return "sys.not";
         case "#":
-            return "size";
+            return "sys.size";
         default:
             throw new RuntimeException("Unknown unary operator " + operator);
         }
@@ -122,13 +93,28 @@ public class UOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public boolean isRValue() {
-        return node.isRValue();
-    }
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+        Type type = node.type(e);
+        if (type.idVoid()) {
+            log.addException(new SemanticException("Expected R-value", operator));
+            return;
+        }
 
-    @Override
-    public boolean isLValue() {
-        return false;
-    }
+        if (type.level != 0) {
+            log.addException(new SemanticException("Expected not array R-value", operator));
+            return;
+        }
+        VisibilityZone zone = z.subZone(false, operator.toString());
+        Variable var = zone.createVariable(type);
+        List<Variable> args = new ArrayList<Variable>();
+        args.add(var);
 
+        String funStr = Values.toString(funName(), args);
+
+        Function fun = e.getFunction(funStr, log, operator);
+
+        if (Values.cmp(dst.type, fun.type, log, operator)) {
+            zone.addAction(new CallFunction(dst, funStr, args, null, operator.toString()));
+        }
+    }
 }

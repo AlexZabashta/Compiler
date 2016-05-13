@@ -1,13 +1,12 @@
 package asm.com;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 
 public class Nop extends Command {
 
-    public Nop(String label, Token token) {
-        super(label, token);
+    public Nop(String label, String comment) {
+        super(label, comment);
     }
 
     @Override

@@ -34,18 +34,18 @@ public class IfNode extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone iz = z.subZone(false, ifToken);
+        VisibilityZone iz = z.subZone(false, ifToken.toString());
         Variable s = iz.createVariable(new Type(EnumType.BOOL));
 
-        state.rValue(s, iz, e, log);
+        state.getVariable(s, iz, e, log);
         IfFalseJump elseJump = new IfFalseJump(s);
         Jump jump = new Jump();
 
         Action tend = new code.act.Nop();
         Action fend = new code.act.Nop();
 
-        elseJump.target = tend.label();
-        jump.target = fend.label();
+        elseJump.target = tend.label;
+        jump.target = fend.label;
 
         iz.addAction(elseJump);
         x.action(iz, e, log);
@@ -91,31 +91,31 @@ public class IfNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void rValue(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             RValue xVal = (RValue) x;
             RValue yVal = (RValue) y;
 
-            VisibilityZone iz = z.subZone(false, ifToken);
+            VisibilityZone iz = z.subZone(false, ifToken.toString());
             Variable s = iz.createVariable(new Type(EnumType.BOOL));
 
-            state.rValue(s, iz, e, log);
+            state.getVariable(s, iz, e, log);
             IfFalseJump elseJump = new IfFalseJump(s);
             Jump jump = new Jump();
 
             Action tend = new code.act.Nop();
             Action fend = new code.act.Nop();
 
-            elseJump.target = tend.label();
-            jump.target = fend.label();
+            elseJump.target = tend.label;
+            jump.target = fend.label;
 
             iz.addAction(elseJump);
-            xVal.rValue(dst, iz, e, log);
+            xVal.getVariable(dst, iz, e, log);
 
             iz.addAction(jump);
             iz.addAction(tend);
 
-            yVal.rValue(dst, iz, e, log);
+            yVal.getVariable(dst, iz, e, log);
 
             iz.addAction(fend);
         } catch (ClassCastException fake) {
@@ -137,13 +137,4 @@ public class IfNode extends AbstractNode implements RValue {
         return new Type();
     }
 
-    @Override
-    public boolean isRValue() {
-        return x.isRValue() && y.isRValue();
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
-    }
 }

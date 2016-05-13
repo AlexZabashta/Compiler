@@ -2,7 +2,6 @@ package asm.com;
 
 import java.util.Objects;
 
-import lex.Token;
 import asm.Command;
 import asm.State;
 
@@ -10,8 +9,8 @@ public class Call extends Command {
 
     public String target;
 
-    public Call(String target, String label, Token token) {
-        super(label, token);
+    public Call(String target, String label, String comment) {
+        super(label, comment);
         this.target = Objects.requireNonNull(target);
     }
 
@@ -23,7 +22,7 @@ public class Call extends Command {
         }
         state.esp -= 4;
         state.setRam(state.esp, state.eip);
-        state.eip = eip;
+        state.eip = eip + 1;
     }
 
     @Override

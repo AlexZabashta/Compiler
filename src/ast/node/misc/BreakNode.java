@@ -34,7 +34,7 @@ public class BreakNode extends AbstractNode {
         }
 
         if (n == 0) {
-            z.addAction(new Break(m, null, breakToken));
+            z.addAction(new Break(m, null, breakToken.toString()));
         } else {
             log.addException(new SemanticException(n + " visibility zones remain", breakToken));
         }
@@ -54,16 +54,6 @@ public class BreakNode extends AbstractNode {
     @Override
     public String toString() {
         return breakToken.toString();
-    }
-
-    @Override
-    public boolean isRValue() {
-        return false;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return false;
     }
 
 }

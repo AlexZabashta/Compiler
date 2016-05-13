@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import lex.Token;
+import asm.com.Push;
 import code.Action;
 import code.Variable;
 
@@ -14,13 +14,8 @@ public class CallFunction extends Action {
     public final List<Variable> args;
     public final Variable res;
 
-    public CallFunction(Variable res, String fun, List<Variable> args, String label, Token token) {
-        super(label, token);
-
-        if (res == null || res.type.idVoid()) {
-            res = null;
-        }
-
+    public CallFunction(Variable res, String fun, List<Variable> args, String label, String comment) {
+        super(label, comment);
         this.fun = fun;
         this.args = args;
         this.res = res;
@@ -44,36 +39,19 @@ public class CallFunction extends Action {
 
     @Override
     public void asm(List<Command> programText) {
-        int sp = 0;
-        programText.add(label() + ":" + comment());
-
-        if (res != null) {
-            if (res.type.level == 0) {
-                programText.add("        push dword 0");
-            } else {
-                programText.add("        push dword emptyarray");
-            }
-            ++sp;
-        }
+        programText.add(start());
 
         for (Variable var : args) {
-            programText.add("        push dword [esp + " + ((var.distance(parent) + sp) * 4) + "]");
-            ++sp;
+            var.subscribe(programText);
+            programText.add(new Push(var.memory(), null, comment));
+            parent.push();
         }
 
-        programText.add("        call " + fun);
+        programText.add(new asm.com.Call(fun, null, comment));
 
-        if (res != null) {
-            programText.add("        sub esp, " + ((sp - 1) * 4));
-            programText.add("        pop eax");
-            programText.add("        mov [esp + " + (res.distance(parent) * 4) + "], eax");
-        } else {
-            programText.add("        sub esp, " + ((sp - 0) * 4));
+        for (Variable var : args) {
+            parent.pop();
         }
-
-        // programText.add(" mov eax, [esp + " + (state.distance(parent) * 4) +
-        // "]");
-        // programText.add(" cmp eax, eax");
 
     }
 

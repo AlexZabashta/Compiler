@@ -6,8 +6,8 @@ import lex.Token;
 
 public abstract class Command extends AsmLine {
 
-    public Command(String label, Token token) {
-        super(label, token);
+    public Command(String label, String comment) {
+        super(label, comment);
     }
 
     public abstract void execute(State state);

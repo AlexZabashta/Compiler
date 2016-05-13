@@ -50,7 +50,7 @@ public class Function {
         }
         Environment environment = new Environment(localVariables, globalVariables, functions);
 
-        action.rValue(null, zone, environment, log);
+        action.action(zone, environment, log);
 
         return zone;
     }

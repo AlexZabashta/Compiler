@@ -6,14 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 import asm.Command;
-import lex.Token;
-import lex.token.fold.DeclarationToken;
-import misc.Type;
 import code.act.Nop;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
-import exception.SyntaxesException;
+import lex.token.fold.DeclarationToken;
+import misc.Type;
 
 public class VisibilityZone extends Action {
 
@@ -41,8 +39,16 @@ public class VisibilityZone extends Action {
     private final List<Variable> vars = new ArrayList<Variable>();
     public final boolean visible;
 
-    public VisibilityZone(String label, Token token) {
-        super(label, token);
+    public void push() {
+        // TODO push vars
+    }
+
+    public void pop() {
+        // TODO pop vars
+    }
+
+    public VisibilityZone(String label, String comment) {
+        super(label, comment);
         this.level = 0;
         this.parent = null;
         this.visible = true;
@@ -56,8 +62,8 @@ public class VisibilityZone extends Action {
         return root;
     }
 
-    public VisibilityZone(VisibilityZone parent, boolean visible, Token token) {
-        super(token);
+    public VisibilityZone(VisibilityZone parent, boolean visible, String comment) {
+        super(null, comment);
         this.parent = parent;
         this.level = parent.level + 1;
         this.visible = visible;
@@ -66,7 +72,7 @@ public class VisibilityZone extends Action {
 
     public void addAction(Action action) {
         if (end != null) {
-            throw new RuntimeException("Visibility zone " + label() + " is already end");
+            throw new RuntimeException("Visibility zone " + label + " is already end");
         }
 
         actions.add(action);
@@ -101,24 +107,21 @@ public class VisibilityZone extends Action {
         return var;
     }
 
+    public void freeVars(List<Command> programText) {
+        end();
+
+        // TODO SAVE REGISTERS
+    }
+
     @Override
     public void asm(List<Command> programText) {
         end();
-        programText.add(label() + ":" + comment());
 
-        for (Variable variable : vars) {
-            if (variable.type.level == 0) {
-                programText.add("        push dword 0");
-            } else {
-                programText.add("        push dword emptyarray");
-            }
-        }
+        // TODO SAVE REGISTERS
 
         for (Action action : actions) {
             action.asm(programText);
         }
-
-        programText.add("        add esp, " + (numberOfVars() * 4));
     }
 
     public Variable createVariable(Type type) {
@@ -140,7 +143,6 @@ public class VisibilityZone extends Action {
 
     @Override
     public void println(PrintWriter out, int indent) {
-        label();
         printLabel(out, indent);
 
         boolean sep = false;
@@ -155,9 +157,9 @@ public class VisibilityZone extends Action {
         }
 
         if (visible) {
-            out.println(") { // " + token);
+            out.println(") { // " + comment);
         } else {
-            out.println(") ( // " + token);
+            out.println(") ( // " + comment);
         }
 
         for (Action action : actions) {
@@ -178,8 +180,8 @@ public class VisibilityZone extends Action {
         }
     }
 
-    public VisibilityZone subZone(boolean visible, Token token) {
-        VisibilityZone zone = new VisibilityZone(this, visible, token);
+    public VisibilityZone subZone(boolean visible, String comment) {
+        VisibilityZone zone = new VisibilityZone(this, visible, comment);
         addAction(zone);
         return zone;
     }

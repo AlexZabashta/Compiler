@@ -4,17 +4,12 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import lex.Token;
 import code.Action;
 
 public class Nop extends Action {
 
-    public Nop(String label) {
-        super(label, null);
-    }
-
     public Nop() {
-        super(null);
+        super(null, null);
     }
 
     @Override
@@ -25,8 +20,7 @@ public class Nop extends Action {
 
     @Override
     public void asm(List<Command> programText) {
-        programText.add(label() + ":" + comment());
-        programText.add("        nop");
+        programText.add(new asm.com.Nop(label, comment));
 
     }
 

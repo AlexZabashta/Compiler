@@ -4,38 +4,33 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import lex.Token;
+import misc.Label;
 
 public abstract class Action {
 
-    private String label;
-    public final Token token;
-    private static int nextLabel = 0;
+    public String label, comment;
 
     protected VisibilityZone parent;
 
     public String comment() {
-        if (token == null) {
+        if (comment == null) {
             return "";
         } else {
-            return "     ;" + token.toString();
+            return "     ;" + comment;
         }
     }
 
-    public String label() {
+    public asm.com.Nop start() {
+        return new asm.com.Nop(label, null);
+    }
+
+    public Action(String label, String comment) {
         if (label == null) {
-            label = "act" + (++nextLabel);
+            this.label = Label.getTextLabel();
+        } else {
+            this.label = label;
         }
-        return label;
-    }
-
-    public Action(Token token) {
-        this.token = token;
-    }
-
-    public Action(String label, Token token) {
-        this.label = label;
-        this.token = token;
+        this.comment = comment;
     }
 
     public abstract void println(PrintWriter out, int indent);
@@ -62,6 +57,5 @@ public abstract class Action {
         }
     }
 
-    public void asm(List<Command> programText) {
-    }
+    public abstract void asm(List<Command> programText);
 }

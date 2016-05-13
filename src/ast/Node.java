@@ -19,8 +19,4 @@ public interface Node {
 
     void printTree(PrintWriter out, int indent);
 
-    public boolean isRValue();
-
-    public boolean isLValue();
-
 }

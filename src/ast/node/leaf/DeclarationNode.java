@@ -26,10 +26,10 @@ public class DeclarationNode extends AbstractNode implements LValue {
     }
 
     @Override
-    public void lValue(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
         Variable dst = z.createVariable(token, e.lv, log);
         if (Values.cmp(dst, src, log, token)) {
-            z.addAction(new SetLVar(dst, src, token));
+            z.addAction(new SetLVar(dst, src, token.toString()));
         }
     }
 
@@ -42,16 +42,6 @@ public class DeclarationNode extends AbstractNode implements LValue {
     public void printTree(PrintWriter out, int indent) {
         printIndent(out, indent);
         out.println(token);
-    }
-
-    @Override
-    public boolean isRValue() {
-        return false;
-    }
-
-    @Override
-    public boolean isLValue() {
-        return true;
     }
 
 }
