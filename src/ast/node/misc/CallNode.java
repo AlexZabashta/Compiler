@@ -11,13 +11,16 @@ import ast.Function;
 import ast.Node;
 import ast.node.AbstractNode;
 import ast.node.RValue;
-import ast.node.Values;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
+import exception.SemanticException;
+import exception.TypeMismatch;
+import exception.UnexpectedVoidType;
 
 public class CallNode extends AbstractNode implements RValue {
 
@@ -31,28 +34,35 @@ public class CallNode extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        String funStr = fun(e);
-        Function function = e.getFunction(funStr, log, fun);
+        try {
+            Function function = fun(e);
+            List<Variable> args = new ArrayList<Variable>();
 
-        if (function == null) {
-            return;
+            VisibilityZone fz = z.subZone(false, fun.toString());
+
+            for (RValue node : vars) {
+                VisibilityZone az = fz.subZone(false, fun.toString());
+
+                Variable var = fz.createVariable(node.type(e));
+
+                node.getVariable(var, az, e, log);
+                args.add(var);
+            }
+
+            Type type = function.type;
+            Variable res = null;
+
+            if (!type.idVoid()) {
+                res = fz.createVariable(type);
+            }
+
+            fz.addAction(new CallFunction(res, function, args, null, fun.toString()));
+        } catch (TypeMismatch | DeclarationException | UnexpectedVoidType exception) {
+            log.addException(new SemanticException(exception.getMessage(), fun));
         }
-        List<Variable> args = new ArrayList<Variable>();
-
-        VisibilityZone fz = z.subZone(false, fun.toString());
-
-        for (RValue node : vars) {
-            VisibilityZone az = fz.subZone(false, fun.toString());
-
-            Variable var = fz.createVariable(node.type(e));
-
-            node.getVariable(var, az, e, log);
-            args.add(var);
-        }
-        fz.addAction(new CallFunction(null, funStr, args, null, fun.toString()));
     }
 
-    public String fun(Environment e) {
+    public Function fun(Environment e) throws DeclarationException {
         StringBuilder builder = new StringBuilder();
         builder.append(fun.toTokenString());
 
@@ -61,7 +71,7 @@ public class CallNode extends AbstractNode implements RValue {
             builder.append(node.type(e));
         }
 
-        return builder.toString();
+        return e.function(builder.toString());
     }
 
     @Override
@@ -93,26 +103,25 @@ public class CallNode extends AbstractNode implements RValue {
 
     @Override
     public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        String funStr = fun(e);
-        Function function = e.getFunction(funStr, log, fun);
+        try {
+            Function function = fun(e);
+            List<Variable> args = new ArrayList<Variable>();
+            VisibilityZone fz = z.subZone(false, fun.toString());
 
-        if (function == null) {
-            return;
-        }
-        List<Variable> args = new ArrayList<Variable>();
+            for (RValue node : vars) {
+                VisibilityZone az = fz.subZone(false, fun.toString());
 
-        VisibilityZone fz = z.subZone(false, fun.toString());
+                Variable var;
+                var = fz.createVariable(node.type(e));
 
-        for (RValue node : vars) {
-            VisibilityZone az = fz.subZone(false, fun.toString());
+                node.getVariable(var, az, e, log);
+                args.add(var);
+            }
 
-            Variable var = fz.createVariable(node.type(e));
+            fz.addAction(new CallFunction(dst, function, args, null, fun.toString()));
 
-            node.getVariable(var, az, e, log);
-            args.add(var);
-        }
-        if (Values.cmp(dst.type, function.type, log, fun)) {
-            fz.addAction(new CallFunction(dst, funStr, args, null, fun.toString()));
+        } catch (UnexpectedVoidType | DeclarationException | TypeMismatch exception) {
+            log.addException(new SemanticException(exception.getMessage(), fun));
         }
     }
 
@@ -122,15 +131,8 @@ public class CallNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public Type type(Environment e) {
-        String fun = fun(e);
-        Function function = e.f.get(fun);
-
-        if (function == null) {
-            return null;
-        }
-
-        return function.type;
+    public Type type(Environment e) throws DeclarationException {
+        return fun(e).type;
     }
 
 }

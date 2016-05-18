@@ -46,7 +46,7 @@ public abstract class Token implements Comparable<Token> {
         if (location == null) {
             return toTokenString();
         } else {
-            return toTokenString() + " at " + location;
+            return toTokenString() + " in " + location;
         }
     }
 

@@ -27,12 +27,13 @@ public class Log {
         if (exceptions.isEmpty()) {
             return false;
         }
-        System.err.println("    " + message);
+        // System.err.println("    " + message);
 
         Collections.sort(exceptions);
 
         for (ParseException exception : exceptions) {
-            System.err.println("    " + "    " + exception.getMessage());
+            // System.err.println("    " + "    " + exception.getMessage());
+            System.err.println(exception.getMessage());
         }
         exceptions.clear();
         return true;

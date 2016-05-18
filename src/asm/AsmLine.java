@@ -2,8 +2,6 @@ package asm;
 
 import java.io.PrintWriter;
 
-import lex.Token;
-
 public abstract class AsmLine {
 
     public String label, comment;

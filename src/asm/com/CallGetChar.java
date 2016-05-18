@@ -1,6 +1,8 @@
 package asm.com;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 
 import asm.Command;
 import asm.Register;
@@ -13,13 +15,9 @@ public class CallGetChar extends Command {
     }
 
     @Override
-    public void execute(State state) {
-        try {
-            int character = state.input.read();
-            state.setReg(Register.EAX, character);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void execute(State state, Reader input, Writer output) throws IOException {
+        int character = input.read();
+        state.setReg(Register.EAX, character);
         state.eip++;
     }
 

@@ -1,6 +1,8 @@
 package asm.com;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 
 import asm.Command;
 import asm.State;
@@ -12,14 +14,10 @@ public class CallPutChar extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) throws IOException {
         int characterPtr = state.esp;
         int character = state.getRam(characterPtr);
-        try {
-            state.output.write(character);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        output.write(character);
         state.eip++;
     }
 

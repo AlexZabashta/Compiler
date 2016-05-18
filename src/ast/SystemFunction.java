@@ -2,9 +2,6 @@ package ast;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import lex.token.fold.DeclarationToken;
 import lex.token.fold.TypeToken;
@@ -12,10 +9,6 @@ import lex.token.fold.VarToken;
 import lex.token.pure.SimpleString;
 import misc.Characters;
 import misc.Type;
-import ast.node.op.FBracketsNode;
-import code.Environment;
-import code.FunctionZone;
-import code.Variable;
 
 public class SystemFunction extends Function {
 

@@ -12,12 +12,15 @@ import ast.node.AbstractNode;
 import ast.node.RValue;
 import ast.node.Values;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
+import exception.TypeMismatch;
+import exception.UnexpectedVoidType;
 
 public class BOperatorNode extends AbstractNode implements RValue {
 
@@ -32,27 +35,25 @@ public class BOperatorNode extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        Type lt = left.type(e);
-        Type rt = right.type(e);
+        try {
+            Type lt = left.type(e);
+            Type rt = right.type(e);
 
-        if (lt.idVoid()) {
-            log.addException(new SemanticException("Unexpected void before operator", operator));
+            if (lt.idVoid()) {
+                throw new UnexpectedVoidType("Unexpected void before operator");
+            }
+
+            if (rt.idVoid()) {
+                throw new UnexpectedVoidType("Unexpected void after operator");
+            }
+
+            e.function(Values.toString(funName(), lt, rt));
+        } catch (DeclarationException | UnexpectedVoidType exception) {
+            log.addException(new SemanticException(exception.getMessage(), operator));
         }
 
-        if (rt.idVoid()) {
-            log.addException(new SemanticException("Unexpected void after operator", operator));
-        }
-
-        if (lt.idVoid() || rt.idVoid()) {
-            return;
-        }
-
-        String funStr = Values.toString(funName(), lt, rt);
-
-        if (e.getFunction(funStr, log, operator) != null) {
-            left.action(z.subZone(false, operator.toString()), e, log);
-            right.action(z.subZone(false, operator.toString()), e, log);
-        }
+        left.action(z.subZone(false, operator.toString()), e, log);
+        right.action(z.subZone(false, operator.toString()), e, log);
     }
 
     public String funName() {
@@ -115,52 +116,43 @@ public class BOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public Type type(Environment e) {
-        try {
-            char q = Characters.typeSeparator;
-            String funStr = funName() + q + left.type(e) + q + right.type(e);
-            Function function = e.f.get(funStr);
-            return function.type;
-        } catch (RuntimeException fake) {
-            return right.type(e);
-        }
+    public Type type(Environment e) throws DeclarationException {
+        String funStr = Values.toString(funName(), left.type(e), right.type(e));
+        return e.function(funStr).type;
     }
 
     @Override
     public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        Type lt = left.type(e);
-        Type rt = right.type(e);
+        try {
+            Type lt = left.type(e);
+            Type rt = right.type(e);
 
-        if (lt.idVoid()) {
-            log.addException(new SemanticException("Unexpected void before operator", operator));
+            if (lt.idVoid()) {
+                throw new UnexpectedVoidType("Unexpected void before operator");
+            }
+
+            if (rt.idVoid()) {
+                throw new UnexpectedVoidType("Unexpected void after operator");
+            }
+
+            VisibilityZone zone = z.subZone(false, operator.toString());
+            Variable lvar = zone.createVariable(lt);
+            left.getVariable(lvar, zone.subZone(false, null), e, log);
+
+            Variable rvar = zone.createVariable(rt);
+            right.getVariable(rvar, zone.subZone(false, null), e, log);
+
+            List<Variable> args = new ArrayList<Variable>();
+            args.add(lvar);
+            args.add(rvar);
+
+            String funStr = Values.toString(funName(), args);
+
+            Function function = e.function(funStr);
+
+            zone.addAction(new CallFunction(dst, function, args, null, operator.toString()));
+        } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
+            log.addException(new SemanticException(exception.getMessage(), operator));
         }
-
-        if (rt.idVoid()) {
-            log.addException(new SemanticException("Unexpected void after operator", operator));
-        }
-
-        if (lt.idVoid() || rt.idVoid()) {
-            return;
-        }
-
-        VisibilityZone zone = z.subZone(false, operator.toString());
-        Variable lvar = zone.createVariable(lt);
-        left.getVariable(lvar, zone.subZone(false, null), e, log);
-
-        Variable rvar = zone.createVariable(rt);
-        right.getVariable(rvar, zone.subZone(false, null), e, log);
-
-        List<Variable> args = new ArrayList<Variable>();
-        args.add(lvar);
-        args.add(rvar);
-
-        String funStr = Values.toString(funName(), args);
-
-        Function fun = e.getFunction(funStr, log, operator);
-
-        if (Values.cmp(dst.type, fun.type, log, operator)) {
-            zone.addAction(new CallFunction(dst, funStr, args, null, operator.toString()));
-        }
-
     }
 }

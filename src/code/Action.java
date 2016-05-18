@@ -3,26 +3,14 @@ package code;
 import java.io.PrintWriter;
 import java.util.List;
 
-import asm.Command;
 import misc.Label;
+import asm.Command;
 
 public abstract class Action {
 
     public String label, comment;
 
     protected VisibilityZone parent;
-
-    public String comment() {
-        if (comment == null) {
-            return "";
-        } else {
-            return "     ;" + comment;
-        }
-    }
-
-    public asm.com.Nop start() {
-        return new asm.com.Nop(label, null);
-    }
 
     public Action(String label, String comment) {
         if (label == null) {
@@ -33,7 +21,21 @@ public abstract class Action {
         this.comment = comment;
     }
 
-    public abstract void println(PrintWriter out, int indent);
+    public abstract void asm(List<Command> programText);
+
+    public String comment() {
+        if (comment == null) {
+            return "";
+        } else {
+            return "     ;" + comment;
+        }
+    }
+
+    public void printIndent(PrintWriter out, int indent) {
+        while (--indent >= 0) {
+            out.print("    ");
+        }
+    }
 
     public void printLabel(PrintWriter out, int indent) {
         if (label == null) {
@@ -51,11 +53,9 @@ public abstract class Action {
         }
     }
 
-    public void printIndent(PrintWriter out, int indent) {
-        while (--indent >= 0) {
-            out.print("    ");
-        }
-    }
+    public abstract void println(PrintWriter out, int indent);
 
-    public abstract void asm(List<Command> programText);
+    public asm.com.Nop start() {
+        return new asm.com.Nop(label, null);
+    }
 }

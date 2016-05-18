@@ -5,28 +5,22 @@ import java.util.List;
 
 import lex.Location;
 import lex.Token;
+import lex.token.ConstValueToken;
 import lex.token.fold.BracketsToken;
 import lex.token.fold.BracketsType;
 import lex.token.fold.BreakToken;
 import lex.token.fold.DeclarationToken;
 import lex.token.fold.VarToken;
-import lex.token.key_word.BoolToken;
 import lex.token.key_word.ElseToken;
 import lex.token.key_word.ForToken;
 import lex.token.key_word.IfToken;
 import lex.token.key_word.ReturnToken;
-import lex.token.pure.CharToken;
-import lex.token.pure.NumberToken;
 import lex.token.pure.Operator;
-import lex.token.pure.QuotedString;
 import lex.token.pure.SimpleString;
 import ast.node.LValue;
 import ast.node.RValue;
-import ast.node.leaf.BoolNode;
-import ast.node.leaf.CharNode;
+import ast.node.leaf.ConstValueNode;
 import ast.node.leaf.DeclarationNode;
-import ast.node.leaf.NumberNode;
-import ast.node.leaf.QuotedStringNode;
 import ast.node.leaf.VarNode;
 import ast.node.misc.BreakNode;
 import ast.node.misc.CallNode;
@@ -152,7 +146,7 @@ public class AST {
             }
 
             try {
-                return new BoolNode((BoolToken) first);
+                return new ConstValueNode((ConstValueToken) first);
             } catch (ClassCastException fake) {
             }
 
@@ -163,21 +157,6 @@ public class AST {
 
             try {
                 return new DeclarationNode((DeclarationToken) first);
-            } catch (ClassCastException fake) {
-            }
-
-            try {
-                return new NumberNode((NumberToken) first);
-            } catch (ClassCastException fake) {
-            }
-
-            try {
-                return new QuotedStringNode((QuotedString) first);
-            } catch (ClassCastException fake) {
-            }
-
-            try {
-                return new CharNode((CharToken) first);
             } catch (ClassCastException fake) {
             }
 

@@ -1,5 +1,8 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
+
 import asm.Command;
 import asm.State;
 
@@ -11,7 +14,7 @@ public class Ret extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         state.eip = state.getRam(state.esp);
         state.esp += 4;
     }

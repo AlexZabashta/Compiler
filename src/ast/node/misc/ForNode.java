@@ -9,15 +9,17 @@ import misc.Type;
 import ast.Node;
 import ast.node.AbstractNode;
 import ast.node.RValue;
-import ast.node.leaf.BoolNode;
+import ast.node.leaf.ConstValueNode;
 import code.Action;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
 import code.act.IfTrueJump;
 import code.act.Jump;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
+import exception.UnexpectedVoidType;
 
 public class ForNode extends AbstractNode {
 
@@ -26,7 +28,7 @@ public class ForNode extends AbstractNode {
     public final RValue state;
 
     public ForNode(ForToken forToken, Node action) {
-        this(forToken, new Nop(), new BoolNode(new BoolToken(false, forToken.location)), new Nop(), action);
+        this(forToken, new Nop(), new ConstValueNode(new BoolToken(false, forToken.location)), new Nop(), action);
     }
 
     public ForNode(ForToken forToken, Node pre, RValue state, Node post, Node action) {
@@ -49,7 +51,12 @@ public class ForNode extends AbstractNode {
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone fz = z.subZone(true, forToken.toString());
 
-        Variable s = fz.createVariable(new Type(EnumType.BOOL));
+        Variable s;
+        try {
+            s = fz.createVariable(new Type(EnumType.BOOL));
+        } catch (UnexpectedVoidType neverHappen) {
+            throw new RuntimeException(neverHappen);
+        }
 
         Jump jump = new Jump();
         Action wnop = new code.act.Nop();
@@ -71,7 +78,11 @@ public class ForNode extends AbstractNode {
 
         fz.addAction(elseJump);
 
-        fz.removeAll(e.lv);
+        try {
+            fz.removeAll(e);
+        } catch (DeclarationException neverHappen) {
+            throw new RuntimeException(neverHappen);
+        }
     }
 
     @Override

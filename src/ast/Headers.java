@@ -3,9 +3,6 @@ package ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import exception.Log;
-import exception.ParseException;
-import exception.SyntaxesException;
 import lex.Token;
 import lex.token.fold.BracketsToken;
 import lex.token.fold.BracketsType;
@@ -16,9 +13,11 @@ import lex.token.key_word.InitToken;
 import lex.token.pure.Operator;
 import lex.token.pure.SimpleString;
 import misc.Characters;
-import misc.EnumType;
 import misc.Type;
 import ast.node.op.FBracketsNode;
+import exception.Log;
+import exception.ParseException;
+import exception.SyntaxesException;
 
 public class Headers {
 
@@ -34,7 +33,7 @@ public class Headers {
             if (token instanceof InitToken) {
                 InitToken initToken = (InitToken) token;
 
-                TypeToken initTypeToken = new TypeToken(new Type(EnumType.VOID, 0), initToken.location);
+                TypeToken initTypeToken = new TypeToken(new Type(), initToken.location);
                 SimpleString initName = new SimpleString("init" + Characters.typeSeparator + "const", initToken.location);
                 VarToken initVarToken = new VarToken(pac, initName);
                 DeclarationToken initDeclaration = new DeclarationToken(initTypeToken, initVarToken);

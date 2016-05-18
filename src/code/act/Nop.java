@@ -13,15 +13,15 @@ public class Nop extends Action {
     }
 
     @Override
-    public void println(PrintWriter out, int indent) {
-        printLabel(out, indent);
-        out.println("nop");
-    }
-
-    @Override
     public void asm(List<Command> programText) {
         programText.add(new asm.com.Nop(label, comment));
 
+    }
+
+    @Override
+    public void println(PrintWriter out, int indent) {
+        printLabel(out, indent);
+        out.println("nop");
     }
 
 }

@@ -1,54 +1,68 @@
 package misc;
 
+import exception.TypeInitException;
+
 public class Type {
     public final EnumType type;
-    public final int level;
+    public final int dim;
+
+    public final static int MAX_DIM = 3;
 
     public boolean idVoid() {
         return type == EnumType.VOID;
     }
 
+    public static Type string() {
+        try {
+            return new Type(EnumType.CHAR, 1);
+        } catch (TypeInitException neverHappen) {
+            throw new RuntimeException(neverHappen);
+        }
+    }
+
     public Type() {
-        this(EnumType.VOID);
+        this.type = EnumType.VOID;
+        this.dim = 0;
     }
 
     public Type(EnumType type) {
-        this(type, 0);
+        this.type = type;
+        this.dim = 0;
     }
 
-    public Type(EnumType type, int level) {
+    public Type(EnumType type, int dim) throws TypeInitException {
         this.type = type;
 
-        if (type == EnumType.VOID && level != 0) {
-            throw new RuntimeException("Void level = " + level + " != 0");
+        if (type == EnumType.VOID && dim != 0) {
+            throw new TypeInitException("Void dim = " + dim + " != 0");
         }
 
-        if (level < 0) {
-            throw new RuntimeException("Type level = " + level + " < 0");
+        if (dim < 0) {
+            throw new TypeInitException("Type dim = " + dim + " < 0");
         }
 
-        if (level > 15) {
-            throw new RuntimeException("Type level = " + level + " > 15");
+        if (dim > MAX_DIM) {
+            throw new TypeInitException("Type dim = " + dim + " > " + MAX_DIM);
         }
-        this.level = level;
+        this.dim = dim;
     }
 
-    public static Type get(String name, int level) {
+    public static Type get(String name, int dim) throws TypeInitException {
         switch (name.intern()) {
         case "int":
-            return new Type(EnumType.INT, level);
+            return new Type(EnumType.INT, dim);
         case "char":
-            return new Type(EnumType.CHAR, level);
+            return new Type(EnumType.CHAR, dim);
         case "bool":
-            return new Type(EnumType.BOOL, level);
+            return new Type(EnumType.BOOL, dim);
         case "void":
-            return new Type(EnumType.VOID, level);
+            return new Type(EnumType.VOID, dim);
         case "string":
-            return new Type(EnumType.CHAR, level + 1);
+            return new Type(EnumType.CHAR, dim + 1);
         case "text":
-            return new Type(EnumType.CHAR, level + 2);
+            return new Type(EnumType.CHAR, dim + 2);
         default:
-            throw new RuntimeException("Unknown type " + name);
+            throw new TypeInitException("Unknown type " + name);
         }
     }
 
@@ -56,7 +70,7 @@ public class Type {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + level;
+        result = prime * result + dim;
         result = prime * result + ((type == null) ? 0 : type.hashCode());
         return result;
     }
@@ -70,7 +84,7 @@ public class Type {
         if (getClass() != obj.getClass())
             return false;
         Type other = (Type) obj;
-        if (level != other.level)
+        if (dim != other.dim)
             return false;
         if (type != other.type)
             return false;
@@ -79,10 +93,10 @@ public class Type {
 
     @Override
     public String toString() {
-        if (level == 0) {
+        if (dim == 0) {
             return type.toString().toLowerCase();
         } else {
-            return type.toString().toLowerCase() + "." + level;
+            return type.toString().toLowerCase() + "." + dim;
         }
 
     }

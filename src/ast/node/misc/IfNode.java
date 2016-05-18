@@ -11,13 +11,15 @@ import ast.node.RValue;
 import ast.node.op.RBracketsNode;
 import code.Action;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
 import code.act.IfFalseJump;
 import code.act.Jump;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
+import exception.UnexpectedVoidType;
 
 public class IfNode extends AbstractNode implements RValue {
 
@@ -35,7 +37,12 @@ public class IfNode extends AbstractNode implements RValue {
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone iz = z.subZone(false, ifToken.toString());
-        Variable s = iz.createVariable(new Type(EnumType.BOOL));
+        Variable s;
+        try {
+            s = iz.createVariable(new Type(EnumType.BOOL));
+        } catch (UnexpectedVoidType neverHappen) {
+            throw new RuntimeException(neverHappen);
+        }
 
         state.getVariable(s, iz, e, log);
         IfFalseJump elseJump = new IfFalseJump(s);
@@ -97,8 +104,12 @@ public class IfNode extends AbstractNode implements RValue {
             RValue yVal = (RValue) y;
 
             VisibilityZone iz = z.subZone(false, ifToken.toString());
-            Variable s = iz.createVariable(new Type(EnumType.BOOL));
-
+            Variable s;
+            try {
+                s = iz.createVariable(new Type(EnumType.BOOL));
+            } catch (UnexpectedVoidType neverHappen) {
+                throw new RuntimeException(neverHappen);
+            }
             state.getVariable(s, iz, e, log);
             IfFalseJump elseJump = new IfFalseJump(s);
             Jump jump = new Jump();
@@ -124,7 +135,7 @@ public class IfNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public Type type(Environment e) {
+    public Type type(Environment e) throws DeclarationException {
         try {
             Type xType = ((RValue) x).type(e);
             Type yType = ((RValue) y).type(e);

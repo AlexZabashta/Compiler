@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.util.List;
 
 import asm.Command;
-import asm.mem.ConstInt;
 import code.Action;
 
 public class Jump extends Action {
@@ -16,8 +15,8 @@ public class Jump extends Action {
     }
 
     @Override
-    public String toString() {
-        return "jump to " + target;
+    public void asm(List<Command> programText) {
+        programText.add(new asm.com.Jmp(target, label, comment));
     }
 
     @Override
@@ -27,9 +26,8 @@ public class Jump extends Action {
     }
 
     @Override
-    public void asm(List<Command> programText) {
-        programText.add(start());
-        programText.add(new asm.com.Jmp(target, null, comment));
+    public String toString() {
+        return "jump to " + target;
     }
 
 }

@@ -1,5 +1,8 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
+
 import asm.Command;
 import asm.Register;
 import asm.State;
@@ -11,7 +14,7 @@ public class CallMalloc extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         int sizePtr = state.esp;
         int size = state.getRam(sizePtr);
         int address = state.malloc(size);

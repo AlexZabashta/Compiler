@@ -2,11 +2,13 @@ package lex.token.pure;
 
 import lex.Location;
 import lex.Token;
-import lex.token.ConstValue;
+import lex.token.ConstValueToken;
 import misc.Characters;
+import misc.EnumType;
 import misc.LittleEndian;
+import misc.Type;
 
-public class CharToken extends Token implements ConstValue {
+public class CharToken extends ConstValueToken {
 
     public final char symbol;
     public int valIndex;
@@ -22,17 +24,7 @@ public class CharToken extends Token implements ConstValue {
     }
 
     @Override
-    public int getValIndex() {
-        return valIndex;
-    }
-
-    @Override
-    public void setValIndex(int valIndex) {
-        this.valIndex = valIndex;
-    }
-
-    @Override
-    public byte[] getConstValue() {
-        return LittleEndian.encode(symbol);
+    public Type type() {
+        return new Type(EnumType.CHAR);
     }
 }

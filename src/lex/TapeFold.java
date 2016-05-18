@@ -22,11 +22,11 @@ import lex.token.pure.Comment;
 import lex.token.pure.NumberToken;
 import lex.token.pure.Operator;
 import lex.token.pure.SimpleString;
-import misc.EnumType;
 import misc.Type;
 import exception.Log;
 import exception.ParseException;
 import exception.SyntaxesException;
+import exception.TypeInitException;
 
 public class TapeFold {
 
@@ -190,24 +190,28 @@ public class TapeFold {
                         NumberToken number = (NumberToken) tokens.get(i + 2);
                         i += 2;
 
-                        Type type = new Type(EnumType.VOID, 0);
+                        Type type = new Type();
                         try {
                             type = Type.get(str.string, number.number);
-                        } catch (RuntimeException error) {
+                        } catch (TypeInitException error) {
                             log.addException(new SyntaxesException(error.getMessage(), str));
                             try {
                                 type = Type.get(str.string, 0);
-                            } catch (RuntimeException error2) {
-                                log.addException(new SyntaxesException(error2.getMessage(), str));
+                            } catch (TypeInitException neverHappen) {
+                                throw new RuntimeException(neverHappen);
                             }
+                        }
+                        list.add(new TypeToken(type, str.location));
+                    } catch (ClassCastException | IndexOutOfBoundsException fake) {
+                        Type type = new Type();
+                        try {
+                            type = Type.get(str.string, 0);
+                        } catch (TypeInitException neverHappen) {
+                            throw new RuntimeException(neverHappen);
                         }
 
                         list.add(new TypeToken(type, str.location));
-
-                    } catch (ClassCastException | IndexOutOfBoundsException fake) {
-                        list.add(new TypeToken(Type.get(str.string, 0), str.location));
                     }
-
                 }
                     break;
                 default:

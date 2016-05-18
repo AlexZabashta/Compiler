@@ -9,8 +9,9 @@ import ast.node.AbstractNode;
 import ast.node.LValue;
 import ast.node.RValue;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
@@ -52,7 +53,7 @@ public class RBracketsNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public Type type(Environment e) {
+    public Type type(Environment e) throws DeclarationException {
         try {
             return ((RValue) node).type(e);
         } catch (ClassCastException fakse) {

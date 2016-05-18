@@ -1,5 +1,8 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
+
 import asm.Command;
 import asm.State;
 import asm.mem.Memory;
@@ -20,7 +23,7 @@ public class Mov extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         int value = src.get(state);
         dst.set(state, value);
         state.eip++;

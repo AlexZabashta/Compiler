@@ -1,7 +1,6 @@
 package ast;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,9 +10,12 @@ import misc.Type;
 import ast.node.op.FBracketsNode;
 import code.Environment;
 import code.FunctionZone;
-import code.Variable;
+import code.var.GlobalVariable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
+import exception.SemanticException;
+import exception.UnexpectedVoidType;
 
 public class Function {
     public final FBracketsNode action;
@@ -41,14 +43,17 @@ public class Function {
 
     }
 
-    public FunctionZone getVisibilityZone(Map<String, DeclarationToken> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
+    public FunctionZone getVisibilityZone(Map<String, GlobalVariable> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
         FunctionZone zone = new FunctionZone(this);
+        Environment environment = new Environment(globalVariables, functions);
 
-        Map<String, Variable> localVariables = new HashMap<String, Variable>();
         for (DeclarationToken var : vars) {
-            zone.createVariable(var, localVariables, log);
+            try {
+                zone.createVariable(var, environment);
+            } catch (UnexpectedVoidType | DeclarationException exceptione) {
+                log.addException(new SemanticException(exceptione.getMessage(), name));
+            }
         }
-        Environment environment = new Environment(localVariables, globalVariables, functions);
 
         action.action(zone, environment, log);
 

@@ -9,7 +9,8 @@ import lex.token.fold.DeclarationToken;
 import ast.node.op.FBracketsNode;
 import code.Environment;
 import code.FunctionZone;
-import code.Variable;
+import code.var.GlobalVariable;
+import code.var.Variable;
 import exception.Log;
 import exception.ParseException;
 
@@ -20,10 +21,10 @@ public class InitFunction extends Function {
     }
 
     @Override
-    public FunctionZone getVisibilityZone(Map<String, DeclarationToken> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
+    public FunctionZone getVisibilityZone(Map<String, GlobalVariable> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
         FunctionZone zone = new FunctionZone(this);
         Map<String, Variable> localVariables = new HashMap<String, Variable>();
-        Environment environment = new Environment(localVariables, globalVariables, functions);
+        Environment environment = new Environment(globalVariables, functions);
         action.action(zone, environment, log);
         return zone;
     }

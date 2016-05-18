@@ -1,8 +1,8 @@
 package asm;
 
-import java.io.PrintWriter;
-
-import lex.Token;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 
 public abstract class Command extends AsmLine {
 
@@ -10,6 +10,6 @@ public abstract class Command extends AsmLine {
         super(label, comment);
     }
 
-    public abstract void execute(State state);
+    public abstract void execute(State state, Reader input, Writer output) throws IOException;
 
 }

@@ -12,12 +12,15 @@ import ast.node.AbstractNode;
 import ast.node.RValue;
 import ast.node.Values;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
+import exception.TypeMismatch;
+import exception.UnexpectedVoidType;
 
 public class UOperatorNode extends AbstractNode implements RValue {
 
@@ -31,23 +34,22 @@ public class UOperatorNode extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        Type type = node.type(e);
-        if (type.idVoid()) {
-            log.addException(new SemanticException("Expected R-value", operator));
-            return;
-        }
+        try {
+            Type type = node.type(e);
+            if (type.idVoid()) {
+                throw new UnexpectedVoidType("Expected R-value");
+            }
 
-        if (type.level != 0) {
-            log.addException(new SemanticException("Expected not array R-value", operator));
-            return;
-        }
+            if (type.dim != 0) {
+                throw new UnexpectedVoidType("Expected not array R-value");
+            }
 
-        String funStr = Values.toString(funName(), type);
-
-        if (e.getFunction(funStr, log, operator) != null) {
+            String funStr = Values.toString(funName(), type);
+            e.function(funStr);
             node.action(z.subZone(false, operator.toString()), e, log);
+        } catch (DeclarationException | UnexpectedVoidType exception) {
+            log.addException(new SemanticException(exception.getMessage(), operator));
         }
-
     }
 
     @Override
@@ -80,7 +82,7 @@ public class UOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public Type type(Environment e) {
+    public Type type(Environment e) throws DeclarationException {
         switch (operator.string) {
         case "~":
             return node.type(e);
@@ -94,27 +96,29 @@ public class UOperatorNode extends AbstractNode implements RValue {
 
     @Override
     public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        Type type = node.type(e);
-        if (type.idVoid()) {
-            log.addException(new SemanticException("Expected R-value", operator));
-            return;
+        try {
+            Type type = node.type(e);
+            if (type.idVoid()) {
+                throw new UnexpectedVoidType("Expected R-value");
+            }
+
+            if (type.dim != 0) {
+                throw new UnexpectedVoidType("Expected not array R-value");
+            }
+
+            VisibilityZone zone = z.subZone(false, operator.toString());
+            Variable var = zone.createVariable(type);
+            List<Variable> args = new ArrayList<Variable>();
+            args.add(var);
+
+            String funStr = Values.toString(funName(), args);
+
+            Function fun = e.function(funStr);
+
+            zone.addAction(new CallFunction(dst, fun, args, null, operator.toString()));
+        } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
+            log.addException(new SemanticException(exception.getMessage(), operator));
         }
 
-        if (type.level != 0) {
-            log.addException(new SemanticException("Expected not array R-value", operator));
-            return;
-        }
-        VisibilityZone zone = z.subZone(false, operator.toString());
-        Variable var = zone.createVariable(type);
-        List<Variable> args = new ArrayList<Variable>();
-        args.add(var);
-
-        String funStr = Values.toString(funName(), args);
-
-        Function fun = e.getFunction(funStr, log, operator);
-
-        if (Values.cmp(dst.type, fun.type, log, operator)) {
-            zone.addAction(new CallFunction(dst, funStr, args, null, operator.toString()));
-        }
     }
 }

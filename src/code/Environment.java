@@ -1,30 +1,73 @@
 package code;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import exception.Log;
-import exception.ParseException;
-import exception.SemanticException;
 import ast.Function;
-import lex.Token;
-import lex.token.fold.DeclarationToken;
+import code.var.GlobalVariable;
+import code.var.LocalVariable;
+import exception.DeclarationException;
 
 public class Environment {
-    public final Map<String, Variable> lv;
-    public final Map<String, DeclarationToken> gv;
-    public final Map<String, Function> f;
+    private final Map<String, Function> f;
+    private final Map<String, GlobalVariable> gv;
+    private final Map<String, LocalVariable> lv;
 
-    public Environment(Map<String, Variable> lv, Map<String, DeclarationToken> gv, Map<String, Function> f) {
-        this.lv = lv;
+    public void removeLocalVariable(String name) throws DeclarationException {
+        if (lv.remove(name) == null) {
+            throw new DeclarationException("Can't find " + name + " declaration");
+        }
+    }
+
+    public void addGlobalVar(String name, GlobalVariable variable) throws DeclarationException {
+        if (gv.put(name, variable) != null) {
+            throw new DeclarationException("Duplicate variable " + name + " declaration");
+        }
+    }
+
+    public void addLocalVariable(String name, LocalVariable variable) throws DeclarationException {
+        if (lv.put(name, variable) != null) {
+            throw new DeclarationException("Duplicate variable " + name + " declaration");
+        }
+    }
+
+    public void addFunction(String name, Function function) throws DeclarationException {
+        if (f.put(name, function) != null) {
+            throw new DeclarationException("Duplicate variable " + name + " declaration");
+        }
+    }
+
+    public Environment(Map<String, GlobalVariable> gv, Map<String, Function> f) {
+        this.lv = new HashMap<String, LocalVariable>();
         this.gv = gv;
         this.f = f;
     }
 
-    public Function getFunction(String funStr, Log log, Token token) throws ParseException {
-        Function function = f.get(funStr);
+    public GlobalVariable globalVar(String name) throws DeclarationException {
+        GlobalVariable variable = gv.get(name);
+
+        if (variable == null) {
+            throw new DeclarationException("Can't find " + name + " declaration");
+        }
+
+        return variable;
+    }
+
+    public LocalVariable localVar(String name) throws DeclarationException {
+        LocalVariable variable = lv.get(name);
+
+        if (variable == null) {
+            throw new DeclarationException("Can't find " + name + " declaration");
+        }
+
+        return variable;
+    }
+
+    public Function function(String name) throws DeclarationException {
+        Function function = f.get(name);
 
         if (function == null) {
-            log.addException(new SemanticException("Can't find " + funStr, token));
+            throw new DeclarationException("Can't find " + name + " declaration");
         }
 
         return function;

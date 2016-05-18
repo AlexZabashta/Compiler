@@ -8,8 +8,9 @@ import ast.Node;
 import ast.node.AbstractNode;
 import ast.node.RValue;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
@@ -61,7 +62,7 @@ public class Semicolon extends AbstractNode implements RValue {
     }
 
     @Override
-    public Type type(Environment e) {
+    public Type type(Environment e) throws DeclarationException {
         try {
             return ((RValue) right).type(e);
         } catch (ClassCastException fake) {
@@ -75,11 +76,6 @@ public class Semicolon extends AbstractNode implements RValue {
 
         try {
             RValue rval = (RValue) right;
-            Type type = rval.type(e);
-
-            if (type.idVoid()) {
-                throw new ClassCastException();
-            }
             rval.getVariable(var, z.subZone(false, operator.toString()), e, log);
         } catch (ClassCastException fake) {
             log.addException(new SemanticException("Expected R-Value after", operator));

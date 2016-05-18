@@ -1,14 +1,11 @@
 package lex.token.pure;
 
-import java.nio.ByteBuffer;
-
 import lex.Location;
-import lex.Token;
-import lex.token.ConstValue;
+import lex.token.ConstValueToken;
 import misc.Characters;
-import misc.LittleEndian;
+import misc.Type;
 
-public class QuotedString extends Token implements ConstValue {
+public class QuotedString extends ConstValueToken {
 
     public final String string;
     public int valIndex;
@@ -24,28 +21,23 @@ public class QuotedString extends Token implements ConstValue {
     }
 
     @Override
-    public int getValIndex() {
-        return valIndex;
+    public Type type() {
+        return Type.string();
     }
 
-    @Override
-    public void setValIndex(int valIndex) {
-        this.valIndex = valIndex;
-    }
-
-    @Override
-    public byte[] getConstValue() {
-        int len = string.length();
-
-        ByteBuffer buffer = ByteBuffer.allocate((len + 2) * 4);
-
-        buffer.put(LittleEndian.encode(-1));
-        buffer.put(LittleEndian.encode(len));
-
-        for (int i = 0; i < len; i++) {
-            buffer.put(LittleEndian.encode(string.charAt(i)));
-        }
-
-        return buffer.array();
-    }
+    // @Override
+    // public byte[] getConstValue() {
+    // int len = string.length();
+    //
+    // ByteBuffer buffer = ByteBuffer.allocate((len + 2) * 4);
+    //
+    // buffer.put(LittleEndian.encode(-1));
+    // buffer.put(LittleEndian.encode(len));
+    //
+    // for (int i = 0; i < len; i++) {
+    // buffer.put(LittleEndian.encode(string.charAt(i)));
+    // }
+    //
+    // return buffer.array();
+    // }
 }

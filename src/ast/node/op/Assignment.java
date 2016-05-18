@@ -8,11 +8,13 @@ import ast.node.AbstractNode;
 import ast.node.LValue;
 import ast.node.RValue;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
+import exception.UnexpectedVoidType;
 
 public class Assignment extends AbstractNode implements RValue {
 
@@ -32,17 +34,16 @@ public class Assignment extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(false, operator.toString());
-        Type type = type(e);
+        try {
+            VisibilityZone zone = z.subZone(false, operator.toString());
+            Type type = type(e);
 
-        if (type.idVoid()) {
-            log.addException(new SemanticException("Can't assign void type", operator));
-            return;
+            Variable var = zone.createVariable(type);
+            right.getVariable(var, zone, e, log);
+            left.setVariable(var, zone, e, log);
+        } catch (UnexpectedVoidType | DeclarationException exception) {
+            log.addException(new SemanticException(exception.getMessage(), operator));
         }
-
-        Variable var = zone.createVariable(type);
-        right.getVariable(var, zone, e, log);
-        left.setVariable(var, zone, e, log);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class Assignment extends AbstractNode implements RValue {
     }
 
     @Override
-    public Type type(Environment e) {
+    public Type type(Environment e) throws DeclarationException {
         return right.type(e);
     }
 

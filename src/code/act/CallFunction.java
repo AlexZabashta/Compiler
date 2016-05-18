@@ -3,37 +3,34 @@ package code.act;
 import java.io.PrintWriter;
 import java.util.List;
 
+import misc.Type;
 import asm.Command;
+import asm.com.Mov;
+import asm.com.PopNull;
 import asm.com.Push;
+import asm.mem.CpuRegister;
+import asm.mem.RWMemory;
+import ast.Function;
 import code.Action;
-import code.Variable;
+import code.var.Variable;
+import exception.TypeMismatch;
 
 public class CallFunction extends Action {
 
-    public final String fun;
     public final List<Variable> args;
+    public final Function function;
     public final Variable res;
 
-    public CallFunction(Variable res, String fun, List<Variable> args, String label, String comment) {
+    public CallFunction(Variable res, Function function, List<Variable> args, String label, String comment) throws TypeMismatch {
         super(label, comment);
-        this.fun = fun;
+        this.function = function;
         this.args = args;
         this.res = res;
-    }
 
-    @Override
-    public String toString() {
-        return fun + "()";
-    }
+        Type type = res == null ? (new Type()) : res.type;
 
-    @Override
-    public void println(PrintWriter out, int indent) {
-        printLabel(out, indent);
-
-        if (res == null) {
-            out.println(fun + "(" + args + ")");
-        } else {
-            out.println(res + " = " + fun + "(" + args + ")");
+        if (!function.type.equals(type)) {
+            throw new TypeMismatch(type, function.type);
         }
     }
 
@@ -42,17 +39,41 @@ public class CallFunction extends Action {
         programText.add(start());
 
         for (Variable var : args) {
-            var.subscribe(programText);
-            programText.add(new Push(var.memory(), null, comment));
+            programText.add(new Push(var.memory(), null, null));
             parent.push();
         }
 
-        programText.add(new asm.com.Call(fun, null, comment));
+        programText.add(new asm.com.Call(function.toString(), null, null));
 
-        for (Variable var : args) {
-            parent.pop();
+        parent.pop(args.size());
+        programText.add(new PopNull(args.size(), null, null));
+
+        if (res != null) {
+            RWMemory eax = new CpuRegister();
+            if (res.type.dim != 0) {
+                programText.add(new Push(eax, null, null));
+                parent.push();
+                Variable.unsubscribe(programText, res.type, res.rwMemory());
+                parent.pop(1);
+            }
+            programText.add(new Mov(res.rwMemory(), eax, null, null));
         }
+    }
 
+    @Override
+    public void println(PrintWriter out, int indent) {
+        printLabel(out, indent);
+
+        if (res == null) {
+            out.println(function + "(" + args + ")");
+        } else {
+            out.println(res + " = " + function + "(" + args + ")");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return function + "()";
     }
 
 }

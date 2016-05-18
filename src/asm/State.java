@@ -1,17 +1,16 @@
 package asm;
 
-import java.io.Reader;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 
 public class State {
 
-    public static final int NUMBER_OF_PAGES = 1024, PAGE_SIZE = 1024;
+    public static final int PAGE_SIZE = 1024;
+
+    public final int numberOfPages = 1024;
 
     public final Map<String, Integer> dataLabels = new HashMap<String, Integer>();
 
@@ -19,21 +18,18 @@ public class State {
 
     public final Stack<Integer> freePages = new Stack<Integer>();
 
-    public final Reader input;
-
     public final Set<String> labels = new HashSet<String>();
 
-    public final int[][] memory = new int[NUMBER_OF_PAGES][];
-    public final Writer output;
-
+    public final int[][] memory;
+    public final boolean[] staticMemory;
     public final int[] register = new int[Register.values().length];
     public final Map<String, Integer> textLabels = new HashMap<String, Integer>();
 
-    public State(Reader input, Writer output) {
-        this.input = input;
-        this.output = output;
+    public State() {
+        this.memory = new int[numberOfPages][];
+        this.staticMemory = new boolean[numberOfPages];
 
-        for (int i = 0; i < NUMBER_OF_PAGES; i++) {
+        for (int i = 0; i < numberOfPages; i++) {
             freePages.add(i);
         }
     }
@@ -98,6 +94,10 @@ public class State {
         int pid = address / PAGE_SIZE;
         if (memory[pid] == null) {
             throw new RuntimeException("Page " + pid + " not alloced yet");
+        }
+
+        if (staticMemory[pid]) {
+            throw new RuntimeException("Can't free static memory");
         }
 
         memory[pid] = null;

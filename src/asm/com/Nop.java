@@ -1,5 +1,8 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
+
 import asm.Command;
 import asm.State;
 
@@ -10,7 +13,7 @@ public class Nop extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         state.eip++;
     }
 

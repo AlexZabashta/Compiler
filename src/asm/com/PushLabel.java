@@ -1,5 +1,7 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Objects;
 
 import asm.Command;
@@ -15,7 +17,7 @@ public class PushLabel extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         int value = state.getAddress(src);
         state.esp -= 4;
         state.setRam(state.esp, value);

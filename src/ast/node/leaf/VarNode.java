@@ -2,22 +2,22 @@ package ast.node.leaf;
 
 import java.io.PrintWriter;
 
-import lex.token.fold.DeclarationToken;
 import lex.token.fold.VarToken;
 import misc.Type;
 import ast.node.AbstractNode;
 import ast.node.LValue;
 import ast.node.RValue;
-import ast.node.Values;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
-import code.act.LoadGVar;
-import code.act.SetGVar;
-import code.act.SetLVar;
+import code.act.MoveVar;
+import code.var.GlobalVariable;
+import code.var.LocalVariable;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
+import exception.TypeMismatch;
 
 public class VarNode extends AbstractNode implements LValue, RValue {
     public final VarToken token;
@@ -28,30 +28,17 @@ public class VarNode extends AbstractNode implements LValue, RValue {
 
     @Override
     public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
-        if (token.pac == null) {
-            Variable dst = e.lv.get(token.toTokenString());
-            if (dst == null) {
-                log.addException(new SemanticException("Cant find declaration", token));
-                return;
+        try {
+            if (token.pac == null) {
+                LocalVariable dst = e.localVar(token.toTokenString());
+                z.addAction(new MoveVar(dst, src, token.toString()));
+            } else {
+                GlobalVariable dst = e.globalVar(token.toTokenString());
+                z.addAction(new MoveVar(dst, src, token.toString()));
             }
-
-            if (Values.cmp(dst.type, src.type, log, token)) {
-                z.addAction(new SetLVar(dst, src, token.toString()));
-            }
-
-        } else {
-            DeclarationToken declarationToken = e.gv.get(token.toTokenString());
-
-            if (declarationToken == null) {
-                log.addException(new SemanticException("Cant find declaration", token));
-                return;
-            }
-
-            if (Values.cmp(declarationToken, src.type, log)) {
-                z.addAction(new SetGVar(token.toTokenString(), src, null, declarationToken.toString()));
-            }
+        } catch (TypeMismatch | DeclarationException exception) {
+            log.addException(new SemanticException(exception.getMessage(), token));
         }
-
     }
 
     @Override
@@ -67,45 +54,26 @@ public class VarNode extends AbstractNode implements LValue, RValue {
 
     @Override
     public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        if (token.pac == null) {
-            Variable src = e.lv.get(token.toTokenString());
-            if (src == null) {
-                log.addException(new SemanticException("Cant find declaration", token));
-                return;
+        try {
+            if (token.pac == null) {
+                LocalVariable src = e.localVar(token.toTokenString());
+                z.addAction(new MoveVar(dst, src, token.toString()));
+            } else {
+                GlobalVariable src = e.globalVar(token.toTokenString());
+                z.addAction(new MoveVar(dst, src, token.toString()));
             }
-
-            if (Values.cmp(dst.type, src.type, log, token)) {
-                z.addAction(new SetLVar(dst, src, token.toString()));
-            }
-
-        } else {
-            DeclarationToken declarationToken = e.gv.get(token.toTokenString());
-
-            if (declarationToken == null) {
-                log.addException(new SemanticException("Cant find declaration", token));
-                return;
-            }
-
-            if (Values.cmp(dst.type, declarationToken, log)) {
-                z.addAction(new LoadGVar(dst, token.toTokenString(), declarationToken.toString()));
-            }
+        } catch (TypeMismatch | DeclarationException exception) {
+            log.addException(new SemanticException(exception.getMessage(), token));
         }
     }
 
     @Override
-    public Type type(Environment e) {
+    public Type type(Environment e) throws DeclarationException {
         if (token.pac == null) {
-            Variable variable = e.lv.get(token.toTokenString());
-            if (variable != null) {
-                return variable.type;
-            }
+            return e.localVar(token.toTokenString()).type;
         } else {
-            DeclarationToken declarationToken = e.gv.get(token.toTokenString());
-            if (declarationToken != null) {
-                return declarationToken.typeToken.type;
-            }
+            return e.globalVar(token.toTokenString()).type;
         }
-        return null;
     }
 
 }

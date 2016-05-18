@@ -2,8 +2,8 @@ package ast.node;
 
 import ast.Node;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
+import code.var.Variable;
 import exception.Log;
 import exception.ParseException;
 

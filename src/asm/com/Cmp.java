@@ -1,5 +1,8 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
+
 import asm.Command;
 import asm.State;
 import asm.mem.Memory;
@@ -18,7 +21,7 @@ public class Cmp extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         state.cmp = Integer.compare(l.get(state), r.get(state));
         state.eip++;
     }

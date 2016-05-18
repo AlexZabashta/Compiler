@@ -2,13 +2,14 @@ package lex.token.key_word;
 
 import lex.Location;
 import lex.Token;
-import lex.token.ConstValue;
+import lex.token.ConstValueToken;
+import misc.EnumType;
 import misc.LittleEndian;
+import misc.Type;
 
-public class BoolToken extends Token implements ConstValue {
+public class BoolToken extends ConstValueToken {
 
     public final boolean value;
-    private int valIndex;
 
     public BoolToken(boolean value, Location location) {
         super(location);
@@ -21,22 +22,8 @@ public class BoolToken extends Token implements ConstValue {
     }
 
     @Override
-    public int getValIndex() {
-        return valIndex;
-    }
-
-    @Override
-    public void setValIndex(int valIndex) {
-        this.valIndex = valIndex;
-    }
-
-    @Override
-    public byte[] getConstValue() {
-        if (value) {
-            return LittleEndian.encode(-1);
-        } else {
-            return LittleEndian.encode(0);
-        }
+    public Type type() {
+        return new Type(EnumType.BOOL);
     }
 
 }

@@ -1,5 +1,8 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
+
 import asm.Command;
 import asm.State;
 import asm.mem.Memory;
@@ -20,7 +23,7 @@ public class Sub extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         int value = 0;
         value -= src.get(state);
         value += dst.get(state);

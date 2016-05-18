@@ -3,63 +3,34 @@ package code;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import asm.Command;
-import code.act.Nop;
-import exception.Log;
-import exception.ParseException;
-import exception.SemanticException;
 import lex.token.fold.DeclarationToken;
 import misc.Type;
+import asm.Command;
+import code.act.Nop;
+import code.var.LocalVariable;
+import exception.DeclarationException;
+import exception.UnexpectedVoidType;
 
 public class VisibilityZone extends Action {
 
     protected final List<Action> actions = new ArrayList<Action>();
     private final List<String> decVars = new ArrayList<String>();
-    public final int level;
-
     private Nop end = null;
 
-    public Nop end() {
-        if (end == null) {
-            Nop nop = new Nop();
-            addAction(nop);
-            end = nop;
-        }
-        return end;
-    }
-
-    public int numberOfVars() {
-        return vars.size();
-    }
+    public final int level;
 
     protected FunctionZone root;
 
-    private final List<Variable> vars = new ArrayList<Variable>();
+    private final List<LocalVariable> vars = new ArrayList<LocalVariable>();
+
     public final boolean visible;
-
-    public void push() {
-        // TODO push vars
-    }
-
-    public void pop() {
-        // TODO pop vars
-    }
 
     public VisibilityZone(String label, String comment) {
         super(label, comment);
         this.level = 0;
         this.parent = null;
         this.visible = true;
-    }
-
-    public VisibilityZone parent() {
-        return parent;
-    }
-
-    public FunctionZone root() {
-        return root;
     }
 
     public VisibilityZone(VisibilityZone parent, boolean visible, String comment) {
@@ -86,33 +57,6 @@ public class VisibilityZone extends Action {
 
     }
 
-    public Variable createVariable(DeclarationToken token, Map<String, Variable> localVariables, Log log) throws ParseException {
-        if (token.varToken.pac != null) {
-            log.addException(new SemanticException("Can't declare global varible here", token));
-        }
-
-        VisibilityZone zone = getVisibleParent();
-
-        String name = token.varToken.name.toTokenString();
-        Variable var = localVariables.get(name);
-
-        if (var != null) {
-            log.addException(new SemanticException("Duplicate local variable", token));
-            return var;
-        }
-
-        var = zone.createVariable(token.typeToken.type);
-        localVariables.put(name, var);
-        zone.decVars.add(name);
-        return var;
-    }
-
-    public void freeVars(List<Command> programText) {
-        end();
-
-        // TODO SAVE REGISTERS
-    }
-
     @Override
     public void asm(List<Command> programText) {
         end();
@@ -124,13 +68,44 @@ public class VisibilityZone extends Action {
         }
     }
 
-    public Variable createVariable(Type type) {
+    public LocalVariable createVariable(DeclarationToken token, Environment environment) throws UnexpectedVoidType, DeclarationException {
+        if (token.varToken.pac != null) {
+            throw new DeclarationException("Can't declare global varible here");
+        }
+
+        VisibilityZone zone = getVisibleParent();
+
+        String name = token.varToken.name.toTokenString();
+        LocalVariable var = zone.createVariable(token.typeToken.type);
+
+        environment.addLocalVariable(name, var);
+
+        zone.decVars.add(name);
+        return var;
+    }
+
+    public LocalVariable createVariable(Type type) throws UnexpectedVoidType {
         if (type.idVoid()) {
             throw new RuntimeException("Can't declare void variable");
         }
-        Variable variable = new Variable(type, this, vars.size());
+        LocalVariable variable = new LocalVariable(type, this, vars.size());
         vars.add(variable);
         return variable;
+    }
+
+    public Nop end() {
+        if (end == null) {
+            Nop nop = new Nop();
+            addAction(nop);
+            end = nop;
+        }
+        return end;
+    }
+
+    public void freeVars(List<Command> programText) {
+        end();
+
+        // TODO SAVE REGISTERS
     }
 
     public VisibilityZone getVisibleParent() {
@@ -139,6 +114,18 @@ public class VisibilityZone extends Action {
             cur = cur.parent;
         }
         return cur;
+    }
+
+    public int numberOfVars() {
+        return vars.size();
+    }
+
+    public VisibilityZone parent() {
+        return parent;
+    }
+
+    public void pop(int offset) {
+        // TODO pop vars
     }
 
     @Override
@@ -174,10 +161,18 @@ public class VisibilityZone extends Action {
         }
     }
 
-    public void removeAll(Map<String, Variable> localVariables) {
+    public void push() {
+        // TODO push vars
+    }
+
+    public void removeAll(Environment environment) throws DeclarationException {
         for (String var : decVars) {
-            localVariables.remove(var);
+            environment.removeLocalVariable(var);
         }
+    }
+
+    public FunctionZone root() {
+        return root;
     }
 
     public VisibilityZone subZone(boolean visible, String comment) {

@@ -6,12 +6,13 @@ import java.util.List;
 import asm.Command;
 import asm.mem.ConstInt;
 import code.Action;
-import code.Variable;
+import code.var.LocalVariable;
+import code.var.Variable;
 
 public class IfTrueJump extends Action {
 
-    public String target;
     public final Variable state;
+    public String target;
 
     public IfTrueJump(Variable state) {
         super(null, null);
@@ -19,8 +20,10 @@ public class IfTrueJump extends Action {
     }
 
     @Override
-    public String toString() {
-        return "else (" + state + ") jump to " + target;
+    public void asm(List<Command> programText) {
+        programText.add(start());
+        programText.add(new asm.com.Cmp(state.rwMemory(), new ConstInt(0), null, null));
+        programText.add(new asm.com.Jne(target, null, null));
     }
 
     @Override
@@ -30,10 +33,8 @@ public class IfTrueJump extends Action {
     }
 
     @Override
-    public void asm(List<Command> programText) {
-        programText.add(start());
-        programText.add(new asm.com.Cmp(state.memory(), new ConstInt(0), null, comment));
-        programText.add(new asm.com.Jne(target, null, comment));
+    public String toString() {
+        return "else (" + state + ") jump to " + target;
     }
 
 }

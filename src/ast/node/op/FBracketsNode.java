@@ -8,6 +8,7 @@ import ast.node.AbstractNode;
 import ast.node.misc.Nop;
 import code.Environment;
 import code.VisibilityZone;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 
@@ -30,7 +31,11 @@ public class FBracketsNode extends AbstractNode {
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone zone = z.subZone(true, token.toString());
         node.action(zone, e, log);
-        zone.removeAll(e.lv);
+        try {
+            zone.removeAll(e);
+        } catch (DeclarationException neverHappen) {
+            throw new RuntimeException(neverHappen);
+        }
     }
 
     @Override

@@ -1,5 +1,7 @@
 package asm.com;
 
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Objects;
 
 import asm.Command;
@@ -15,7 +17,7 @@ public class Jne extends Command {
     }
 
     @Override
-    public void execute(State state) {
+    public void execute(State state, Reader input, Writer output) {
         Integer eip = state.textLabels.get(target);
         if (eip == null) {
             throw new RuntimeException("Can't find label " + target);

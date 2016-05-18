@@ -18,17 +18,6 @@ public class Break extends Action {
     }
 
     @Override
-    public String toString() {
-        return "break";
-    }
-
-    @Override
-    public void println(PrintWriter out, int indent) {
-        printLabel(out, indent);
-        out.println("break");
-    }
-
-    @Override
     public void asm(List<Command> programText) {
         programText.add(start());
         VisibilityZone cur = parent;
@@ -42,6 +31,17 @@ public class Break extends Action {
         }
 
         programText.add(new Jmp(nop.label, null, comment));
+    }
+
+    @Override
+    public void println(PrintWriter out, int indent) {
+        printLabel(out, indent);
+        out.println("break");
+    }
+
+    @Override
+    public String toString() {
+        return "break";
     }
 
 }

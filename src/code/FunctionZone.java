@@ -4,15 +4,22 @@ import java.util.List;
 
 import asm.Command;
 import ast.Function;
+import code.var.LocalVariable;
+import exception.UnexpectedVoidType;
 
 public class FunctionZone extends VisibilityZone {
 
-    public final Variable result;
+    public LocalVariable result;
 
     public FunctionZone(Function function) {
         super(function.toString(), function.name.toString());
         super.root = this;
-        this.result = new Variable(function.type, this, -1);
+
+        try {
+            this.result = new LocalVariable(function.type, this, -1);
+        } catch (UnexpectedVoidType e) {
+            this.result = null;
+        }
     }
 
     @Override
@@ -20,7 +27,7 @@ public class FunctionZone extends VisibilityZone {
         end();
         programText.add(new asm.com.Nop(label, comment));
         // TODO SAVE REGISTERS
-        
+
         for (Action action : actions) {
             action.asm(programText);
         }

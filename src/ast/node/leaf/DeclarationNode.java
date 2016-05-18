@@ -7,11 +7,15 @@ import ast.node.AbstractNode;
 import ast.node.LValue;
 import ast.node.Values;
 import code.Environment;
-import code.Variable;
 import code.VisibilityZone;
-import code.act.SetLVar;
+import code.act.MoveVar;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
+import exception.SemanticException;
+import exception.TypeMismatch;
+import exception.UnexpectedVoidType;
 
 public class DeclarationNode extends AbstractNode implements LValue {
     public final DeclarationToken token;
@@ -22,14 +26,20 @@ public class DeclarationNode extends AbstractNode implements LValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        z.createVariable(token, e.lv, log);
+        try {
+            z.createVariable(token, e);
+        } catch (UnexpectedVoidType | DeclarationException exception) {
+            log.addException(new SemanticException(exception.getMessage(), token));
+        }
     }
 
     @Override
     public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
-        Variable dst = z.createVariable(token, e.lv, log);
-        if (Values.cmp(dst, src, log, token)) {
-            z.addAction(new SetLVar(dst, src, token.toString()));
+        try {
+            Variable dst = z.createVariable(token, e);
+            z.addAction(new MoveVar(dst, src, token.toString()));
+        } catch (TypeMismatch | UnexpectedVoidType | DeclarationException exception) {
+            log.addException(new SemanticException(exception.getMessage(), token));
         }
     }
 
