@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import code.var.ConstVariable;
 import code.var.Variable;
 import exception.TypeInitException;
 import misc.EnumType;
@@ -11,7 +12,9 @@ import asm.Register;
 import asm.com.Add;
 import asm.com.Call;
 import asm.com.CallFree;
+import asm.com.CallGetChar;
 import asm.com.CallMalloc;
+import asm.com.CallPutChar;
 import asm.com.Cmp;
 import asm.com.IDiv;
 import asm.com.IMul;
@@ -22,7 +25,7 @@ import asm.com.Jne;
 import asm.com.Mov;
 import asm.com.Nop;
 import asm.com.Pop;
-import asm.com.PopNull;
+import asm.com.ShiftEsp;
 import asm.com.Push;
 import asm.mem.ConstInt;
 import asm.mem.CpuRegister;
@@ -43,11 +46,40 @@ public class StandardFunctions {
         Type int0 = new Type(INT);
         Type char0 = new Type(CHAR);
         Type bool0 = new Type(BOOL);
+        Type void0 = new Type(VOID);
 
         CpuRegister eax = new CpuRegister(EAX);
         CpuRegister ebx = new CpuRegister(EBX);
         CpuRegister ecx = new CpuRegister(ECX);
         CpuRegister edx = new CpuRegister(EDX);
+
+        {
+            List<Command> asmCode = new ArrayList<Command>();
+            asmCode.add(new Push(ecx, null, null));
+            asmCode.add(new Push(edx, null, null));
+            {
+                asmCode.add(new CallGetChar(null, null));
+            }
+            asmCode.add(new Pop(edx, null, null));
+            asmCode.add(new Pop(ecx, null, null));
+
+            f.add(new SystemFunction(asmCode, char0, "getchar"));
+        }
+
+        {
+            List<Command> asmCode = new ArrayList<Command>();
+            asmCode.add(new Push(ecx, null, null));
+            asmCode.add(new Push(edx, null, null));
+            { // [0] = edx, [1] = ecx, [2] = eip, [3] = char
+                asmCode.add(new Push(new RamEsp(3), null, null));
+                asmCode.add(new CallPutChar(null, null));
+                asmCode.add(new ShiftEsp(1, null, null));
+            }
+            asmCode.add(new Pop(edx, null, null));
+            asmCode.add(new Pop(ecx, null, null));
+
+            f.add(new SystemFunction(asmCode, void0, "putchar", char0));
+        }
 
         {
             List<Command> asmCode = new ArrayList<Command>(); // eip, arg1, arg0
@@ -170,7 +202,7 @@ public class StandardFunctions {
                 asmCode.add(new Nop(end, null));
             }
 
-            f.add(new SystemFunction(asmCode, new Type(), "subscribe"));
+            f.add(new SystemFunction(asmCode, void0, "subscribe"));
         }
 
         EnumType[] types = { BOOL, CHAR, INT };
@@ -209,7 +241,7 @@ public class StandardFunctions {
 
                                         asmCode.add(new Push(edx, null, null));
                                         asmCode.add(new Call(Values.toString(SystemFunction.PAC + ".unsubscribe", valType), null, null));
-                                        asmCode.add(new PopNull(1, null, null));
+                                        asmCode.add(new ShiftEsp(1, null, null));
 
                                         asmCode.add(new Pop(eax, null, null));
                                     }
@@ -225,17 +257,20 @@ public class StandardFunctions {
                             {
                                 asmCode.add(new Push(ecx, null, null));
                                 asmCode.add(new CallFree(null, null));
-                                asmCode.add(new PopNull(1, null, null));
+                                asmCode.add(new ShiftEsp(1, null, null));
                             }
                             asmCode.add(new Nop(end, null));
                         }
                         asmCode.add(new Pop(edx, null, null));
                         asmCode.add(new Pop(ecx, null, null));
-                        f.add(new SystemFunction(asmCode, new Type(), "unsubscribe", arrayType));
+                        f.add(new SystemFunction(asmCode, void0, "unsubscribe", arrayType));
                     }
                     { // get
                         List<Command> asmCode = new ArrayList<Command>();
-                        asmCode.add(new Push(edx, null, null)); // [0] = edx, [1] = eip, [2] = index, [3] = array
+                        asmCode.add(new Push(edx, null, null)); // [0] = edx,
+                                                                // [1] = eip,
+                                                                // [2] = index,
+                                                                // [3] = array
                         {
                             asmCode.add(new Mov(eax, new ConstInt(4), null, null));
                             asmCode.add(new IMul(new RamEsp(2), null, null));
@@ -245,7 +280,7 @@ public class StandardFunctions {
                                 asmCode.add(new Mov(eax, new RamRegister(Register.EAX, 2), null, null));
                             } else {
                                 asmCode.add(new Mov(edx, new RamRegister(Register.EAX, 2), null, null));
-                                Variable.subscribe(asmCode, edx);
+                                Variable.subscribe(asmCode, valType, edx);
                                 asmCode.add(new Mov(eax, edx, null, null));
                             }
                         }
@@ -255,7 +290,11 @@ public class StandardFunctions {
                     { // set
                         List<Command> asmCode = new ArrayList<Command>();
 
-                        asmCode.add(new Push(edx, null, null)); // [0] = edx, [1] = eip, [2] = val, [3] = index, [4] = array
+                        asmCode.add(new Push(edx, null, null)); // [0] = edx,
+                                                                // [1] = eip,
+                                                                // [2] = val,
+                                                                // [3] = index,
+                                                                // [4] = array
                         {
                             RWMemory val = new RamEsp(2);
                             RWMemory index = new RamEsp(3);
@@ -270,8 +309,9 @@ public class StandardFunctions {
                             if (valType.dim > 0) {
                                 asmCode.add(new Mov(edx, pointer, null, null));
                                 asmCode.add(new Push(eax, null, null));
-                                { // [0] = eax, [1] = edx, [2] = eip, [3] = val, [4] = index, [5] = array
-                                    Variable.subscribe(asmCode, new RamEsp(3));
+                                { // [0] = eax, [1] = edx, [2] = eip, [3] = val,
+                                  // [4] = index, [5] = array
+                                    Variable.subscribe(asmCode, valType, new RamEsp(3));
                                     Variable.unsubscribe(asmCode, valType, edx);
                                 }
                                 asmCode.add(new Pop(eax, null, null));
@@ -282,7 +322,7 @@ public class StandardFunctions {
 
                         }
                         asmCode.add(new Pop(edx, null, null));
-                        f.add(new SystemFunction(asmCode, new Type(), "set", arrayType, int0, valType));
+                        f.add(new SystemFunction(asmCode, void0, "set", arrayType, int0, valType));
                     }
                     { // new
 
@@ -303,7 +343,7 @@ public class StandardFunctions {
                             asmCode.add(new Push(edx, null, null));
                             asmCode.add(new Push(eax, null, null));
                             asmCode.add(new CallMalloc(null, null));
-                            asmCode.add(new PopNull(1, null, null));
+                            asmCode.add(new ShiftEsp(1, null, null));
                             asmCode.add(new Pop(edx, null, null));
 
                             asmCode.add(new Mov(new RamRegister(Register.EAX), new ConstInt(1), null, null));
@@ -317,11 +357,17 @@ public class StandardFunctions {
                             String loopStart = Label.getTextLabel();
                             String loopEnd = Label.getTextLabel();
 
+                            if (valType.dim > 0) {
+                                asmCode.add(new Mov(eax, ConstVariable.NULL, null, null));
+                            }
+
                             asmCode.add(new Cmp(ecx, edx, loopStart, null));
                             asmCode.add(new Je(loopEnd, null, null));
                             {
-                                {
-                                    asmCode.add(new Mov(new RamRegister(Register.ECX), new asm.mem.Label("emptyarray"), null, null));
+                                if (valType.dim == 0) {
+                                    asmCode.add(new Mov(new RamRegister(Register.ECX), new ConstInt(0), null, null));
+                                } else {
+                                    asmCode.add(new Mov(new RamRegister(Register.ECX), eax, null, null));
                                 }
                                 asmCode.add(new Add(ecx, new ConstInt(4), null, null));
                                 asmCode.add(new Jmp(loopStart, null, null));

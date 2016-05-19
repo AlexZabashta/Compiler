@@ -10,7 +10,7 @@ import asm.State;
 public class CallPutChar extends Command {
 
     public CallPutChar(String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
     }
 
     @Override

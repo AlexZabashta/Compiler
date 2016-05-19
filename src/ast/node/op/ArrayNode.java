@@ -15,7 +15,7 @@ import ast.node.Values;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.CallFunction;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -98,7 +98,7 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void setLocalVariable(LocalVariable src, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Type arrayType = array.type(e);
 
@@ -113,12 +113,12 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
             }
 
             VisibilityZone zone = z.subZone(false, null);
-            Variable a = zone.createVariable(arrayType);
-            array.getVariable(a, zone.subZone(false, null), e, log);
-            Variable i = zone.createVariable(indexType);
-            index.getVariable(i, zone.subZone(false, null), e, log);
+            LocalVariable a = zone.createVariable(arrayType);
+            array.getLocalVariable(a, zone.subZone(false, null), e, log);
+            LocalVariable i = zone.createVariable(indexType);
+            index.getLocalVariable(i, zone.subZone(false, null), e, log);
 
-            List<Variable> args = new ArrayList<Variable>();
+            List<LocalVariable> args = new ArrayList<LocalVariable>();
             args.add(a);
             args.add(i);
             args.add(src);
@@ -135,7 +135,7 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Type arrayType = array.type(e);
 
@@ -150,12 +150,12 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
             }
 
             VisibilityZone zone = z.subZone(false, null);
-            Variable a = zone.createVariable(arrayType);
-            array.getVariable(a, zone.subZone(false, null), e, log);
-            Variable i = zone.createVariable(indexType);
-            index.getVariable(i, zone.subZone(false, null), e, log);
+            LocalVariable a = zone.createVariable(arrayType);
+            array.getLocalVariable(a, zone.subZone(false, null), e, log);
+            LocalVariable i = zone.createVariable(indexType);
+            index.getLocalVariable(i, zone.subZone(false, null), e, log);
 
-            List<Variable> args = new ArrayList<Variable>();
+            List<LocalVariable> args = new ArrayList<LocalVariable>();
             args.add(a);
             args.add(i);
             String funStr = Values.toString("sys.get", args);

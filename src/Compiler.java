@@ -13,6 +13,7 @@ import java.util.Set;
 import lex.token.fold.DeclarationToken;
 import lex.token.pure.SimpleString;
 import misc.EnumType;
+import asm.Command;
 import asm.Programm;
 import ast.Function;
 import ast.InitFunction;
@@ -22,6 +23,7 @@ import code.FunctionZone;
 import code.act.CallFunction;
 import code.var.ConstVariable;
 import code.var.GlobalVariable;
+import code.var.LocalVariable;
 import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
@@ -92,14 +94,14 @@ public class Compiler {
                     for (Function function : functions) {
                         if (function instanceof InitFunction) {
                             InitFunction initFunction = (InitFunction) function;
-                            for (DeclarationToken token : initFunction.vars) {
+
+                            for (GlobalVariable variable : initFunction.globalVariables) {
                                 try {
-                                    String name = token.varToken.toTokenString();
-                                    GlobalVariable variable = new GlobalVariable(token);
+                                    String name = variable.location;
                                     environment.addGlobalVar(name, variable);
                                     vars.add(variable);
-                                } catch (UnexpectedVoidType | DeclarationException exception) {
-                                    log.addException(new SemanticException(exception.getMessage(), token));
+                                } catch (DeclarationException exception) {
+                                    log.addException(new SemanticException(exception.getMessage(), initFunction.name));
                                 }
                             }
                             inits.add(initFunction);
@@ -156,7 +158,7 @@ public class Compiler {
             }
 
             try {
-                zone.addAction(new CallFunction(null, next, new ArrayList<Variable>(), null, null));
+                zone.addAction(new CallFunction(null, next, new ArrayList<LocalVariable>(), null, null));
             } catch (TypeMismatch | NullPointerException ignore) {
             }
         }
@@ -179,6 +181,20 @@ public class Compiler {
                     out.println();
                 }
             }
+            try (PrintWriter out = new PrintWriter(new File(enter + ".asm"))) {
+                for (FunctionZone zone : functionZones) {
+                    List<Command> commands = new ArrayList<>();
+                    zone.asmFunction(commands);
+
+                    AsmOptimizer.removeNop(commands);
+
+                    for (Command command : commands) {
+                        command.printYASM_WIN_32(out, 6);
+                    }
+                    out.println();
+                }
+            }
+
         }
         return programm;
     }

@@ -8,7 +8,7 @@ import ast.node.RValue;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.Break;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
@@ -26,12 +26,12 @@ public class ReturnVNode extends AbstractNode {
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone rz = z.subZone(false, returnToken.toString());
-        Variable res = z.root().result;
+        LocalVariable res = z.root().result;
 
         if (res == null) {
             log.addException(new SemanticException("Can't return value in void function", returnToken));
         } else {
-            node.getVariable(res, rz, e, log);
+            node.getLocalVariable(res, rz, e, log);
             z.addAction(new Break(z.level + 1, null, returnToken.toString()));
         }
 

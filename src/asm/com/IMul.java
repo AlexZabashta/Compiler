@@ -15,7 +15,7 @@ public class IMul extends Command {
     public final Memory src;
 
     public IMul(Memory src, String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
         this.src = src;
         if (src instanceof ConstInt) {
             throw new RuntimeException("Can't multiple on const");

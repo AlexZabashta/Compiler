@@ -11,18 +11,19 @@ import asm.mem.CpuRegister;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 import code.Action;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.TypeMismatch;
 
 public class Not extends Action {
-    public final Variable res, val;
+    public final LocalVariable res, val;
 
-    public Not(Variable res, Variable val, String comment) throws TypeMismatch {
+    public Not(LocalVariable res, LocalVariable val, String comment) throws TypeMismatch {
         super(null, comment);
 
         this.res = res;
         this.val = val;
-
+        res.use(1);
+        val.use(1);
         if (res.type.equals(new Type(EnumType.INT))) {
             TypeMismatch.check(res.type, val.type);
         } else {

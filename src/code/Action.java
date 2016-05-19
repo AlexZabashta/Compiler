@@ -60,6 +60,6 @@ public abstract class Action {
     public abstract void println(PrintWriter out, int indent);
 
     public asm.com.Nop start() {
-        return new asm.com.Nop(label, null);
+        return new asm.com.Nop(label, comment);
     }
 }

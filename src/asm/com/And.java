@@ -2,6 +2,7 @@ package asm.com;
 
 import java.io.Reader;
 import java.io.Writer;
+import java.util.List;
 
 import asm.Command;
 import asm.State;
@@ -14,7 +15,7 @@ public class And extends Command {
     public final Memory src;
 
     public And(RWMemory dst, Memory src, String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
         this.dst = dst;
         this.src = src;
         if (src.useRam() && dst.useRam()) {

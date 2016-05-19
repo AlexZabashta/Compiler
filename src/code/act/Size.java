@@ -13,16 +13,19 @@ import asm.mem.Memory;
 import asm.mem.RWMemory;
 import asm.mem.RamRegister;
 import code.Action;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.TypeMismatch;
 
 public class Size extends Action {
-    public final Variable res, val;
+    public final LocalVariable res, val;
 
-    public Size(Variable res, Variable val, String comment) throws TypeMismatch {
+    public Size(LocalVariable res, LocalVariable val, String comment) throws TypeMismatch {
         super(null, comment);
         this.res = res;
         this.val = val;
+        res.use(1);
+        val.use(1);
+
         TypeMismatch.check(res.type, new Type(EnumType.INT));
     }
 

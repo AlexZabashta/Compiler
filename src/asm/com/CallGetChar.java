@@ -11,7 +11,7 @@ import asm.State;
 public class CallGetChar extends Command {
 
     public CallGetChar(String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
     }
 
     @Override

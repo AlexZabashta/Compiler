@@ -10,19 +10,21 @@ import asm.mem.CpuRegister;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 import code.Action;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.TypeMismatch;
 
 public class And extends Action {
-    public final Variable res, x, y;
+    public final LocalVariable res, x, y;
 
-    public And(Variable res, Variable x, Variable y, String comment) throws TypeMismatch {
+    public And(LocalVariable res, LocalVariable x, LocalVariable y, String comment) throws TypeMismatch {
         super(null, comment);
 
         this.res = res;
         this.x = x;
         this.y = y;
-
+        res.use(2);
+        x.use(1);
+        y.use(1);
         if (res.type.equals(new Type(EnumType.INT))) {
             TypeMismatch.check(res.type, x.type);
             TypeMismatch.check(res.type, y.type);

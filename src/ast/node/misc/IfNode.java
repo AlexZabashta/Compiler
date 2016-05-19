@@ -14,7 +14,7 @@ import code.Environment;
 import code.VisibilityZone;
 import code.act.IfFalseJump;
 import code.act.Jump;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -37,14 +37,14 @@ public class IfNode extends AbstractNode implements RValue {
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone iz = z.subZone(false, ifToken.toString());
-        Variable s;
+        LocalVariable s;
         try {
             s = iz.createVariable(new Type(EnumType.BOOL));
         } catch (UnexpectedVoidType neverHappen) {
             throw new RuntimeException(neverHappen);
         }
 
-        state.getVariable(s, iz, e, log);
+        state.getLocalVariable(s, iz, e, log);
         IfFalseJump elseJump = new IfFalseJump(s);
         Jump jump = new Jump();
 
@@ -98,19 +98,19 @@ public class IfNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             RValue xVal = (RValue) x;
             RValue yVal = (RValue) y;
 
             VisibilityZone iz = z.subZone(false, ifToken.toString());
-            Variable s;
+            LocalVariable s;
             try {
                 s = iz.createVariable(new Type(EnumType.BOOL));
             } catch (UnexpectedVoidType neverHappen) {
                 throw new RuntimeException(neverHappen);
             }
-            state.getVariable(s, iz, e, log);
+            state.getLocalVariable(s, iz, e, log);
             IfFalseJump elseJump = new IfFalseJump(s);
             Jump jump = new Jump();
 
@@ -121,12 +121,12 @@ public class IfNode extends AbstractNode implements RValue {
             jump.target = fend.label;
 
             iz.addAction(elseJump);
-            xVal.getVariable(dst, iz, e, log);
+            xVal.getLocalVariable(dst, iz, e, log);
 
             iz.addAction(jump);
             iz.addAction(tend);
 
-            yVal.getVariable(dst, iz, e, log);
+            yVal.getLocalVariable(dst, iz, e, log);
 
             iz.addAction(fend);
         } catch (ClassCastException fake) {

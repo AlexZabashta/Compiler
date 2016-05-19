@@ -3,10 +3,9 @@ package code.act;
 import java.io.PrintWriter;
 import java.util.List;
 
-import misc.Type;
 import asm.Command;
 import asm.com.Call;
-import asm.com.PopNull;
+import asm.com.ShiftEsp;
 import asm.com.Push;
 import asm.mem.CpuRegister;
 import asm.mem.Memory;
@@ -14,17 +13,22 @@ import asm.mem.RWMemory;
 import ast.node.Values;
 import code.Action;
 import code.var.ConstVariable;
-import code.var.Variable;
+import code.var.LocalVariable;
+import misc.Type;
 
 public class CopyConst extends Action {
-    public final Variable dst;
+    public final LocalVariable dst;
     public final ConstVariable src;
     public final Type type;
 
-    public CopyConst(Variable dst, ConstVariable src, String label, String comment) {
+    public CopyConst(LocalVariable dst, ConstVariable src, String label, String comment) {
         super(label, comment);
         this.dst = dst;
         this.src = src;
+
+        dst.use(2);
+        src.use(1);
+
         this.type = dst.type;
         if (!dst.type.equals(src.type)) {
             throw new RuntimeException("Wrong types " + dst + " " + src);
@@ -42,15 +46,15 @@ public class CopyConst extends Action {
             return;
         }
         if (type.dim == 0) {
-            Variable.moveMem(programText, dstMemory, srcMemory);
+            LocalVariable.moveMem(programText, dstMemory, srcMemory);
         } else {
-            Variable.unsubscribe(programText, type, dstMemory);
+            LocalVariable.unsubscribe(programText, type, dstMemory);
 
             programText.add(new Push(srcMemory, null, null));
             programText.add(new Call(Values.toString("sys.clone", type), null, null));
-            programText.add(new PopNull(1, null, null));
+            programText.add(new ShiftEsp(1, null, null));
 
-            Variable.moveMem(programText, dstMemory, new CpuRegister());
+            LocalVariable.moveMem(programText, dstMemory, new CpuRegister());
         }
     }
 

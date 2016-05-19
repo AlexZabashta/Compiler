@@ -1,5 +1,7 @@
 package asm.mem;
 
+import java.util.List;
+
 import asm.State;
 
 public interface Memory {
@@ -9,4 +11,5 @@ public interface Memory {
 
     boolean useRam();
 
+    public void getLabels(List<String> labels);
 }

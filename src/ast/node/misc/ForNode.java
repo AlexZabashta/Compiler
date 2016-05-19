@@ -15,7 +15,7 @@ import code.Environment;
 import code.VisibilityZone;
 import code.act.IfTrueJump;
 import code.act.Jump;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -51,7 +51,7 @@ public class ForNode extends AbstractNode {
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         VisibilityZone fz = z.subZone(true, forToken.toString());
 
-        Variable s;
+        LocalVariable s;
         try {
             s = fz.createVariable(new Type(EnumType.BOOL));
         } catch (UnexpectedVoidType neverHappen) {
@@ -71,7 +71,7 @@ public class ForNode extends AbstractNode {
         post.action(fz, e, log);
 
         fz.addAction(snop);
-        state.getVariable(s, fz, e, log);
+        state.getLocalVariable(s, fz, e, log);
 
         IfTrueJump elseJump = new IfTrueJump(s);
         elseJump.target = wnop.label;

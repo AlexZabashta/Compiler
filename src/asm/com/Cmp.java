@@ -12,7 +12,7 @@ public class Cmp extends Command {
     public final Memory l, r;
 
     public Cmp(Memory l, Memory r, String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
         this.l = l;
         this.r = r;
         if (l.useRam() && r.useRam()) {

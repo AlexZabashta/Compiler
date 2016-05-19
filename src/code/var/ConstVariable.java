@@ -15,6 +15,10 @@ public class ConstVariable extends GlobalVariable {
     public final int[] bigData;
     public final int smallData;
 
+    public static final Memory NULL = new RamLabel("emptyarray");
+    public static final Memory TRUE = new ConstInt(-1);
+    public static final Memory FALSE = new ConstInt(0);
+
     public ConstVariable(Type type, String location, int data) throws UnexpectedVoidType {
         super(type, location);
         this.bigData = null;

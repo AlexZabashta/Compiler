@@ -10,7 +10,7 @@ import asm.State;
 public class CallMalloc extends Command {
 
     public CallMalloc(String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
     }
 
     @Override

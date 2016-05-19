@@ -9,7 +9,7 @@ import asm.State;
 public class CallFree extends Command {
 
     public CallFree(String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
     }
 
     @Override

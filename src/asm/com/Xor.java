@@ -14,7 +14,7 @@ public class Xor extends Command {
     public final Memory src;
 
     public Xor(RWMemory dst, Memory src, String label, String comment) {
-        super(label, comment);
+        super(label, null, comment);
         this.dst = dst;
         this.src = src;
         if (src.useRam() && dst.useRam()) {

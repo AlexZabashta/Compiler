@@ -7,16 +7,16 @@ import asm.Command;
 import asm.mem.ConstInt;
 import code.Action;
 import code.var.LocalVariable;
-import code.var.Variable;
 
 public class IfTrueJump extends Action {
 
-    public final Variable state;
+    public final LocalVariable state;
     public String target;
 
-    public IfTrueJump(Variable state) {
+    public IfTrueJump(LocalVariable state) {
         super(null, null);
         this.state = state;
+        state.use(1);
     }
 
     @Override

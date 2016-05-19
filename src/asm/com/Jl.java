@@ -9,11 +9,8 @@ import asm.State;
 
 public class Jl extends Command {
 
-    public final String target;
-
     public Jl(String target, String label, String comment) {
-        super(label, comment);
-        this.target = Objects.requireNonNull(target);
+        super(label, Objects.requireNonNull(target), comment);
     }
 
     @Override

@@ -12,7 +12,7 @@ public class Pop extends Command {
     public final RWMemory dst;
 
     public Pop(RWMemory dst, String label, String comment) {
-        super(label, comment);
+        super(label,null, comment);
         this.dst = Objects.requireNonNull(dst);
     }
 

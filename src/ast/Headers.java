@@ -17,7 +17,9 @@ import misc.Type;
 import ast.node.op.FBracketsNode;
 import exception.Log;
 import exception.ParseException;
+import exception.SemanticException;
 import exception.SyntaxesException;
+import exception.UnexpectedVoidType;
 
 public class Headers {
 
@@ -59,8 +61,12 @@ public class Headers {
                     gvars.add(vard.addPac(pac, log));
                 }
 
-                InitFunction function = new InitFunction(initDeclaration, gvars, actions);
-                functions.add(function);
+                try {
+                    InitFunction function = new InitFunction(initDeclaration, gvars, actions);
+                    functions.add(function);
+                } catch (UnexpectedVoidType e) {
+                    log.addException(new SemanticException(e.getMessage(), vars));
+                }
 
                 continue;
             }

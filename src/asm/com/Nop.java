@@ -9,7 +9,7 @@ import asm.State;
 public class Nop extends Command {
 
     public Nop(String label, String comment) {
-        super(label, comment);
+        super(label, null,comment);
     }
 
     @Override

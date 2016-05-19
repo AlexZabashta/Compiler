@@ -9,7 +9,7 @@ import asm.State;
 public class Ret extends Command {
 
     public Ret(String label, String comment) {
-        super(label, comment);
+        super(label,null, comment);
 
     }
 

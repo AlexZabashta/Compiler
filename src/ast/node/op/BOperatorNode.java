@@ -20,7 +20,7 @@ import code.act.CallFunction;
 import code.act.Or;
 import code.act.Sub;
 import code.act.Xor;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -51,7 +51,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         right.action(z.subZone(false, operator.toString()), e, log);
     }
 
-    void add(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
+    void add(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Add(res, a, b, operator.toString()));
     }
 
@@ -65,7 +65,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         return null;
     }
 
-    void and(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
+    void and(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new And(res, a, b, operator.toString()));
     }
 
@@ -127,7 +127,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Type lt = left.type(e);
             Type rt = right.type(e);
@@ -141,11 +141,11 @@ public class BOperatorNode extends AbstractNode implements RValue {
             }
 
             VisibilityZone zone = z.subZone(false, operator.toString());
-            Variable lvar = zone.createVariable(lt);
-            left.getVariable(lvar, zone.subZone(false, null), e, log);
+            LocalVariable lvar = zone.createVariable(lt);
+            left.getLocalVariable(lvar, zone.subZone(false, null), e, log);
 
-            Variable rvar = zone.createVariable(rt);
-            right.getVariable(rvar, zone.subZone(false, null), e, log);
+            LocalVariable rvar = zone.createVariable(rt);
+            right.getLocalVariable(rvar, zone.subZone(false, null), e, log);
 
             if ((addType(lt, rt)) != null) {
                 add(dst, lvar, rvar, zone);
@@ -168,7 +168,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
                 return;
             }
 
-            List<Variable> args = new ArrayList<Variable>();
+            List<LocalVariable> args = new ArrayList<LocalVariable>();
             args.add(lvar);
             args.add(rvar);
 
@@ -182,7 +182,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         }
     }
 
-    void or(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
+    void or(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Or(res, a, b, operator.toString()));
     }
 
@@ -217,7 +217,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         right.printTree(out, indent + 1);
     }
 
-    void sub(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
+    void sub(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Sub(res, a, b, operator.toString()));
     }
 
@@ -262,7 +262,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         return e.function(funStr).type;
     }
 
-    void xor(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
+    void xor(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Xor(res, a, b, operator.toString()));
     }
 

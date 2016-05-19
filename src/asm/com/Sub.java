@@ -14,7 +14,7 @@ public class Sub extends Command {
     public final Memory src;
 
     public Sub(RWMemory dst, Memory src, String label, String comment) {
-        super(label, comment);
+        super(label, null,comment);
         this.dst = dst;
         this.src = src;
         if (src.useRam() && dst.useRam()) {

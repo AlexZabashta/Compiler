@@ -2,15 +2,27 @@ package code;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 import lex.token.fold.DeclarationToken;
 import misc.Type;
 import asm.Command;
+import asm.Register;
+import asm.com.Push;
+import asm.com.ShiftEsp;
+import asm.mem.CpuRegister;
+import asm.mem.RamEsp;
 import code.act.Nop;
 import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.UnexpectedVoidType;
+import static asm.Register.*;
 
 public class VisibilityZone extends Action {
 
@@ -19,10 +31,12 @@ public class VisibilityZone extends Action {
     private Nop end = null;
 
     public final int level;
+    public static final Register[] registers = { EBX, ECX, EDX, EDI, ESI, EBP };
+    public final Set<Register> use = new HashSet<>();
 
     protected FunctionZone root;
 
-    private final List<LocalVariable> vars = new ArrayList<LocalVariable>();
+    protected final List<LocalVariable> vars = new ArrayList<LocalVariable>();
 
     public final boolean visible;
 
@@ -59,14 +73,76 @@ public class VisibilityZone extends Action {
 
     @Override
     public void asm(List<Command> programText) {
-        end();
+        Nop end = end();
+        programText.add(start());
+
+        int len = vars.size();
+
+        final Integer[] order = new Integer[len];
+        for (int i = 0; i < len; i++) {
+            order[i] = i;
+        }
+
+        Arrays.sort(order, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer i, Integer j) {
+                LocalVariable x = vars.get(i);
+                LocalVariable y = vars.get(j);
+
+                if (x.counter == y.counter) {
+                    return i.compareTo(j);
+                } else {
+                    return Integer.compare(y.counter, x.counter);
+                }
+            }
+        });
+
+        int reg = Math.min(len, registers.length);
+
+        programText.add(new ShiftEsp(-len, null, null));
+        if (parent != null) {
+            parent.push(len);
+        }
+
+        for (int i = 0; i < reg; i++) {
+            LocalVariable nVar = vars.get(order[i]);
+
+            Register register = registers[i];
+            nVar.register = register;
+            use.add(register);
+
+            Stack<LocalVariable> cur = root.reAlloc.get(register);
+
+            int offset = len - i - 1;
+
+            if (!cur.isEmpty()) {
+                LocalVariable oVar = cur.peek();
+                oVar.offset = offset;
+                oVar.register = null;
+            }
+            cur.add(nVar);
+
+            CpuRegister cpuRegister = new CpuRegister(register);
+            Variable.moveMem(programText, new RamEsp(offset), cpuRegister);
+            Variable.init(programText, nVar.type, nVar.rwMemory());
+        }
+        for (int i = reg; i < len; i++) {
+            LocalVariable variable = vars.get(order[i]);
+            variable.offset = len - i - 1;
+            variable.register = null;
+            Variable.init(programText, variable.type, variable.rwMemory());
+        }
 
         for (Action action : actions) {
             action.asm(programText);
         }
+
+        freeVars(programText);
+        programText.add(new asm.com.Nop(end.label, end.comment));
     }
 
     public LocalVariable createVariable(DeclarationToken token, Environment environment) throws UnexpectedVoidType, DeclarationException {
+
         if (token.varToken.pac != null) {
             throw new DeclarationException("Can't declare global varible here");
         }
@@ -83,6 +159,10 @@ public class VisibilityZone extends Action {
     }
 
     public LocalVariable createVariable(Type type) throws UnexpectedVoidType {
+        if (end != null) {
+            throw new RuntimeException("Visibility zone " + label + " is already end");
+        }
+
         if (type.idVoid()) {
             throw new UnexpectedVoidType("Can't declare void variable");
         }
@@ -103,7 +183,9 @@ public class VisibilityZone extends Action {
     public void freeVars(List<Command> programText) {
         end();
 
-        // TODO SAVE REGISTERS
+        
+        
+        
     }
 
     public VisibilityZone getVisibleParent() {
@@ -169,7 +251,7 @@ public class VisibilityZone extends Action {
         }
     }
 
-    public void push() {
+    public void push(int offset) {
         // TODO push vars
     }
 

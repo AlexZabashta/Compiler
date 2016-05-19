@@ -1,5 +1,6 @@
 package asm.mem;
 
+import java.util.List;
 import java.util.Objects;
 
 import asm.State;
@@ -29,6 +30,11 @@ public class ConstInt implements Memory {
     @Override
     public boolean useRam() {
         return false;
+    }
+
+    @Override
+    public void getLabels(List<String> labels) {
+
     }
 
 }

@@ -6,14 +6,11 @@ import java.io.Writer;
 import asm.Command;
 import asm.State;
 
-public class PopNull extends Command {
+public class ShiftEsp extends Command {
     public final int offset;
 
-    public PopNull(int integerOffset, String label, String comment) {
-        super(label, comment);
-        if (integerOffset < 0) {
-            throw new RuntimeException("integerOffset = " + integerOffset + " < 0");
-        }
+    public ShiftEsp(int integerOffset, String label, String comment) {
+        super(label, null, comment);
         this.offset = integerOffset * 4;
     }
 

@@ -12,7 +12,7 @@ import ast.node.Values;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.CopyConst;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.Log;
 import exception.ParseException;
 
@@ -35,7 +35,7 @@ public class ConstValueNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
 
         z.addAction(new CopyConst(dst, token.variable, null, token.toString()));
 

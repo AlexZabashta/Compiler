@@ -8,11 +8,12 @@ import asm.Command;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 import code.Action;
+import code.var.LocalVariable;
 import code.var.Variable;
 import exception.TypeMismatch;
 
 public class MoveVar extends Action {
-    public final Variable src, dst;
+    public final Variable dst, src;
     public final Type type;
 
     public MoveVar(Variable dst, Variable src, String comment) throws TypeMismatch {
@@ -23,6 +24,9 @@ public class MoveVar extends Action {
         if (!dst.type.equals(src.type)) {
             throw new TypeMismatch(dst.type, src.type);
         }
+        dst.use(2);
+        src.use(2);
+
     }
 
     @Override
@@ -35,13 +39,11 @@ public class MoveVar extends Action {
         if (dstMemory.equals(srcMemory)) {
             return;
         }
-        if (type.dim == 0) {
-            Variable.moveMem(programText, dstMemory, srcMemory);
-        } else {
-            Variable.subscribe(programText, srcMemory);
-            Variable.unsubscribe(programText, type, dstMemory);
-            Variable.moveMem(programText, dstMemory, srcMemory);
-        }
+
+        LocalVariable.subscribe(programText, type, srcMemory);
+        LocalVariable.unsubscribe(programText, type, dstMemory);
+        LocalVariable.moveMem(programText, dstMemory, srcMemory);
+
     }
 
     @Override

@@ -1,5 +1,6 @@
 package asm.mem;
 
+import java.util.List;
 import java.util.Objects;
 
 import asm.Register;
@@ -40,6 +41,11 @@ public class RamEsp implements RWMemory {
     @Override
     public boolean useRam() {
         return true;
+    }
+
+    @Override
+    public void getLabels(List<String> labels) {
+
     }
 
 }

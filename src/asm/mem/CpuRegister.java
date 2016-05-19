@@ -1,5 +1,6 @@
 package asm.mem;
 
+import java.util.List;
 import java.util.Objects;
 
 import asm.Register;
@@ -35,6 +36,11 @@ public class CpuRegister implements RWMemory {
     @Override
     public boolean useRam() {
         return false;
+    }
+
+    @Override
+    public void getLabels(List<String> labels) {
+
     }
 
 }

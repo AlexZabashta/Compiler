@@ -9,7 +9,7 @@ import ast.node.LValue;
 import ast.node.RValue;
 import code.Environment;
 import code.VisibilityZone;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -38,9 +38,9 @@ public class Assignment extends AbstractNode implements RValue {
             VisibilityZone zone = z.subZone(false, operator.toString());
             Type type = type(e);
 
-            Variable var = zone.createVariable(type);
-            right.getVariable(var, zone, e, log);
-            left.setVariable(var, zone, e, log);
+            LocalVariable var = zone.createVariable(type);
+            right.getLocalVariable(var, zone, e, log);
+            left.setLocalVariable(var, zone, e, log);
         } catch (UnexpectedVoidType | DeclarationException exception) {
             log.addException(new SemanticException(exception.getMessage(), operator));
         }
@@ -74,9 +74,9 @@ public class Assignment extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        right.getVariable(dst, z.subZone(false, operator.toString()), e, log);
-        left.setVariable(dst, z.subZone(false, operator.toString()), e, log);
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+        right.getLocalVariable(dst, z.subZone(false, operator.toString()), e, log);
+        left.setLocalVariable(dst, z.subZone(false, operator.toString()), e, log);
     }
 
 }

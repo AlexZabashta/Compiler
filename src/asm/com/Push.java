@@ -12,7 +12,7 @@ public class Push extends Command {
     public final Memory src;
 
     public Push(Memory src, String label, String comment) {
-        super(label, comment);
+        super(label, null,comment);
         this.src = Objects.requireNonNull(src);
     }
 

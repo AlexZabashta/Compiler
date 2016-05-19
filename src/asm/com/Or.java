@@ -14,7 +14,7 @@ public class Or extends Command {
     public final Memory src;
 
     public Or(RWMemory dst, Memory src, String label, String comment) {
-        super(label, comment);
+        super(label, null,comment);
         this.dst = dst;
         this.src = src;
         if (src.useRam() && dst.useRam()) {

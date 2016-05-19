@@ -9,11 +9,8 @@ import asm.State;
 
 public class Je extends Command {
 
-    public final String target;
-
     public Je(String target, String label, String comment) {
-        super(label, comment);
-        this.target = Objects.requireNonNull(target);
+        super(label, Objects.requireNonNull(target), comment);
     }
 
     @Override

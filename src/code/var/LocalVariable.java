@@ -11,22 +11,32 @@ import exception.UnexpectedVoidType;
 public class LocalVariable extends Variable {
     private static int codeCnt = 0;
     private final int code = ++codeCnt;
-    private int offset = 0;
 
-    private Register register = null;
+    public int counter = 0;
+
+    public int offset = 0;
+    public Register register = null;
     public final VisibilityZone visibilityZone;
+
+    @Override
+    public void use(int cnt) {
+        counter += cnt;
+    }
 
     public LocalVariable(Type type, VisibilityZone visibilityZone, int offset) throws UnexpectedVoidType {
         super(type);
         this.visibilityZone = visibilityZone;
+        if (offset < 0) {
+            throw new RuntimeException("offset < 0");
+        }
         this.offset = offset;
     }
 
     public RWMemory rwMemory() {
         if (register == null) {
-            return new CpuRegister(register);
+            return new RamEsp(offset);
         } else {
-            return new RamEsp(offset * 4);
+            return new CpuRegister(register);
         }
     }
 

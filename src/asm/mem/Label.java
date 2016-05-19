@@ -1,5 +1,7 @@
 package asm.mem;
 
+import java.util.List;
+
 import asm.State;
 
 public class Label implements Memory {
@@ -23,6 +25,12 @@ public class Label implements Memory {
     @Override
     public boolean useRam() {
         return false;
+    }
+
+    @Override
+    public void getLabels(List<String> labels) {
+        labels.add(label);
+
     }
 
 }

@@ -17,7 +17,7 @@ import code.VisibilityZone;
 import code.act.CallFunction;
 import code.act.Not;
 import code.act.Size;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -93,21 +93,21 @@ public class UOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
 
             Type type = type(e);
             if (operator.string == "~") {
                 VisibilityZone zone = z.subZone(false, null);
-                Variable var = zone.createVariable(type);
-                node.getVariable(var, zone, e, log);
+                LocalVariable var = zone.createVariable(type);
+                node.getLocalVariable(var, zone, e, log);
                 z.addAction(new Not(dst, var, operator.toString()));
             } else {
                 Type arrayType = node.type(e);
                 VisibilityZone zone = z.subZone(false, null);
 
-                Variable var = zone.createVariable(arrayType);
-                node.getVariable(var, zone, e, log);
+                LocalVariable var = zone.createVariable(arrayType);
+                node.getLocalVariable(var, zone, e, log);
                 z.addAction(new Size(dst, var, operator.toString()));
             }
         } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {

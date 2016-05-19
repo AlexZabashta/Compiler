@@ -7,7 +7,7 @@ import ast.node.AbstractNode;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.Break;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
@@ -22,7 +22,7 @@ public class ReturnNode extends AbstractNode {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        Variable res = z.root().result;
+        LocalVariable res = z.root().result;
 
         if (res == null) {
             z.addAction(new Break(z.level + 1, null, returnToken.toString()));

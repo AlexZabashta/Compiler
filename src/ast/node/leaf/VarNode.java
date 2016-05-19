@@ -12,7 +12,7 @@ import code.VisibilityZone;
 import code.act.MoveVar;
 import code.var.GlobalVariable;
 import code.var.LocalVariable;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -27,7 +27,7 @@ public class VarNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void setLocalVariable(LocalVariable src, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             if (token.pac == null) {
                 LocalVariable dst = e.localVar(token.toTokenString());
@@ -53,7 +53,7 @@ public class VarNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             if (token.pac == null) {
                 LocalVariable src = e.localVar(token.toTokenString());

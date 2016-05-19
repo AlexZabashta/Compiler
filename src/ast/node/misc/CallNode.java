@@ -14,7 +14,7 @@ import ast.node.RValue;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.CallFunction;
-import code.var.Variable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -36,21 +36,21 @@ public class CallNode extends AbstractNode implements RValue {
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Function function = fun(e);
-            List<Variable> args = new ArrayList<Variable>();
+            List<LocalVariable> args = new ArrayList<LocalVariable>();
 
             VisibilityZone fz = z.subZone(false, fun.toString());
 
             for (RValue node : vars) {
                 VisibilityZone az = fz.subZone(false, fun.toString());
 
-                Variable var = fz.createVariable(node.type(e));
+                LocalVariable var = fz.createVariable(node.type(e));
 
-                node.getVariable(var, az, e, log);
+                node.getLocalVariable(var, az, e, log);
                 args.add(var);
             }
 
             Type type = function.type;
-            Variable res = null;
+            LocalVariable res = null;
 
             if (!type.idVoid()) {
                 res = fz.createVariable(type);
@@ -102,19 +102,19 @@ public class CallNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Function function = fun(e);
-            List<Variable> args = new ArrayList<Variable>();
+            List<LocalVariable> args = new ArrayList<LocalVariable>();
             VisibilityZone fz = z.subZone(false, fun.toString());
 
             for (RValue node : vars) {
                 VisibilityZone az = fz.subZone(false, fun.toString());
 
-                Variable var;
+                LocalVariable var;
                 var = fz.createVariable(node.type(e));
 
-                node.getVariable(var, az, e, log);
+                node.getLocalVariable(var, az, e, log);
                 args.add(var);
             }
 
