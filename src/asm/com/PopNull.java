@@ -7,24 +7,24 @@ import asm.Command;
 import asm.State;
 
 public class PopNull extends Command {
-    public final int num;
+    public final int offset;
 
-    public PopNull(int num, String label, String comment) {
+    public PopNull(int integerOffset, String label, String comment) {
         super(label, comment);
-        if (num < 0) {
-            throw new RuntimeException("num = " + num + " < 0");
+        if (integerOffset < 0) {
+            throw new RuntimeException("integerOffset = " + integerOffset + " < 0");
         }
-        this.num = num * 4;
+        this.offset = integerOffset * 4;
     }
 
     @Override
     public void execute(State state, Reader input, Writer output) {
-        state.esp += num;
+        state.esp += offset;
     }
 
     @Override
     public String toStringYASM_WIN_32() {
-        return "add esp, " + num;
+        return "add esp, " + offset;
     }
 
 }

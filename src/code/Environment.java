@@ -13,6 +13,10 @@ public class Environment {
     private final Map<String, GlobalVariable> gv;
     private final Map<String, LocalVariable> lv;
 
+    public void removeAllLocalVariables() {
+        lv.clear();
+    }
+
     public void removeLocalVariable(String name) throws DeclarationException {
         if (lv.remove(name) == null) {
             throw new DeclarationException("Can't find " + name + " declaration");
@@ -35,6 +39,12 @@ public class Environment {
         if (f.put(name, function) != null) {
             throw new DeclarationException("Duplicate variable " + name + " declaration");
         }
+    }
+
+    public Environment() {
+        this.lv = new HashMap<String, LocalVariable>();
+        this.gv = new HashMap<String, GlobalVariable>();
+        this.f = new HashMap<String, Function>();
     }
 
     public Environment(Map<String, GlobalVariable> gv, Map<String, Function> f) {

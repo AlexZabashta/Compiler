@@ -14,14 +14,22 @@ public class RamRegister implements RWMemory {
         this(register, 0);
     }
 
-    public RamRegister(Register register, int offset) {
+    public RamRegister(Register register, int integerOffset) {
         this.register = Objects.requireNonNull(register);
-        this.offset = offset;
+        this.offset = 4 * integerOffset;
     }
 
     @Override
     public String toStringYASM_WIN_32() {
-        return "[" + register.toString().toLowerCase() + " + " + offset + "]";
+        if (offset == 0) {
+            return "dword [" + register.toString().toLowerCase() + "]";
+        } else {
+            if (offset < 0) {
+                return "dword [" + register.toString().toLowerCase() + " - " + (-offset) + "]";
+            } else {
+                return "dword [" + register.toString().toLowerCase() + " + " + offset + "]";
+            }
+        }
     }
 
     @Override

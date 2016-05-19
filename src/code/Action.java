@@ -53,6 +53,10 @@ public abstract class Action {
         }
     }
 
+    public void printDensely(PrintWriter out, int indent) {
+        println(out, indent);
+    }
+
     public abstract void println(PrintWriter out, int indent);
 
     public asm.com.Nop start() {

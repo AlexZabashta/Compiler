@@ -21,10 +21,8 @@ public class InitFunction extends Function {
     }
 
     @Override
-    public FunctionZone getVisibilityZone(Map<String, GlobalVariable> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
+    public FunctionZone getVisibilityZone(Environment environment, Log log) throws ParseException {
         FunctionZone zone = new FunctionZone(this);
-        Map<String, Variable> localVariables = new HashMap<String, Variable>();
-        Environment environment = new Environment(globalVariables, functions);
         action.action(zone, environment, log);
         return zone;
     }

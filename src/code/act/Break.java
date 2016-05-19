@@ -30,7 +30,7 @@ public class Break extends Action {
             cur = cur.parent();
         }
 
-        programText.add(new Jmp(nop.label, null, comment));
+        programText.add(new Jmp(nop.label, null, null));
     }
 
     @Override

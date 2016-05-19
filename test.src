@@ -1,11 +1,55 @@
-void main(text args) {
+void main() {
 
-	string str = "";
+!	string str = "";
+!	
+!	for (int i = 0, i < 10, i = i + 1) {
+!		str = str + sys.readLine();	
+!	} ;
+!
+!	sys.println(str);
 	
-	for (int i = 0, i < 10, i = i + 1) {
-		str = str + sys.readLine();	
-	} ;
+}
 
-	sys.println(str);
-	
+int pow(int x, int y) {
+	int z = 1;
+	for (,y > 0, y = y / 2) {
+		if (y % 2 == 1) {
+			z = z * x;
+		};
+		x = x * x;
+	};
+	return z;
+}
+
+
+void read(){
+	char c = sys.read();
+	sys.write(c);
+}
+
+char get(string str, int index) {
+	return str[index];
+}
+
+bool cmp(bool x, bool y) {
+	return x == y;
+}
+
+bool cmp(char x, char y) {
+	return (x == y) | (x <> y);
+}
+
+bool cmp(int x, int y) {
+	return (x < y) | (x <= y) | (x == y) | (x >= y) | (x > y) | (x <> y);
+}
+
+
+int sum(int x, int y) {
+	return x + y;
+}
+
+
+init(int a,int b) {
+	test.a = 3;
+	test.b = 5;
 }

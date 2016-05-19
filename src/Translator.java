@@ -24,10 +24,6 @@ import exception.UnexpectedVoidType;
 
 public class Translator {
 
-    public static List<Function> translate(String path, String pac, Queue<SimpleString> pacs, List<ConstVariable> vals, String debug, Log log) throws IOException, ParseException {
-        return translate(path, new SimpleString(pac, null), pacs, vals, debug, log);
-    }
-
     public static List<Function> translate(String path, SimpleString pac, Queue<SimpleString> pacs, List<ConstVariable> vals, String debug, Log log) throws IOException, ParseException {
         if (pac.string.isEmpty()) {
             log.addException(new ParseException("Empty pac name ", pac));
@@ -122,7 +118,7 @@ public class Translator {
                 }
             }
 
-            try (PrintWriter out = new PrintWriter(new File(debug + File.separator + "3_ast.txt"))) {
+            try (PrintWriter out = new PrintWriter(new File(outFolder + "3_ast.txt"))) {
                 for (Function function : functions) {
                     out.print(function.name.toTokenString());
                     for (DeclarationToken token : function.vars) {
@@ -133,7 +129,7 @@ public class Translator {
                     function.action.printTree(out, 1);
                 }
             }
-            try (PrintWriter out = new PrintWriter(new File(debug + File.separator + "4_fun.txt"))) {
+            try (PrintWriter out = new PrintWriter(new File(outFolder + "4_fun.txt"))) {
                 for (Function function : functions) {
                     function.println(out, 0);
                 }

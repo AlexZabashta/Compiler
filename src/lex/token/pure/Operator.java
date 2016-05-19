@@ -40,8 +40,8 @@ public class Operator extends Token {
         operators.put("&", 6);
         operators.put("^", 5);
         operators.put("|", 4);
-        operators.put("&&", 3);
-        operators.put("||", 2);
+        // operators.put("&&", 3);
+        // operators.put("||", 2);
 
         operators.put("=", 1);
 

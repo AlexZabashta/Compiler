@@ -43,9 +43,8 @@ public class Function {
 
     }
 
-    public FunctionZone getVisibilityZone(Map<String, GlobalVariable> globalVariables, Map<String, Function> functions, Log log) throws ParseException {
+    public FunctionZone getVisibilityZone(Environment environment, Log log) throws ParseException {
         FunctionZone zone = new FunctionZone(this);
-        Environment environment = new Environment(globalVariables, functions);
 
         for (DeclarationToken var : vars) {
             try {
@@ -54,8 +53,8 @@ public class Function {
                 log.addException(new SemanticException(exceptione.getMessage(), name));
             }
         }
-
         action.action(zone, environment, log);
+        environment.removeAllLocalVariables();
 
         return zone;
     }

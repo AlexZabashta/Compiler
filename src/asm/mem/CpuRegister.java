@@ -24,12 +24,12 @@ public class CpuRegister implements RWMemory {
 
     @Override
     public int get(State state) {
-        return state.register[register.ordinal()];
+        return state.getReg(register);
     }
 
     @Override
     public void set(State state, int value) {
-        state.register[register.ordinal()] = value;
+        state.setReg(register, value);
     }
 
     @Override

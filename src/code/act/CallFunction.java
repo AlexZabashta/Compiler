@@ -6,6 +6,7 @@ import java.util.List;
 import misc.Type;
 import asm.Command;
 import asm.com.Mov;
+import asm.com.Pop;
 import asm.com.PopNull;
 import asm.com.Push;
 import asm.mem.CpuRegister;
@@ -55,6 +56,7 @@ public class CallFunction extends Action {
                 parent.push();
                 Variable.unsubscribe(programText, res.type, res.rwMemory());
                 parent.pop(1);
+                programText.add(new Pop(eax, null, null));
             }
             programText.add(new Mov(res.rwMemory(), eax, null, null));
         }

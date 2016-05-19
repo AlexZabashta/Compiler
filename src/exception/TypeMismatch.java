@@ -10,4 +10,9 @@ public class TypeMismatch extends Exception {
         super("Type mismatch " + src + " -> " + dst);
     }
 
+    public static void check(Type dst, Type src) throws TypeMismatch {
+        if (!dst.equals(src)) {
+            throw new TypeMismatch(dst, src);
+        }
+    }
 }

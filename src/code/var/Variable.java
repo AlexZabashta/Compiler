@@ -12,6 +12,7 @@ import asm.com.Push;
 import asm.mem.CpuRegister;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
+import ast.SystemFunction;
 import ast.node.Values;
 
 public abstract class Variable {
@@ -27,13 +28,13 @@ public abstract class Variable {
 
     public static void subscribe(List<Command> programText, Memory src) {
         programText.add(new Push(src, null, null));
-        programText.add(new Call("subscribe", null, null));
+        programText.add(new Call(SystemFunction.PAC + ".subscribe", null, null));
         programText.add(new PopNull(1, null, null));
     }
 
     public static void unsubscribe(List<Command> programText, Type type, Memory src) {
         programText.add(new Push(src, null, null));
-        programText.add(new Call(Values.toString("unsubscribe", type), null, null));
+        programText.add(new Call(Values.toString(SystemFunction.PAC + ".unsubscribe", type), null, null));
         programText.add(new PopNull(1, null, null));
     }
 

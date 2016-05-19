@@ -16,12 +16,18 @@ import misc.EnumType;
 import asm.Programm;
 import ast.Function;
 import ast.InitFunction;
+import ast.SystemFunction;
+import code.Environment;
 import code.FunctionZone;
+import code.act.CallFunction;
 import code.var.ConstVariable;
 import code.var.GlobalVariable;
+import code.var.Variable;
+import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
+import exception.TypeMismatch;
 import exception.UnexpectedVoidType;
 
 public class Compiler {
@@ -29,12 +35,8 @@ public class Compiler {
     public static Programm compile(String srcFolder, String enter, String debug, Log log) throws IOException, ParseException {
         Programm programm = new Programm();
 
-        List<DeclarationToken> vars = new ArrayList<DeclarationToken>();
-        Map<String, GlobalVariable> varMap = new HashMap<String, GlobalVariable>();
-
+        List<GlobalVariable> vars = new ArrayList<GlobalVariable>();
         List<Function> funs = new ArrayList<Function>();
-        Map<String, Function> funMap = new HashMap<String, Function>();
-
         List<InitFunction> inits = new ArrayList<InitFunction>();
         Function mainf = null;
 
@@ -45,12 +47,11 @@ public class Compiler {
         Queue<SimpleString> queue = new ArrayDeque<SimpleString>();
 
         enter = enter.toLowerCase();
-
         if (enter.length() >= 4 && enter.substring(enter.length() - 4).equals(".src")) {
             enter = enter.substring(0, enter.length() - 4);
         }
 
-        String sys = StandardFunctions.PAC;
+        String sys = SystemFunction.PAC;
         if (enter.equals(sys)) {
             throw new RuntimeException("Main pac can't be \"sys\"");
         }
@@ -64,7 +65,22 @@ public class Compiler {
 
         List<ConstVariable> vals = new ArrayList<ConstVariable>();
 
+        Environment environment = new Environment();
+        funs.addAll(StandardFunctions.getFunctions());
+
+        for (Function function : funs) {
+            try {
+                environment.addFunction(function.toString(), function);
+            } catch (DeclarationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         while (sys != null) {
+            if (queue.isEmpty() && sys != null) {
+                queue.add(new SimpleString(sys, null));
+                sys = null;
+            }
             while (!queue.isEmpty()) {
                 SimpleString pac = queue.poll();
                 if (pacs.add(pac.string)) {
@@ -77,25 +93,25 @@ public class Compiler {
                         if (function instanceof InitFunction) {
                             InitFunction initFunction = (InitFunction) function;
                             for (DeclarationToken token : initFunction.vars) {
-                                String key = token.varToken.toTokenString();
                                 try {
-                                    if (varMap.put(key, new GlobalVariable(token)) == null) {
-                                        vars.add(token);
-                                    } else {
-                                        log.addException(new SemanticException("Duplicate global variable", token));
-                                    }
-                                } catch (UnexpectedVoidType exception) {
+                                    String name = token.varToken.toTokenString();
+                                    GlobalVariable variable = new GlobalVariable(token);
+                                    environment.addGlobalVar(name, variable);
+                                    vars.add(variable);
+                                } catch (UnexpectedVoidType | DeclarationException exception) {
                                     log.addException(new SemanticException(exception.getMessage(), token));
                                 }
                             }
+                            inits.add(initFunction);
+                        } else {
+                            funs.add(function);
                         }
                         {
-                            String key = function.toString();
-
-                            if (funMap.put(key, function) == null) {
-                                funs.add(function);
-                            } else {
-                                log.addException(new SemanticException("Duplicate function declaration", function.name));
+                            try {
+                                String name = function.toString();
+                                environment.addFunction(name, function);
+                            } catch (DeclarationException exception) {
+                                log.addException(new SemanticException(exception.getMessage(), function.name));
                             }
                         }
 
@@ -106,48 +122,59 @@ public class Compiler {
                     // System.err.println("Success!");
                 }
             }
-
-            queue.add(new SimpleString(sys, null));
-            sys = null;
         }
         // System.err.println("Build program:");
 
         if (mainf == null) {
             log.addException(new SemanticException("Can't find void " + enter + ".main() function", enterToken));
-        } else {
-            if (mainf.type.type != EnumType.VOID) {
-                log.addException(new SemanticException("The 'main' must be void function", enterToken));
-            }
+            return programm;
         }
 
-        if (debug != null) {
-            try (PrintWriter out = new PrintWriter(new File(debug + File.separator + "ast.txt"))) {
-                for (Function function : funs) {
-                    out.print(function.name.toTokenString());
-                    for (DeclarationToken token : function.vars) {
-                        out.print(' ');
-                        out.print(token.toTokenString());
-                    }
-                    out.println();
-                    function.action.printTree(out, 1);
-                }
-            }
-            try (PrintWriter out = new PrintWriter(new File(debug + File.separator + "fun.txt"))) {
-                for (Function function : funs) {
-                    function.println(out, 0);
-                }
-            }
+        if (mainf.type.type != EnumType.VOID) {
+            log.addException(new SemanticException("The 'main' must be void function", enterToken));
         }
 
+        String start = null;
+
+        int initLen = inits.size();
         List<FunctionZone> functionZones = new ArrayList<FunctionZone>();
 
-        for (Function function : funs) {
-            functionZones.add(function.getVisibilityZone(varMap, funMap, log));
+        for (int i = initLen - 1; i >= 0; i--) {
+            Function function = inits.get(i);
+
+            if (start == null) {
+                start = function.toString();
+            }
+
+            FunctionZone zone = function.getVisibilityZone(environment, log);
+            functionZones.add(zone);
+
+            Function next = mainf;
+
+            if (i > 0) {
+                next = inits.get(i - 1);
+            }
+
+            try {
+                zone.addAction(new CallFunction(null, next, new ArrayList<Variable>(), null, null));
+            } catch (TypeMismatch | NullPointerException ignore) {
+            }
         }
+
+        if (start == null) {
+            start = mainf.toString();
+        }
+
+        for (Function function : funs) {
+            FunctionZone zone = function.getVisibilityZone(environment, log);
+            functionZones.add(zone);
+        }
+
         if (debug != null) {
-            try (PrintWriter out = new PrintWriter(new File(debug + File.separator + "code.txt"))) {
-                for (FunctionZone zone : functionZones) {
-                    zone.println(out, 0);
+            for (FunctionZone zone : functionZones) {
+                String name = zone.label;
+                try (PrintWriter out = new PrintWriter(new File(debug + File.separator + name + ".txt"))) {
+                    zone.println(out, 1);
                     out.println();
                     out.println();
                 }

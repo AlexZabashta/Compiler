@@ -1,0 +1,47 @@
+String readLine(){
+}
+
+int.1 newint1(int len) {
+	len = 0;
+}
+
+int.2 newint2(int len) {
+	len = 0;
+}
+
+bool lessOrEqual(int x, int y) {
+	return (x < y) | (x == y);
+}
+
+bool greaterOrEqual(int x, int y) {
+	return (x > y) | (x == y);
+}
+
+bool greater(int x, int y) {
+	return ~(x <= y);
+}
+
+bool notequal(int x, int y) {
+	return ~(x == y);
+}
+
+bool notequal(char x, char y) {
+	return ~(x == y);
+}
+
+bool notequal(bool x, bool y) {
+	return x ^ y;
+}
+
+bool equal(bool x, bool y) {
+	return ~(x <> y);
+}
+
+int.1 clone(int.1 src) {
+	int len = #src;
+	clone = newint1(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = src[i];
+	}
+}

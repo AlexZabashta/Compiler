@@ -61,8 +61,6 @@ public class VisibilityZone extends Action {
     public void asm(List<Command> programText) {
         end();
 
-        // TODO SAVE REGISTERS
-
         for (Action action : actions) {
             action.asm(programText);
         }
@@ -86,7 +84,7 @@ public class VisibilityZone extends Action {
 
     public LocalVariable createVariable(Type type) throws UnexpectedVoidType {
         if (type.idVoid()) {
-            throw new RuntimeException("Can't declare void variable");
+            throw new UnexpectedVoidType("Can't declare void variable");
         }
         LocalVariable variable = new LocalVariable(type, this, vars.size());
         vars.add(variable);
@@ -158,6 +156,16 @@ public class VisibilityZone extends Action {
             out.println("}");
         } else {
             out.println(")");
+        }
+    }
+
+    @Override
+    public void printDensely(PrintWriter out, int indent) {
+        for (Action action : actions) {
+            if (action instanceof Nop) {
+                continue;
+            }
+            action.printDensely(out, indent);
         }
     }
 

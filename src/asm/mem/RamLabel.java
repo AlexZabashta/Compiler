@@ -14,7 +14,7 @@ public class RamLabel implements RWMemory {
 
     @Override
     public String toStringYASM_WIN_32() {
-        return "[" + label + "]";
+        return "dword [" + label + "]";
     }
 
     @Override

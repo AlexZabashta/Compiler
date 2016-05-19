@@ -25,7 +25,7 @@ public class FunctionZone extends VisibilityZone {
     @Override
     public void asm(List<Command> programText) {
         end();
-        programText.add(new asm.com.Nop(label, comment));
+        programText.add(start());
         // TODO SAVE REGISTERS
 
         for (Action action : actions) {

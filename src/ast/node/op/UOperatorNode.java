@@ -8,12 +8,15 @@ import lex.token.pure.Operator;
 import misc.EnumType;
 import misc.Type;
 import ast.Function;
+import ast.SystemFunction;
 import ast.node.AbstractNode;
 import ast.node.RValue;
 import ast.node.Values;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.CallFunction;
+import code.act.Not;
+import code.act.Size;
 import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
@@ -35,21 +38,11 @@ public class UOperatorNode extends AbstractNode implements RValue {
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
-            Type type = node.type(e);
-            if (type.idVoid()) {
-                throw new UnexpectedVoidType("Expected R-value");
-            }
-
-            if (type.dim != 0) {
-                throw new UnexpectedVoidType("Expected not array R-value");
-            }
-
-            String funStr = Values.toString(funName(), type);
-            e.function(funStr);
-            node.action(z.subZone(false, operator.toString()), e, log);
-        } catch (DeclarationException | UnexpectedVoidType exception) {
+            type(e);
+        } catch (DeclarationException exception) {
             log.addException(new SemanticException(exception.getMessage(), operator));
         }
+        node.action(z.subZone(false, operator.toString()), e, log);
     }
 
     @Override
@@ -68,9 +61,9 @@ public class UOperatorNode extends AbstractNode implements RValue {
     public String funName() {
         switch (operator.string) {
         case "~":
-            return "sys.not";
+            return SystemFunction.PAC + ".not";
         case "#":
-            return "sys.size";
+            return SystemFunction.PAC + ".size";
         default:
             throw new RuntimeException("Unknown unary operator " + operator);
         }
@@ -83,39 +76,40 @@ public class UOperatorNode extends AbstractNode implements RValue {
 
     @Override
     public Type type(Environment e) throws DeclarationException {
+        Type type = node.type(e);
+
         switch (operator.string) {
         case "~":
-            return node.type(e);
+            if (type.equals(new Type(EnumType.INT)) || type.equals(new Type(EnumType.BOOL))) {
+                return type;
+            } else {
+                throw new DeclarationException("Can't find ~" + type + " function");
+            }
         case "#":
             return new Type(EnumType.INT);
         default:
             throw new RuntimeException("Unknown unary operator " + operator);
         }
-
     }
 
     @Override
     public void getVariable(Variable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
-            Type type = node.type(e);
-            if (type.idVoid()) {
-                throw new UnexpectedVoidType("Expected R-value");
+
+            Type type = type(e);
+            if (operator.string == "~") {
+                VisibilityZone zone = z.subZone(false, null);
+                Variable var = zone.createVariable(type);
+                node.getVariable(var, zone, e, log);
+                z.addAction(new Not(dst, var, operator.toString()));
+            } else {
+                Type arrayType = node.type(e);
+                VisibilityZone zone = z.subZone(false, null);
+
+                Variable var = zone.createVariable(arrayType);
+                node.getVariable(var, zone, e, log);
+                z.addAction(new Size(dst, var, operator.toString()));
             }
-
-            if (type.dim != 0) {
-                throw new UnexpectedVoidType("Expected not array R-value");
-            }
-
-            VisibilityZone zone = z.subZone(false, operator.toString());
-            Variable var = zone.createVariable(type);
-            List<Variable> args = new ArrayList<Variable>();
-            args.add(var);
-
-            String funStr = Values.toString(funName(), args);
-
-            Function fun = e.function(funStr);
-
-            zone.addAction(new CallFunction(dst, fun, args, null, operator.toString()));
         } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
             log.addException(new SemanticException(exception.getMessage(), operator));
         }
