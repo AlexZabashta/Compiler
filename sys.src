@@ -1,47 +1,95 @@
 String readLine(){
 }
 
-int.1 newint1(int len) {
-	len = 0;
-}
-
-int.2 newint2(int len) {
-	len = 0;
-}
-
 bool lessOrEqual(int x, int y) {
-	return (x < y) | (x == y);
+	lessOrEqual =  (x < y) | (x == y);
 }
 
 bool greaterOrEqual(int x, int y) {
-	return (x > y) | (x == y);
+	greaterOrEqual = (x > y) | (x == y);
 }
 
 bool greater(int x, int y) {
-	return ~(x <= y);
+	greater = ~(x <= y);
 }
 
-bool notequal(int x, int y) {
-	return ~(x == y);
+char.1 clone(char.1 array) {
+	int len = #array;
+	clone = newchar1(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
 }
 
-bool notequal(char x, char y) {
-	return ~(x == y);
+char.2 clone(char.2 array) {
+	int len = #array;
+	clone = newchar2(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
 }
 
-bool notequal(bool x, bool y) {
-	return x ^ y;
+char.3 clone(char.3 array) {
+	int len = #array;
+	clone = newchar3(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
 }
 
-bool equal(bool x, bool y) {
-	return ~(x <> y);
-}
-
-int.1 clone(int.1 src) {
-	int len = #src;
+int.1 clone(int.1 array) {
+	int len = #array;
 	clone = newint1(len);
 	
 	for(int i = 0, i < len, i = i + 1) {
-		clone[i] = src[i];
-	}
+		clone[i] = array[i];
+	};	
+}
+
+int.2 clone(int.2 array) {
+	int len = #array;
+	clone = newint2(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
+}
+
+int.3 clone(int.3 array) {
+	int len = #array;
+	clone = newint3(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
+}
+
+bool.1 clone(bool.1 array) {
+	int len = #array;
+	clone = newbool1(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
+}
+
+bool.2 clone(bool.2 array) {
+	int len = #array;
+	clone = newbool2(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
+}
+
+bool.3 clone(bool.3 array) {
+	int len = #array;
+	clone = newbool3(len);
+	
+	for(int i = 0, i < len, i = i + 1) {
+		clone[i] = array[i];
+	};	
 }

@@ -1,6 +1,6 @@
 void main() {
 
-!	string str = "";
+	string str = "ololol";
 !	
 !	for (int i = 0, i < 10, i = i + 1) {
 !		str = str + sys.readLine();	
@@ -10,46 +10,51 @@ void main() {
 	
 }
 
+int id(int num) {
+	id = num
+}
+
+
 int pow(int x, int y) {
-	int z = 1;
+	pow = 1;
 	for (,y > 0, y = y / 2) {
 		if (y % 2 == 1) {
-			z = z * x;
+			pow = pow * x;
 		};
 		x = x * x;
 	};
-	return z;
 }
 
 
 void read(){
-	char c = sys.read();
-	sys.write(c);
+	char c = sys.getChar();
+	sys.putChar(c);
 }
 
 char get(string str, int index) {
-	return str[index];
+	get = str[index];
+	bool ans = str == str;
 }
 
 bool cmp(bool x, bool y) {
-	return x == y;
+	cmp = x == y;
 }
 
 bool cmp(char x, char y) {
-	return (x == y) | (x <> y);
+	cmp = (x == y) | (x <> y);
 }
 
 bool cmp(int x, int y) {
-	return (x < y) | (x <= y) | (x == y) | (x >= y) | (x > y) | (x <> y);
+	cmp = (x < y) | (x <= y) | (x == y) | (x >= y) | (x > y) | (x <> y);
 }
 
 
 int sum(int x, int y) {
-	return x + y;
+	sum = x + y;
 }
 
 
-init(int a,int b) {
+init(int a,int b, char.3 lol) {
 	test.a = 3;
 	test.b = 5;
 }
