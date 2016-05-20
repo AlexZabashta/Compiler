@@ -12,12 +12,12 @@ import asm.mem.RamLabel;
 
 public class ConstVariable extends GlobalVariable {
 
-    public final int[] bigData;
-    public final int smallData;
+    public String bigData;
+    public int smallData;
 
-    public static final Memory NULL = new RamLabel("emptyarray");
-    public static final Memory TRUE = new ConstInt(-1);
-    public static final Memory FALSE = new ConstInt(0);
+    public static final RamLabel NULL = new RamLabel("emptyarray");
+    public static final ConstInt TRUE = new ConstInt(-1);
+    public static final ConstInt FALSE = new ConstInt(0);
 
     public ConstVariable(Type type, String location, int data) throws UnexpectedVoidType {
         super(type, location);
@@ -25,16 +25,17 @@ public class ConstVariable extends GlobalVariable {
         this.smallData = data;
     }
 
-    public ConstVariable(Type type, String location, int[] data) throws UnexpectedVoidType {
+    public ConstVariable(Type type, String location, String bigData) throws UnexpectedVoidType {
         super(type, location);
-        this.bigData = data;
+        this.bigData = bigData;
         this.smallData = 0;
     }
 
     public ConstVariable(ConstValueToken token) throws UnexpectedVoidType {
         super(token.type(), Label.getDataLabel());
-        this.bigData = null;
-        this.smallData = 0;
+
+        this.bigData = token.stringValue();
+        this.smallData = token.intValue();
     }
 
     @Override

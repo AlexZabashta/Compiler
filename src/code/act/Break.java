@@ -8,6 +8,7 @@ import asm.com.Jmp;
 import code.Action;
 import code.VisibilityZone;
 
+@Deprecated
 public class Break extends Action {
 
     public final int level;
@@ -15,6 +16,7 @@ public class Break extends Action {
     public Break(int level, String label, String comment) {
         super(label, comment);
         this.level = level;
+        throw new RuntimeException("Deprecated");
     }
 
     @Override
@@ -25,7 +27,7 @@ public class Break extends Action {
         Nop nop = null;
 
         for (int n = level; n > 0; n--) {
-            cur.freeVars(programText);
+            // cur.freeVars(programText);
             nop = cur.end();
             cur = cur.parent();
         }

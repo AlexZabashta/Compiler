@@ -53,21 +53,21 @@ public class CallFunction extends Action {
 
         for (LocalVariable var : args) {
             programText.add(new Push(var.memory(), null, null));
-            parent.push(1);
+            parent.shiftStack(1); // PUSH
         }
 
         programText.add(new asm.com.Call(function.toString(), null, null));
 
-        parent.pop(args.size());
+        parent.shiftStack(-args.size()); // POP
         programText.add(new ShiftEsp(args.size(), null, null));
 
         if (res != null) {
             RWMemory eax = new CpuRegister();
             if (res.type.dim != 0) {
                 programText.add(new Push(eax, null, null));
-                parent.push(1);
+                parent.shiftStack(1); // PUSH
                 LocalVariable.unsubscribe(programText, res.type, res.rwMemory());
-                parent.pop(1);
+                parent.shiftStack(-1); // POP
                 programText.add(new Pop(eax, null, null));
             }
             programText.add(new Mov(res.rwMemory(), eax, null, null));

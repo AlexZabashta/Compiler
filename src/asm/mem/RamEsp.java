@@ -27,6 +27,23 @@ public class RamEsp implements RWMemory {
     }
 
     @Override
+    public int hashCode() {
+        return offset;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RamEsp other = (RamEsp) obj;
+        return offset == other.offset;
+    }
+
+    @Override
     public int get(State state) {
         int address = state.esp + offset;
         return state.getRam(address);

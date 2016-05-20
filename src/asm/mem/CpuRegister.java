@@ -19,6 +19,23 @@ public class CpuRegister implements RWMemory {
     }
 
     @Override
+    public int hashCode() {
+        return register.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CpuRegister other = (CpuRegister) obj;
+        return register == other.register;
+    }
+
+    @Override
     public String toStringYASM_WIN_32() {
         return register.toString().toLowerCase();
     }

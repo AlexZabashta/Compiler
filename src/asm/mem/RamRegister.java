@@ -8,6 +8,31 @@ import asm.State;
 
 public class RamRegister implements RWMemory {
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + offset;
+        result = prime * result + register.hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RamRegister other = (RamRegister) obj;
+        if (offset != other.offset)
+            return false;
+        if (register != other.register)
+            return false;
+        return true;
+    }
+
     public final Register register;
     public final int offset;
 

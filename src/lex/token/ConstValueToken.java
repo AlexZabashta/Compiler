@@ -15,4 +15,8 @@ public abstract class ConstValueToken extends Token {
 
     public abstract Type type();
 
+    public abstract String stringValue();
+
+    public abstract int intValue();
+
 }

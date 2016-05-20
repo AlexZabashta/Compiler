@@ -5,8 +5,10 @@ import java.io.Writer;
 
 import asm.Command;
 import asm.State;
+import asm.mem.ConstInt;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
+import code.var.ConstVariable;
 
 public class Sub extends Command {
 
@@ -14,7 +16,7 @@ public class Sub extends Command {
     public final Memory src;
 
     public Sub(RWMemory dst, Memory src, String label, String comment) {
-        super(label, null,comment);
+        super(label, null, comment);
         this.dst = dst;
         this.src = src;
         if (src.useRam() && dst.useRam()) {
@@ -29,6 +31,19 @@ public class Sub extends Command {
         value += dst.get(state);
         dst.set(state, value);
         state.eip++;
+    }
+
+    @Override
+    public Command optimize() {
+        if (dst.equals(src)) {
+            return setZero(dst);
+        }
+
+        if (src.equals(ConstVariable.FALSE)) {
+            return nop();
+        }
+
+        return this;
     }
 
     @Override

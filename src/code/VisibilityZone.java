@@ -3,9 +3,12 @@ package code;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -22,17 +25,20 @@ import code.var.LocalVariable;
 import code.var.Variable;
 import exception.DeclarationException;
 import exception.UnexpectedVoidType;
+import javafx.print.Collation;
+
 import static asm.Register.*;
 
 public class VisibilityZone extends Action {
 
+    public static final Register[] registers = { EBX, ECX, EDX, EDI, ESI, EBP };
+    public static int regPointer = 0;
+
     protected final List<Action> actions = new ArrayList<Action>();
     private final List<String> decVars = new ArrayList<String>();
-    private Nop end = null;
 
+    private Nop end = null;
     public final int level;
-    public static final Register[] registers = { EBX, ECX, EDX, EDI, ESI, EBP };
-    public final Set<Register> use = new HashSet<>();
 
     protected FunctionZone root;
 
@@ -71,6 +77,10 @@ public class VisibilityZone extends Action {
 
     }
 
+    public static Register nextRegister() {
+        return registers[(regPointer++) % registers.length];
+    }
+
     @Override
     public void asm(List<Command> programText) {
         Nop end = end();
@@ -78,56 +88,40 @@ public class VisibilityZone extends Action {
 
         int len = vars.size();
 
-        final Integer[] order = new Integer[len];
-        for (int i = 0; i < len; i++) {
-            order[i] = i;
-        }
-
-        Arrays.sort(order, new Comparator<Integer>() {
+        Collections.sort(vars, new Comparator<LocalVariable>() {
             @Override
-            public int compare(Integer i, Integer j) {
-                LocalVariable x = vars.get(i);
-                LocalVariable y = vars.get(j);
-
-                if (x.counter == y.counter) {
-                    return i.compareTo(j);
-                } else {
-                    return Integer.compare(y.counter, x.counter);
-                }
+            public int compare(LocalVariable v, LocalVariable u) {
+                return Integer.compare(u.counter, v.counter);
             }
         });
 
         int reg = Math.min(len, registers.length);
 
         programText.add(new ShiftEsp(-len, null, null));
-        if (parent != null) {
-            parent.push(len);
-        }
+
+        parent.shiftStack(len);
 
         for (int i = 0; i < reg; i++) {
-            LocalVariable nVar = vars.get(order[i]);
+            LocalVariable nVar = vars.get(i);
 
-            Register register = registers[i];
+            Register register = nextRegister();
             nVar.register = register;
-            use.add(register);
 
-            Stack<LocalVariable> cur = root.reAlloc.get(register);
-
+            Stack<LocalVariable> stack = root.reAlloc.get(register);
             int offset = len - i - 1;
-
-            if (!cur.isEmpty()) {
-                LocalVariable oVar = cur.peek();
+            if (!stack.isEmpty()) {
+                LocalVariable oVar = stack.peek();
                 oVar.offset = offset;
                 oVar.register = null;
             }
-            cur.add(nVar);
+            stack.push(nVar);
 
-            CpuRegister cpuRegister = new CpuRegister(register);
-            Variable.moveMem(programText, new RamEsp(offset), cpuRegister);
+            Variable.moveMem(programText, new RamEsp(offset), new CpuRegister(register));
             Variable.init(programText, nVar.type, nVar.rwMemory());
         }
+
         for (int i = reg; i < len; i++) {
-            LocalVariable variable = vars.get(order[i]);
+            LocalVariable variable = vars.get(i);
             variable.offset = len - i - 1;
             variable.register = null;
             Variable.init(programText, variable.type, variable.rwMemory());
@@ -137,7 +131,34 @@ public class VisibilityZone extends Action {
             action.asm(programText);
         }
 
-        freeVars(programText);
+        for (int i = 0; i < reg; i++) {
+            LocalVariable nVar = vars.get(i);
+
+            Register register = nVar.register;
+
+            Stack<LocalVariable> stack = root.reAlloc.get(register);
+            int offset = len - i - 1;
+            stack.pop();
+
+            if (!stack.isEmpty()) {
+                LocalVariable oVar = stack.peek();
+                oVar.offset = -10000;
+                oVar.register = register;
+            }
+
+            Variable.unsubscribe(programText, nVar.type, nVar.rwMemory());
+            Variable.moveMem(programText, new CpuRegister(register), new RamEsp(offset));
+        }
+
+        for (int i = reg; i < len; i++) {
+            LocalVariable variable = vars.get(i);
+            Variable.unsubscribe(programText, variable.type, variable.rwMemory());
+        }
+
+        programText.add(new ShiftEsp(len, null, null));
+
+        parent.shiftStack(-len);
+
         programText.add(new asm.com.Nop(end.label, end.comment));
     }
 
@@ -166,7 +187,7 @@ public class VisibilityZone extends Action {
         if (type.idVoid()) {
             throw new UnexpectedVoidType("Can't declare void variable");
         }
-        LocalVariable variable = new LocalVariable(type, this, vars.size());
+        LocalVariable variable = new LocalVariable(type);
         vars.add(variable);
         return variable;
     }
@@ -180,14 +201,6 @@ public class VisibilityZone extends Action {
         return end;
     }
 
-    public void freeVars(List<Command> programText) {
-        end();
-
-        
-        
-        
-    }
-
     public VisibilityZone getVisibleParent() {
         VisibilityZone cur = this;
         while (!cur.visible) {
@@ -196,16 +209,25 @@ public class VisibilityZone extends Action {
         return cur;
     }
 
-    public int numberOfVars() {
-        return vars.size();
-    }
-
     public VisibilityZone parent() {
         return parent;
     }
 
-    public void pop(int offset) {
-        // TODO pop vars
+    public void shiftStack(int offset) {
+        for (LocalVariable variable : vars) {
+            variable.offset += offset;
+        }
+        parent.shiftStack(offset);
+    }
+
+    @Override
+    public void printDensely(PrintWriter out, int indent) {
+        for (Action action : actions) {
+            if (action instanceof Nop) {
+                continue;
+            }
+            action.printDensely(out, indent);
+        }
     }
 
     @Override
@@ -239,20 +261,6 @@ public class VisibilityZone extends Action {
         } else {
             out.println(")");
         }
-    }
-
-    @Override
-    public void printDensely(PrintWriter out, int indent) {
-        for (Action action : actions) {
-            if (action instanceof Nop) {
-                continue;
-            }
-            action.printDensely(out, indent);
-        }
-    }
-
-    public void push(int offset) {
-        // TODO push vars
     }
 
     public void removeAll(Environment environment) throws DeclarationException {

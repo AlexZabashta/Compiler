@@ -27,4 +27,14 @@ public class CharToken extends ConstValueToken {
     public Type type() {
         return new Type(EnumType.CHAR);
     }
+
+    @Override
+    public String stringValue() {
+        return null;
+    }
+
+    @Override
+    public int intValue() {
+        return symbol;
+    }
 }

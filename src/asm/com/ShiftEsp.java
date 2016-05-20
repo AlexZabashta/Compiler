@@ -20,8 +20,22 @@ public class ShiftEsp extends Command {
     }
 
     @Override
+    public Command optimize() {
+        if (offset == 0) {
+            return nop();
+        }
+        return this;
+    }
+
+    @Override
     public String toStringYASM_WIN_32() {
-        return "add esp, " + offset;
+
+        if (offset < 0) {
+            return "sub esp, " + (-offset);
+        } else {
+            return "add esp, " + offset;
+        }
+
     }
 
 }

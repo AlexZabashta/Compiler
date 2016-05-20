@@ -1,5 +1,6 @@
 package lex.token.key_word;
 
+import code.var.ConstVariable;
 import lex.Location;
 import lex.Token;
 import lex.token.ConstValueToken;
@@ -24,6 +25,20 @@ public class BoolToken extends ConstValueToken {
     @Override
     public Type type() {
         return new Type(EnumType.BOOL);
+    }
+
+    @Override
+    public String stringValue() {
+        return null;
+    }
+
+    @Override
+    public int intValue() {
+        if (value) {
+            return ConstVariable.TRUE.value;
+        } else {
+            return ConstVariable.FALSE.value;
+        }
     }
 
 }

@@ -7,6 +7,7 @@ import asm.Command;
 import asm.Register;
 import asm.State;
 import asm.mem.ConstInt;
+import asm.mem.CpuRegister;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 

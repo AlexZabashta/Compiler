@@ -62,9 +62,6 @@ public class Compiler {
 
         queue.add(enterToken);
 
-        List<String> programData = new ArrayList<>();
-        List<String> programText = new ArrayList<>();
-
         List<ConstVariable> vals = new ArrayList<ConstVariable>();
 
         Environment environment = new Environment();
@@ -181,20 +178,73 @@ public class Compiler {
                     out.println();
                 }
             }
-            try (PrintWriter out = new PrintWriter(new File(enter + ".asm"))) {
-                for (FunctionZone zone : functionZones) {
-                    List<Command> commands = new ArrayList<>();
-                    zone.asmFunction(commands);
 
-                    AsmOptimizer.removeNop(commands);
+        }
 
+        Map<String, List<Command>> asmFunctions = new HashMap<>();
+
+        for (FunctionZone zone : functionZones) {
+            List<Command> commands = new ArrayList<>();
+            String label = zone.asmFunction(commands);
+            AsmOptimizer.removeNop(commands);
+            asmFunctions.put(label, commands);
+        }
+
+        asmFunctions = AsmOptimizer.removeDeadCode(start, asmFunctions);
+        try (PrintWriter out = new PrintWriter(new File(enter + ".asm"))) {
+
+            out.println("global _main");
+            out.println("extern _printf");
+            out.println("extern _getchar");
+            out.println("extern _malloc");
+            out.println("extern _putchar");
+
+            {
+
+                out.println();
+                out.println("section .data");
+
+                // emptyarray
+                out.println("    emptyarray:  dd (emptyarray + 4), -1, 0");
+
+                for (GlobalVariable globalVariable : vars) {
+                    if (globalVariable.type.dim == 0) {
+                        out.println("    " + globalVariable.location + ":  dd 0");
+                    } else {
+                        out.println("    " + globalVariable.location + ":  dd (emptyarray + 4)");
+                    }
+                }
+
+                for (ConstVariable constVariable : vals) {
+                    if (constVariable.bigData != null) {
+                        String location = constVariable.location;
+                        out.print("    " + location + ":  dd ");
+                        out.print("(" + location + " + 4), -1, 0");
+
+                        out.println(constVariable.bigData);
+                    }
+                }
+            }
+            {
+                out.println();
+                out.println("section .text");
+
+                out.println("    _main:");
+                out.println("         pusha");
+
+                out.println("         call " + start);
+
+                out.println("         popa");
+                out.println("         xor eax, eax");
+                out.println("         ret");
+
+                for (List<Command> commands : asmFunctions.values()) {
                     for (Command command : commands) {
                         command.printYASM_WIN_32(out, 6);
                     }
                     out.println();
                 }
             }
-
         }
         return programm;
     }

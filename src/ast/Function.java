@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 import lex.token.fold.DeclarationToken;
+import lex.token.fold.VarToken;
 import misc.Characters;
 import misc.Type;
 import ast.node.op.FBracketsNode;
 import code.Environment;
 import code.FunctionZone;
 import code.var.GlobalVariable;
+import code.var.LocalVariable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -48,11 +50,28 @@ public class Function {
 
         for (DeclarationToken var : vars) {
             try {
-                zone.createVariable(var, environment);
+                zone.shiftStack(1);
+                LocalVariable variable = zone.createVariable(var, environment);
+                variable.offset = 0;
             } catch (UnexpectedVoidType | DeclarationException exceptione) {
                 log.addException(new SemanticException(exceptione.getMessage(), name));
             }
         }
+
+        zone.shiftStack(1);
+
+        if (!type.idVoid()) {
+            try {
+                zone.shiftStack(1);
+                DeclarationToken f = new DeclarationToken(name.typeToken, new VarToken(null, name.varToken.name));
+                LocalVariable variable = zone.createVariable(f, environment);
+                variable.offset = 0;
+                zone.result = variable;
+            } catch (UnexpectedVoidType | DeclarationException exceptione) {
+                log.addException(new SemanticException(exceptione.getMessage(), name));
+            }
+        }
+
         action.action(zone, environment, log);
         environment.removeAllLocalVariables();
 

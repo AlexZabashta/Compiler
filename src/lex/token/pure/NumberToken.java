@@ -28,4 +28,14 @@ public class NumberToken extends ConstValueToken {
         return new Type(EnumType.INT);
     }
 
+    @Override
+    public String stringValue() {
+        return null;
+    }
+
+    @Override
+    public int intValue() {
+        return number;
+    }
+
 }

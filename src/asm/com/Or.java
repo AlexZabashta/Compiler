@@ -5,8 +5,10 @@ import java.io.Writer;
 
 import asm.Command;
 import asm.State;
+import asm.mem.ConstInt;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
+import code.var.ConstVariable;
 
 public class Or extends Command {
 
@@ -14,7 +16,7 @@ public class Or extends Command {
     public final Memory src;
 
     public Or(RWMemory dst, Memory src, String label, String comment) {
-        super(label, null,comment);
+        super(label, null, comment);
         this.dst = dst;
         this.src = src;
         if (src.useRam() && dst.useRam()) {
@@ -29,6 +31,23 @@ public class Or extends Command {
         value |= dst.get(state);
         dst.set(state, value);
         state.eip++;
+    }
+
+    @Override
+    public Command optimize() {
+        if (src.equals(dst)) {
+            return nop();
+        }
+
+        if (src.equals(ConstVariable.FALSE)) {
+            return nop();
+        }
+
+        if (src.equals(ConstVariable.TRUE)) {
+            return setConstInt(dst, ConstVariable.TRUE);
+        }
+
+        return this;
     }
 
     @Override

@@ -13,6 +13,23 @@ public class ConstInt implements Memory {
         this.value = value;
     }
 
+    @Override
+    public int hashCode() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ConstInt other = (ConstInt) obj;
+        return value == other.value;
+    }
+
     public ConstInt() {
         this(0);
     }

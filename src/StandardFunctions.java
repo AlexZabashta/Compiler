@@ -136,44 +136,6 @@ public class StandardFunctions {
 
             f.add(new SystemFunction(asmCode, int0, "mod", int0, int0));
         }
-        {
-            List<Command> asmCode = new ArrayList<Command>();
-            asmCode.add(new Push(ebx, null, null));
-            {
-                asmCode.add(new Mov(eax, new ConstInt(-1), null, null));
-                asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
-                asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
-
-                String end = Label.getTextLabel();
-                asmCode.add(new Je(end, null, null));
-
-                asmCode.add(new Mov(eax, new ConstInt(0), null, null));
-                asmCode.add(new Nop(end, null));
-
-            }
-            asmCode.add(new Pop(ebx, null, null));
-
-            f.add(new SystemFunction(asmCode, bool0, "equal", int0, int0));
-        }
-        {
-            List<Command> asmCode = new ArrayList<Command>();
-            asmCode.add(new Push(ebx, null, null));
-            {
-                asmCode.add(new Mov(eax, new ConstInt(-1), null, null));
-                asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
-                asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
-
-                String end = Label.getTextLabel();
-                asmCode.add(new Je(end, null, null));
-
-                asmCode.add(new Mov(eax, new ConstInt(0), null, null));
-                asmCode.add(new Nop(end, null));
-
-            }
-            asmCode.add(new Pop(ebx, null, null));
-
-            f.add(new SystemFunction(asmCode, bool0, "equal", char0, char0));
-        }
 
         {
             List<Command> asmCode = new ArrayList<Command>();
@@ -207,11 +169,56 @@ public class StandardFunctions {
 
         EnumType[] types = { BOOL, CHAR, INT };
         for (EnumType enumType : types) {
-            for (int dim = 1; dim <= Type.MAX_DIM; dim++) {
+            for (int dim = 0; dim <= Type.MAX_DIM; dim++) {
                 try {
                     Type arrayType = new Type(enumType, dim);
+
+                    { // equal
+                        List<Command> asmCode = new ArrayList<Command>();
+                        asmCode.add(new Push(ebx, null, null));
+                        {
+                            asmCode.add(new Mov(eax, ConstVariable.TRUE, null, null));
+                            asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
+                            asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
+
+                            String end = Label.getTextLabel();
+                            asmCode.add(new Je(end, null, null));
+
+                            asmCode.add(new Mov(eax, ConstVariable.FALSE, null, null));
+                            asmCode.add(new Nop(end, null));
+
+                        }
+                        asmCode.add(new Pop(ebx, null, null));
+
+                        f.add(new SystemFunction(asmCode, bool0, "equal", arrayType, arrayType));
+                    }
+
+                    { // notequal
+                        List<Command> asmCode = new ArrayList<Command>();
+                        asmCode.add(new Push(ebx, null, null));
+                        {
+                            asmCode.add(new Mov(eax, ConstVariable.FALSE, null, null));
+                            asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
+                            asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
+
+                            String end = Label.getTextLabel();
+                            asmCode.add(new Je(end, null, null));
+
+                            asmCode.add(new Mov(eax, ConstVariable.TRUE, null, null));
+                            asmCode.add(new Nop(end, null));
+
+                        }
+                        asmCode.add(new Pop(ebx, null, null));
+
+                        f.add(new SystemFunction(asmCode, bool0, "notequal", arrayType, arrayType));
+                    }
+
+                    if (dim == 0) {
+                        continue;
+                    }
                     Type valType = new Type(enumType, dim - 1);
-                    {
+
+                    { // unsub
                         List<Command> asmCode = new ArrayList<Command>();
                         asmCode.add(new Push(ecx, null, null));
                         asmCode.add(new Push(edx, null, null));

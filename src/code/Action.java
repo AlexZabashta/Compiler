@@ -23,14 +23,6 @@ public abstract class Action {
 
     public abstract void asm(List<Command> programText);
 
-    public String comment() {
-        if (comment == null) {
-            return "";
-        } else {
-            return "     ;" + comment;
-        }
-    }
-
     public void printIndent(PrintWriter out, int indent) {
         while (--indent >= 0) {
             out.print("    ");

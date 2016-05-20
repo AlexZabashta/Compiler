@@ -5,8 +5,10 @@ import java.io.Writer;
 
 import asm.Command;
 import asm.State;
+import asm.mem.ConstInt;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
+import code.var.ConstVariable;
 
 public class Xor extends Command {
 
@@ -29,6 +31,15 @@ public class Xor extends Command {
         value ^= dst.get(state);
         dst.set(state, value);
         state.eip++;
+    }
+
+    @Override
+    public Command optimize() {
+        if (src.equals(ConstVariable.FALSE)) {
+            return nop();
+        }
+
+        return this;
     }
 
     @Override

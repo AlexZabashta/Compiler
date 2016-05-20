@@ -25,6 +25,34 @@ public class QuotedString extends ConstValueToken {
         return Type.string();
     }
 
+    @Override
+    public String stringValue() {
+
+        StringBuilder builder = new StringBuilder();
+
+        for (char c : string.toCharArray()) {
+            builder.append(", ");
+
+            if (c != '\'' && c != '\"' && c != '\\') {
+                if ((' ' <= c && c <= ']') || ('a' <= c && c <= '}')) {
+                    builder.append("'");
+                    builder.append(c);
+                    builder.append("'");
+                    continue;
+                }
+            }
+            builder.append((int) c);
+
+        }
+
+        return builder.toString();
+    }
+
+    @Override
+    public int intValue() {
+        return 0;
+    }
+
     // @Override
     // public byte[] getConstValue() {
     // int len = string.length();
