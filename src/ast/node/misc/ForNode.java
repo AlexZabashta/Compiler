@@ -4,8 +4,6 @@ import java.io.PrintWriter;
 
 import lex.token.key_word.BoolToken;
 import lex.token.key_word.ForToken;
-import misc.EnumType;
-import misc.Type;
 import ast.Node;
 import ast.node.AbstractNode;
 import ast.node.RValue;
@@ -15,11 +13,11 @@ import code.Environment;
 import code.VisibilityZone;
 import code.act.IfTrueJump;
 import code.act.Jump;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
-import exception.UnexpectedVoidType;
+import exception.SemanticException;
 
 public class ForNode extends AbstractNode {
 
@@ -49,14 +47,7 @@ public class ForNode extends AbstractNode {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone fz = z.subZone(true, forToken.toString());
-
-        LocalVariable s;
-        try {
-            s = fz.createVariable(new Type(EnumType.BOOL));
-        } catch (UnexpectedVoidType neverHappen) {
-            throw new RuntimeException(neverHappen);
-        }
+        VisibilityZone fz = new VisibilityZone();
 
         Jump jump = new Jump();
         Action wnop = new code.act.Nop();
@@ -67,22 +58,28 @@ public class ForNode extends AbstractNode {
 
         fz.addAction(jump);
         fz.addAction(wnop);
+
         action.action(fz, e, log);
+
         post.action(fz, e, log);
 
         fz.addAction(snop);
-        state.getLocalVariable(s, fz, e, log);
-
-        IfTrueJump elseJump = new IfTrueJump(s);
-        elseJump.target = wnop.label;
-
-        fz.addAction(elseJump);
 
         try {
-            fz.removeAll(e);
-        } catch (DeclarationException neverHappen) {
-            throw new RuntimeException(neverHappen);
+            Variable s = state.getVariable(fz, e, log);
+            IfTrueJump elseJump = new IfTrueJump(s);
+            elseJump.target = wnop.label;
+            fz.addAction(elseJump);
+        } catch (ParseException exception) {
+            log.addException(exception);
         }
+
+        try {
+            z.addZone(fz, e);
+        } catch (DeclarationException exception) {
+            log.addException(new SemanticException(exception, forToken));
+        }
+
     }
 
     @Override

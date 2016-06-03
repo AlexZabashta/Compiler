@@ -20,7 +20,7 @@ import code.act.CallFunction;
 import code.act.Or;
 import code.act.Sub;
 import code.act.Xor;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -44,14 +44,14 @@ public class BOperatorNode extends AbstractNode implements RValue {
         try {
             type(e);
         } catch (DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), operator));
+            log.addException(new SemanticException(exception, operator));
         }
 
-        left.action(z.subZone(false, operator.toString()), e, log);
-        right.action(z.subZone(false, operator.toString()), e, log);
+        left.action(z, e, log);
+        right.action(z, e, log);
     }
 
-    void add(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
+    void add(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Add(res, a, b, operator.toString()));
     }
 
@@ -65,7 +65,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         return null;
     }
 
-    void and(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
+    void and(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new And(res, a, b, operator.toString()));
     }
 
@@ -126,63 +126,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         }
     }
 
-    @Override
-    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        try {
-            Type lt = left.type(e);
-            Type rt = right.type(e);
-
-            if (lt.idVoid()) {
-                throw new UnexpectedVoidType("Unexpected void before operator");
-            }
-
-            if (rt.idVoid()) {
-                throw new UnexpectedVoidType("Unexpected void after operator");
-            }
-
-            VisibilityZone zone = z.subZone(false, operator.toString());
-            LocalVariable lvar = zone.createVariable(lt);
-            left.getLocalVariable(lvar, zone.subZone(false, null), e, log);
-
-            LocalVariable rvar = zone.createVariable(rt);
-            right.getLocalVariable(rvar, zone.subZone(false, null), e, log);
-
-            if ((addType(lt, rt)) != null) {
-                add(dst, lvar, rvar, zone);
-                return;
-            }
-            if ((subType(lt, rt)) != null) {
-                sub(dst, lvar, rvar, zone);
-                return;
-            }
-            if ((andType(lt, rt)) != null) {
-                and(dst, lvar, rvar, zone);
-                return;
-            }
-            if ((xorType(lt, rt)) != null) {
-                xor(dst, lvar, rvar, zone);
-                return;
-            }
-            if ((orType(lt, rt)) != null) {
-                or(dst, lvar, rvar, zone);
-                return;
-            }
-
-            List<LocalVariable> args = new ArrayList<LocalVariable>();
-            args.add(lvar);
-            args.add(rvar);
-
-            String funStr = Values.toString(fullfunName(), args);
-
-            Function function = e.function(funStr);
-
-            zone.addAction(new CallFunction(dst, function, args, null, operator.toString()));
-        } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
-            log.addException(new SemanticException(exception.getMessage(), operator));
-        }
-    }
-
-    void or(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
+    void or(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Or(res, a, b, operator.toString()));
     }
 
@@ -217,7 +161,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         right.printTree(out, indent + 1);
     }
 
-    void sub(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
+    void sub(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Sub(res, a, b, operator.toString()));
     }
 
@@ -262,7 +206,7 @@ public class BOperatorNode extends AbstractNode implements RValue {
         return e.function(funStr).type;
     }
 
-    void xor(LocalVariable res, LocalVariable a, LocalVariable b, VisibilityZone z) throws TypeMismatch {
+    void xor(Variable res, Variable a, Variable b, VisibilityZone z) throws TypeMismatch {
         z.addAction(new Xor(res, a, b, operator.toString()));
     }
 
@@ -278,5 +222,67 @@ public class BOperatorNode extends AbstractNode implements RValue {
             return new Type(EnumType.BOOL);
         }
         return null;
+    }
+
+    @Override
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
+        try {
+            Variable dst = z.createVariable(type(e));
+            Type lt = left.type(e);
+            Type rt = right.type(e);
+
+            if (lt.idVoid()) {
+                throw new UnexpectedVoidType("Unexpected void before operator");
+            }
+
+            if (rt.idVoid()) {
+                throw new UnexpectedVoidType("Unexpected void after operator");
+            }
+
+            try {
+                Variable lvar = left.getVariable(z, e, log);
+                Variable rvar = right.getVariable(z, e, log);
+
+                if ((addType(lt, rt)) != null) {
+                    add(dst, lvar, rvar, z);
+                    return dst;
+                }
+                if ((subType(lt, rt)) != null) {
+                    sub(dst, lvar, rvar, z);
+                    return dst;
+                }
+                if ((andType(lt, rt)) != null) {
+                    and(dst, lvar, rvar, z);
+                    return dst;
+                }
+                if ((xorType(lt, rt)) != null) {
+                    xor(dst, lvar, rvar, z);
+                    return dst;
+                }
+                if ((orType(lt, rt)) != null) {
+                    or(dst, lvar, rvar, z);
+                    return dst;
+                }
+
+                List<Variable> args = new ArrayList<Variable>();
+                args.add(lvar);
+                args.add(rvar);
+
+                String funStr = Values.toString(fullfunName(), args);
+
+                Function function = e.function(funStr);
+
+                z.addAction(new CallFunction(dst, function, args, null, operator.toString()));
+                return dst;
+
+            } catch (ParseException exception) {
+                log.addException(exception);
+                right.action(z, e, log);
+                throw exception;
+            }
+
+        } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
+            throw new SemanticException(exception, operator);
+        }
     }
 }

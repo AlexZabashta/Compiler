@@ -7,33 +7,32 @@ import ast.node.AbstractNode;
 import ast.node.RValue;
 import code.Environment;
 import code.VisibilityZone;
-import code.act.Break;
-import code.var.LocalVariable;
 import exception.Log;
 import exception.ParseException;
-import exception.SemanticException;
 
+@Deprecated
 public class ReturnVNode extends AbstractNode {
 
     public final RValue node;
     public final ReturnToken returnToken;
 
     public ReturnVNode(RValue node, ReturnToken returnToken) {
-        this.node = node;
-        this.returnToken = returnToken;
+        throw new RuntimeException("Deprecated");
+        // this.node = node;
+        // this.returnToken = returnToken;
     }
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone rz = z.subZone(false, returnToken.toString());
-        LocalVariable res = z.root().result;
-
-        if (res == null) {
-            log.addException(new SemanticException("Can't return value in void function", returnToken));
-        } else {
-            node.getLocalVariable(res, rz, e, log);
-            z.addAction(new Break(z.level + 1, null, returnToken.toString()));
-        }
+        // VisibilityZone rz = z.subZone(false, returnToken.toString());
+        // Variable res = z.root().result;
+        //
+        // if (res == null) {
+        // log.addException(new SemanticException("Can't return value in void function", returnToken));
+        // } else {
+        // node.getVariable(res, rz, e, log);
+        // z.addAction(new Break(z.level + 1, null, returnToken.toString()));
+        // }
 
     }
 

@@ -18,23 +18,17 @@ public class AsmFunctionZone extends FunctionZone {
     }
 
     @Override
-    public void asm(List<Command> programText) {
-        programText.add(start());
+    public String asm(List<Command> programText) {
+        programText.add(new asm.com.Nop(label, null));
         for (Command command : asmCode) {
             programText.add(command);
         }
-    }
-
-    @Override
-    public void printDensely(PrintWriter out, int indent) {
-        println(out, indent);
+        programText.add(new asm.com.Ret(null, null));
+        return label;
     }
 
     @Override
     public void println(PrintWriter out, int indent) {
-        printLabel(out, indent);
-        out.println();
-
         for (Command command : asmCode) {
             command.printYASM_WIN_32(out, indent + 1);
         }

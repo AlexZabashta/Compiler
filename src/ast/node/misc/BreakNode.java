@@ -11,33 +11,35 @@ import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
 
+@Deprecated
 public class BreakNode extends AbstractNode {
 
     public final BreakToken breakToken;
 
     public BreakNode(BreakToken breakToken) {
-        this.breakToken = breakToken;
+        throw new RuntimeException("Deprecated");
+        // this.breakToken = breakToken;
     }
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        int n = breakToken.level, m = 0;
-
-        VisibilityZone cur = z;
-
-        while (n > 0 && cur != null) {
-            if (cur.visible) {
-                --n;
-            }
-            ++m;
-            cur = cur.parent();
-        }
-
-        if (n == 0) {
-            z.addAction(new Break(m, null, breakToken.toString()));
-        } else {
-            log.addException(new SemanticException(n + " visibility zones remain", breakToken));
-        }
+        // int n = breakToken.level, m = 0;
+        //
+        // VisibilityZone cur = z;
+        //
+        // while (n > 0 && cur != null) {
+        // if (cur.visible) {
+        // --n;
+        // }
+        // ++m;
+        // cur = cur.parent();
+        // }
+        //
+        // if (n == 0) {
+        // z.addAction(new Break(m, null, breakToken.toString()));
+        // } else {
+        // log.addException(new SemanticException(n + " visibility zones remain", breakToken));
+        // }
     }
 
     @Override

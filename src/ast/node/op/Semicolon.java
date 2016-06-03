@@ -9,7 +9,7 @@ import ast.node.AbstractNode;
 import ast.node.RValue;
 import code.Environment;
 import code.VisibilityZone;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -28,8 +28,8 @@ public class Semicolon extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        left.action(z.subZone(false, operator.toString()), e, log);
-        right.action(z.subZone(false, operator.toString()), e, log);
+        left.action(z, e, log);
+        right.action(z, e, log);
     }
 
     @Override
@@ -71,14 +71,14 @@ public class Semicolon extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getLocalVariable(LocalVariable var, VisibilityZone z, Environment e, Log log) throws ParseException {
-        left.action(z.subZone(false, operator.toString()), e, log);
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
+        left.action(z, e, log);
 
         try {
             RValue rval = (RValue) right;
-            rval.getLocalVariable(var, z.subZone(false, operator.toString()), e, log);
+            return rval.getVariable(z, e, log);
         } catch (ClassCastException fake) {
-            log.addException(new SemanticException("Expected R-Value after", operator));
+            throw new SemanticException("Expected R-Value after", operator);
         }
     }
 

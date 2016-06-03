@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +42,71 @@ import static misc.EnumType.*;
 import static asm.Register.*;
 
 public class StandardFunctions {
+
+    public static void main(String[] args) throws FileNotFoundException {
+
+        try (PrintWriter out = new PrintWriter(new File(SystemFunction.PAC + ".src"))) {
+
+            out.println("bool lessOrEqual(int x, int y) {");
+            out.println("   lessOrEqual = (x < y) | (x == y)");
+            out.println("}");
+            out.println();
+            out.println("bool greaterOrEqual(int x, int y) {");
+            out.println("   greaterOrEqual = ~(x < y)");
+            out.println("}");
+            out.println();
+            out.println("bool greater(int x, int y) {");
+            out.println("   greater = ~(x <= y)");
+            out.println("}");
+
+            EnumType[] types = { BOOL, CHAR, INT };
+            for (EnumType enumType : types) {
+                for (int dim = 0; dim <= Type.MAX_DIM; dim++) {
+                    try {
+                        Type arrayType = new Type(enumType, dim);
+                        if (dim == 0) {
+                            continue;
+                        }
+                        Type valType = new Type(enumType, dim - 1);
+
+                        out.println(arrayType + " clone(" + arrayType + " array) {");
+                        out.println("    int len = #array;");
+                        out.println("    clone = new" + enumType.toString().toLowerCase() + dim + "(len);");
+
+                        out.println("    for (int i = 0, i < len, i = i + 1) {");
+                        if (valType.dim == 0) {
+                            out.println("        clone[i] = array[i]");
+                        } else {
+                            out.println("        clone[i] = clone(array[i])");
+                        }
+                        out.println("    }");
+
+                        out.println("}");
+                        out.println();
+
+                        out.println("bool equal(" + arrayType + " x, " + arrayType + " y) {");
+
+                        out.println("    int len = #x;");
+                        out.println("    equal = len == #y;");
+                        out.println("    for (int i = 0, equal & i < len, i = i + 1) {");
+                        out.println("        equal = x[i] == y[i]");
+                        out.println("    }");
+
+                        out.println("}");
+                        out.println();
+
+                        out.println("bool notequal(" + arrayType + " x, " + arrayType + " y) {");
+                        out.println("    notequal = ~(x == y)");
+                        out.println("}");
+                        out.println();
+
+                    } catch (TypeInitException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+    }
 
     public static List<Function> getFunctions() {
         List<Function> f = new ArrayList<Function>();
@@ -172,219 +240,220 @@ public class StandardFunctions {
             for (int dim = 0; dim <= Type.MAX_DIM; dim++) {
                 try {
                     Type arrayType = new Type(enumType, dim);
-
-                    { // equal
-                        List<Command> asmCode = new ArrayList<Command>();
-                        asmCode.add(new Push(ebx, null, null));
-                        {
-                            asmCode.add(new Mov(eax, ConstVariable.TRUE, null, null));
-                            asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
-                            asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
-
-                            String end = Label.getTextLabel();
-                            asmCode.add(new Je(end, null, null));
-
-                            asmCode.add(new Mov(eax, ConstVariable.FALSE, null, null));
-                            asmCode.add(new Nop(end, null));
-
-                        }
-                        asmCode.add(new Pop(ebx, null, null));
-
-                        f.add(new SystemFunction(asmCode, bool0, "equal", arrayType, arrayType));
-                    }
-
-                    { // notequal
-                        List<Command> asmCode = new ArrayList<Command>();
-                        asmCode.add(new Push(ebx, null, null));
-                        {
-                            asmCode.add(new Mov(eax, ConstVariable.FALSE, null, null));
-                            asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
-                            asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
-
-                            String end = Label.getTextLabel();
-                            asmCode.add(new Je(end, null, null));
-
-                            asmCode.add(new Mov(eax, ConstVariable.TRUE, null, null));
-                            asmCode.add(new Nop(end, null));
-
-                        }
-                        asmCode.add(new Pop(ebx, null, null));
-
-                        f.add(new SystemFunction(asmCode, bool0, "notequal", arrayType, arrayType));
-                    }
-
                     if (dim == 0) {
-                        continue;
-                    }
-                    Type valType = new Type(enumType, dim - 1);
 
-                    { // unsub
-                        List<Command> asmCode = new ArrayList<Command>();
-                        asmCode.add(new Push(ecx, null, null));
-                        asmCode.add(new Push(edx, null, null));
+                        { // equal
+                            List<Command> asmCode = new ArrayList<Command>();
+                            asmCode.add(new Push(ebx, null, null));
+                            {
+                                asmCode.add(new Mov(eax, ConstVariable.TRUE, null, null));
+                                asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
+                                asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
 
-                        { // [0] = edx, [1] = ecx, [2] = eip, [3] = array
-                            String end = Label.getTextLabel();
-                            String loopStart = Label.getTextLabel();
-                            String loopEnd = Label.getTextLabel();
-                            asmCode.add(new Mov(ecx, new RamEsp(3), null, null));
-                            RWMemory pointer = new RamRegister(Register.ECX);
-                            asmCode.add(new Cmp(pointer, new ConstInt(-1), null, null));
-                            asmCode.add(new Je(end, null, null));
-                            if (valType.dim > 0) {
+                                String end = Label.getTextLabel();
+                                asmCode.add(new Je(end, null, null));
+
+                                asmCode.add(new Mov(eax, ConstVariable.FALSE, null, null));
+                                asmCode.add(new Nop(end, null));
+
+                            }
+                            asmCode.add(new Pop(ebx, null, null));
+
+                            f.add(new SystemFunction(asmCode, bool0, "equal", arrayType, arrayType));
+                        }
+
+                        { // notequal
+                            List<Command> asmCode = new ArrayList<Command>();
+                            asmCode.add(new Push(ebx, null, null));
+                            {
+                                asmCode.add(new Mov(eax, ConstVariable.FALSE, null, null));
+                                asmCode.add(new Mov(ebx, new RamEsp(2), null, null));
+                                asmCode.add(new Cmp(ebx, new RamEsp(3), null, null));
+
+                                String end = Label.getTextLabel();
+                                asmCode.add(new Je(end, null, null));
+
+                                asmCode.add(new Mov(eax, ConstVariable.TRUE, null, null));
+                                asmCode.add(new Nop(end, null));
+
+                            }
+                            asmCode.add(new Pop(ebx, null, null));
+
+                            f.add(new SystemFunction(asmCode, bool0, "notequal", arrayType, arrayType));
+                        }
+
+                    } else {
+
+                        Type valType = new Type(enumType, dim - 1);
+
+                        { // unsub
+                            List<Command> asmCode = new ArrayList<Command>();
+                            asmCode.add(new Push(ecx, null, null));
+                            asmCode.add(new Push(edx, null, null));
+
+                            { // [0] = edx, [1] = ecx, [2] = eip, [3] = array
+                                String end = Label.getTextLabel();
+                                String loopStart = Label.getTextLabel();
+                                String loopEnd = Label.getTextLabel();
+                                asmCode.add(new Mov(ecx, new RamEsp(3), null, null));
+                                RWMemory pointer = new RamRegister(Register.ECX);
+                                asmCode.add(new Cmp(pointer, new ConstInt(-1), null, null));
+                                asmCode.add(new Je(end, null, null));
+                                if (valType.dim > 0) {
+                                    asmCode.add(new Mov(eax, new ConstInt(4), null, null));
+                                    asmCode.add(new IMul(new RamRegister(Register.ECX, 1), null, null));
+
+                                    asmCode.add(new Mov(edx, ecx, null, null));
+                                    asmCode.add(new Add(edx, new ConstInt(8), null, null));
+
+                                    asmCode.add(new Add(eax, edx, null, null));
+
+                                    asmCode.add(new Cmp(eax, edx, loopStart, null));
+                                    asmCode.add(new Je(loopEnd, null, null));
+                                    {
+                                        {
+                                            asmCode.add(new Push(eax, null, null));
+
+                                            asmCode.add(new Push(edx, null, null));
+                                            asmCode.add(new Call(Values.toString(SystemFunction.PAC + ".unsubscribe", valType), null, null));
+                                            asmCode.add(new ShiftEsp(1, null, null));
+
+                                            asmCode.add(new Pop(eax, null, null));
+                                        }
+                                        asmCode.add(new Add(edx, new ConstInt(4), null, null));
+                                        asmCode.add(new Jmp(loopStart, null, null));
+                                    }
+                                    asmCode.add(new Nop(loopEnd, null));
+
+                                }
+                                asmCode.add(new Add(pointer, new ConstInt(-1), null, null));
+                                asmCode.add(new Cmp(pointer, new ConstInt(0), null, null));
+                                asmCode.add(new Jne(end, null, null));
+                                {
+                                    asmCode.add(new Push(ecx, null, null));
+                                    asmCode.add(new CallFree(null, null));
+                                    asmCode.add(new ShiftEsp(1, null, null));
+                                }
+                                asmCode.add(new Nop(end, null));
+                            }
+                            asmCode.add(new Pop(edx, null, null));
+                            asmCode.add(new Pop(ecx, null, null));
+                            f.add(new SystemFunction(asmCode, void0, "unsubscribe", arrayType));
+                        }
+                        { // get
+                            List<Command> asmCode = new ArrayList<Command>();
+                            asmCode.add(new Push(edx, null, null)); // [0] = edx,
+                                                                    // [1] = eip,
+                                                                    // [2] = index,
+                                                                    // [3] = array
+                            {
                                 asmCode.add(new Mov(eax, new ConstInt(4), null, null));
-                                asmCode.add(new IMul(new RamRegister(Register.ECX, 1), null, null));
+                                asmCode.add(new IMul(new RamEsp(2), null, null));
+                                asmCode.add(new Add(eax, new RamEsp(3), null, null));
 
-                                asmCode.add(new Mov(edx, ecx, null, null));
-                                asmCode.add(new Add(edx, new ConstInt(8), null, null));
+                                if (valType.dim == 0) {
+                                    asmCode.add(new Mov(eax, new RamRegister(Register.EAX, 2), null, null));
+                                } else {
+                                    asmCode.add(new Mov(edx, new RamRegister(Register.EAX, 2), null, null));
+                                    Variable.subscribe(asmCode, valType, edx);
+                                    asmCode.add(new Mov(eax, edx, null, null));
+                                }
+                            }
+                            asmCode.add(new Pop(edx, null, null));
+                            f.add(new SystemFunction(asmCode, valType, "get", arrayType, int0));
+                        }
+                        { // set
+                            List<Command> asmCode = new ArrayList<Command>();
 
-                                asmCode.add(new Add(eax, edx, null, null));
+                            asmCode.add(new Push(edx, null, null)); // [0] = edx,
+                                                                    // [1] = eip,
+                                                                    // [2] = val,
+                                                                    // [3] = index,
+                                                                    // [4] = array
+                            {
+                                RWMemory val = new RamEsp(2);
+                                RWMemory index = new RamEsp(3);
+                                RWMemory array = new RamEsp(4);
 
-                                asmCode.add(new Cmp(eax, edx, loopStart, null));
+                                asmCode.add(new Mov(eax, new ConstInt(4), null, null));
+                                asmCode.add(new IMul(index, null, null));
+                                asmCode.add(new Add(eax, array, null, null));
+
+                                RWMemory pointer = new RamRegister(Register.EAX, 2);
+
+                                if (valType.dim > 0) {
+                                    asmCode.add(new Mov(edx, pointer, null, null));
+                                    asmCode.add(new Push(eax, null, null));
+                                    { // [0] = eax, [1] = edx, [2] = eip, [3] = val,
+                                      // [4] = index, [5] = array
+                                        Variable.subscribe(asmCode, valType, new RamEsp(3));
+                                        Variable.unsubscribe(asmCode, valType, edx);
+                                    }
+                                    asmCode.add(new Pop(eax, null, null));
+                                }
+
+                                asmCode.add(new Mov(edx, val, null, null));
+                                asmCode.add(new Add(pointer, edx, null, null));
+
+                            }
+                            asmCode.add(new Pop(edx, null, null));
+                            f.add(new SystemFunction(asmCode, void0, "set", arrayType, int0, valType));
+                        }
+                        { // new
+
+                            String name = "new" + enumType + dim;
+
+                            List<Command> asmCode = new ArrayList<Command>();
+
+                            asmCode.add(new Push(edx, null, null));
+                            asmCode.add(new Push(ecx, null, null));
+                            { // [0] = ecx, [1] = edx, [2] = eip, [3] = size
+                                RWMemory size = new RamEsp(3);
+
+                                asmCode.add(new Mov(eax, new ConstInt(4), null, null));
+                                asmCode.add(new IMul(size, null, null));
+                                asmCode.add(new Add(eax, new ConstInt(8), null, null));
+                                asmCode.add(new Mov(edx, eax, null, null));
+
+                                asmCode.add(new Push(edx, null, null));
+                                asmCode.add(new Push(eax, null, null));
+                                asmCode.add(new CallMalloc(null, null));
+                                asmCode.add(new ShiftEsp(1, null, null));
+                                asmCode.add(new Pop(edx, null, null));
+
+                                asmCode.add(new Mov(new RamRegister(Register.EAX), new ConstInt(1), null, null));
+                                asmCode.add(new Mov(ecx, size, null, null));
+                                asmCode.add(new Mov(new RamRegister(Register.EAX, 1), ecx, null, null));
+
+                                asmCode.add(new Add(edx, eax, null, null));
+                                asmCode.add(new Mov(ecx, eax, null, null));
+                                asmCode.add(new Add(ecx, new ConstInt(8), null, null));
+
+                                String loopStart = Label.getTextLabel();
+                                String loopEnd = Label.getTextLabel();
+
+                                if (valType.dim > 0) {
+                                    asmCode.add(new Mov(eax, ConstVariable.NULL, null, null));
+                                }
+
+                                asmCode.add(new Cmp(ecx, edx, loopStart, null));
                                 asmCode.add(new Je(loopEnd, null, null));
                                 {
-                                    {
-                                        asmCode.add(new Push(eax, null, null));
-
-                                        asmCode.add(new Push(edx, null, null));
-                                        asmCode.add(new Call(Values.toString(SystemFunction.PAC + ".unsubscribe", valType), null, null));
-                                        asmCode.add(new ShiftEsp(1, null, null));
-
-                                        asmCode.add(new Pop(eax, null, null));
+                                    if (valType.dim == 0) {
+                                        asmCode.add(new Mov(new RamRegister(Register.ECX), new ConstInt(0), null, null));
+                                    } else {
+                                        asmCode.add(new Mov(new RamRegister(Register.ECX), eax, null, null));
                                     }
-                                    asmCode.add(new Add(edx, new ConstInt(4), null, null));
+                                    asmCode.add(new Add(ecx, new ConstInt(4), null, null));
                                     asmCode.add(new Jmp(loopStart, null, null));
                                 }
                                 asmCode.add(new Nop(loopEnd, null));
 
                             }
-                            asmCode.add(new Add(pointer, new ConstInt(-1), null, null));
-                            asmCode.add(new Cmp(pointer, new ConstInt(0), null, null));
-                            asmCode.add(new Jne(end, null, null));
-                            {
-                                asmCode.add(new Push(ecx, null, null));
-                                asmCode.add(new CallFree(null, null));
-                                asmCode.add(new ShiftEsp(1, null, null));
-                            }
-                            asmCode.add(new Nop(end, null));
-                        }
-                        asmCode.add(new Pop(edx, null, null));
-                        asmCode.add(new Pop(ecx, null, null));
-                        f.add(new SystemFunction(asmCode, void0, "unsubscribe", arrayType));
-                    }
-                    { // get
-                        List<Command> asmCode = new ArrayList<Command>();
-                        asmCode.add(new Push(edx, null, null)); // [0] = edx,
-                                                                // [1] = eip,
-                                                                // [2] = index,
-                                                                // [3] = array
-                        {
-                            asmCode.add(new Mov(eax, new ConstInt(4), null, null));
-                            asmCode.add(new IMul(new RamEsp(2), null, null));
-                            asmCode.add(new Add(eax, new RamEsp(3), null, null));
-
-                            if (valType.dim == 0) {
-                                asmCode.add(new Mov(eax, new RamRegister(Register.EAX, 2), null, null));
-                            } else {
-                                asmCode.add(new Mov(edx, new RamRegister(Register.EAX, 2), null, null));
-                                Variable.subscribe(asmCode, valType, edx);
-                                asmCode.add(new Mov(eax, edx, null, null));
-                            }
-                        }
-                        asmCode.add(new Pop(edx, null, null));
-                        f.add(new SystemFunction(asmCode, valType, "get", arrayType, int0));
-                    }
-                    { // set
-                        List<Command> asmCode = new ArrayList<Command>();
-
-                        asmCode.add(new Push(edx, null, null)); // [0] = edx,
-                                                                // [1] = eip,
-                                                                // [2] = val,
-                                                                // [3] = index,
-                                                                // [4] = array
-                        {
-                            RWMemory val = new RamEsp(2);
-                            RWMemory index = new RamEsp(3);
-                            RWMemory array = new RamEsp(4);
-
-                            asmCode.add(new Mov(eax, new ConstInt(4), null, null));
-                            asmCode.add(new IMul(index, null, null));
-                            asmCode.add(new Add(eax, array, null, null));
-
-                            RWMemory pointer = new RamRegister(Register.EAX, 2);
-
-                            if (valType.dim > 0) {
-                                asmCode.add(new Mov(edx, pointer, null, null));
-                                asmCode.add(new Push(eax, null, null));
-                                { // [0] = eax, [1] = edx, [2] = eip, [3] = val,
-                                  // [4] = index, [5] = array
-                                    Variable.subscribe(asmCode, valType, new RamEsp(3));
-                                    Variable.unsubscribe(asmCode, valType, edx);
-                                }
-                                asmCode.add(new Pop(eax, null, null));
-                            }
-
-                            asmCode.add(new Mov(edx, val, null, null));
-                            asmCode.add(new Add(pointer, edx, null, null));
-
-                        }
-                        asmCode.add(new Pop(edx, null, null));
-                        f.add(new SystemFunction(asmCode, void0, "set", arrayType, int0, valType));
-                    }
-                    { // new
-
-                        String name = "new" + enumType + dim;
-
-                        List<Command> asmCode = new ArrayList<Command>();
-
-                        asmCode.add(new Push(edx, null, null));
-                        asmCode.add(new Push(ecx, null, null));
-                        { // [0] = ecx, [1] = edx, [2] = eip, [3] = size
-                            RWMemory size = new RamEsp(3);
-
-                            asmCode.add(new Mov(eax, new ConstInt(4), null, null));
-                            asmCode.add(new IMul(size, null, null));
-                            asmCode.add(new Add(eax, new ConstInt(8), null, null));
-                            asmCode.add(new Mov(edx, eax, null, null));
-
-                            asmCode.add(new Push(edx, null, null));
-                            asmCode.add(new Push(eax, null, null));
-                            asmCode.add(new CallMalloc(null, null));
-                            asmCode.add(new ShiftEsp(1, null, null));
+                            asmCode.add(new Pop(ecx, null, null));
                             asmCode.add(new Pop(edx, null, null));
-
-                            asmCode.add(new Mov(new RamRegister(Register.EAX), new ConstInt(1), null, null));
-                            asmCode.add(new Mov(ecx, size, null, null));
-                            asmCode.add(new Mov(new RamRegister(Register.EAX, 1), ecx, null, null));
-
-                            asmCode.add(new Add(edx, eax, null, null));
-                            asmCode.add(new Mov(ecx, eax, null, null));
-                            asmCode.add(new Add(ecx, new ConstInt(8), null, null));
-
-                            String loopStart = Label.getTextLabel();
-                            String loopEnd = Label.getTextLabel();
-
-                            if (valType.dim > 0) {
-                                asmCode.add(new Mov(eax, ConstVariable.NULL, null, null));
-                            }
-
-                            asmCode.add(new Cmp(ecx, edx, loopStart, null));
-                            asmCode.add(new Je(loopEnd, null, null));
-                            {
-                                if (valType.dim == 0) {
-                                    asmCode.add(new Mov(new RamRegister(Register.ECX), new ConstInt(0), null, null));
-                                } else {
-                                    asmCode.add(new Mov(new RamRegister(Register.ECX), eax, null, null));
-                                }
-                                asmCode.add(new Add(ecx, new ConstInt(4), null, null));
-                                asmCode.add(new Jmp(loopStart, null, null));
-                            }
-                            asmCode.add(new Nop(loopEnd, null));
-
+                            f.add(new SystemFunction(asmCode, arrayType, name.toLowerCase(), int0));
                         }
-                        asmCode.add(new Pop(ecx, null, null));
-                        asmCode.add(new Pop(edx, null, null));
-                        f.add(new SystemFunction(asmCode, arrayType, name.toLowerCase(), int0));
                     }
                 } catch (TypeInitException e) {
                     throw new RuntimeException(e);

@@ -11,13 +11,13 @@ import asm.mem.CpuRegister;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 import code.Action;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.TypeMismatch;
 
 public class Not extends Action {
-    public final LocalVariable res, val;
+    public final Variable res, val;
 
-    public Not(LocalVariable res, LocalVariable val, String comment) throws TypeMismatch {
+    public Not(Variable res, Variable val, String comment) throws TypeMismatch {
         super(null, comment);
 
         this.res = res;

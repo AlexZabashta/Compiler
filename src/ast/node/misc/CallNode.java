@@ -14,7 +14,7 @@ import ast.node.RValue;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.CallFunction;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -36,29 +36,27 @@ public class CallNode extends AbstractNode implements RValue {
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Function function = fun(e);
-            List<LocalVariable> args = new ArrayList<LocalVariable>();
-
-            VisibilityZone fz = z.subZone(false, fun.toString());
+            List<Variable> args = new ArrayList<Variable>();
 
             for (RValue node : vars) {
-                VisibilityZone az = fz.subZone(false, fun.toString());
-
-                LocalVariable var = fz.createVariable(node.type(e));
-
-                node.getLocalVariable(var, az, e, log);
-                args.add(var);
+                try {
+                    Variable var = node.getVariable(z, e, log);
+                    args.add(var);
+                } catch (ParseException parseException) {
+                    log.addException(parseException);
+                }
             }
 
             Type type = function.type;
-            LocalVariable res = null;
+            Variable res = null;
 
             if (!type.idVoid()) {
-                res = fz.createVariable(type);
+                res = z.createVariable(type);
             }
 
-            fz.addAction(new CallFunction(res, function, args, null, fun.toString()));
+            z.addAction(new CallFunction(res, function, args, null, fun.toString()));
         } catch (TypeMismatch | DeclarationException | UnexpectedVoidType exception) {
-            log.addException(new SemanticException(exception.getMessage(), fun));
+            log.addException(new SemanticException(exception, fun));
         }
     }
 
@@ -102,30 +100,6 @@ public class CallNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        try {
-            Function function = fun(e);
-            List<LocalVariable> args = new ArrayList<LocalVariable>();
-            VisibilityZone fz = z.subZone(false, fun.toString());
-
-            for (RValue node : vars) {
-                VisibilityZone az = fz.subZone(false, fun.toString());
-
-                LocalVariable var;
-                var = fz.createVariable(node.type(e));
-
-                node.getLocalVariable(var, az, e, log);
-                args.add(var);
-            }
-
-            fz.addAction(new CallFunction(dst, function, args, null, fun.toString()));
-
-        } catch (UnexpectedVoidType | DeclarationException | TypeMismatch exception) {
-            log.addException(new SemanticException(exception.getMessage(), fun));
-        }
-    }
-
-    @Override
     public String toString() {
         return "call " + fun.toString();
     }
@@ -133,6 +107,36 @@ public class CallNode extends AbstractNode implements RValue {
     @Override
     public Type type(Environment e) throws DeclarationException {
         return fun(e).type;
+    }
+
+    @Override
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
+        try {
+            Function function = fun(e);
+            List<Variable> args = new ArrayList<Variable>();
+
+            ParseException error = null;
+
+            for (RValue node : vars) {
+                try {
+                    Variable var = node.getVariable(z, e, log);
+                    args.add(var);
+                } catch (ParseException parseException) {
+                    log.addException(error = parseException);
+                }
+            }
+
+            if (error != null) {
+                throw error;
+            }
+
+            Type type = function.type;
+            Variable res = z.createVariable(type);
+            z.addAction(new CallFunction(res, function, args, null, fun.toString()));
+            return res;
+        } catch (TypeMismatch | DeclarationException | UnexpectedVoidType exception) {
+            throw new SemanticException(exception, fun);
+        }
     }
 
 }

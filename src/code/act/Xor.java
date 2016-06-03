@@ -10,13 +10,13 @@ import asm.mem.CpuRegister;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 import code.Action;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.TypeMismatch;
 
 public class Xor extends Action {
-    public final LocalVariable res, x, y;
+    public final Variable res, x, y;
 
-    public Xor(LocalVariable res, LocalVariable x, LocalVariable y, String comment) throws TypeMismatch {
+    public Xor(Variable res, Variable x, Variable y, String comment) throws TypeMismatch {
         super(null, comment);
 
         this.res = res;

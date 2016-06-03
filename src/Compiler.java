@@ -155,7 +155,7 @@ public class Compiler {
             }
 
             try {
-                zone.addAction(new CallFunction(null, next, new ArrayList<LocalVariable>(), null, null));
+                zone.addAction(new CallFunction(null, next, new ArrayList<Variable>(), null, null));
             } catch (TypeMismatch | NullPointerException ignore) {
             }
         }
@@ -185,7 +185,7 @@ public class Compiler {
 
         for (FunctionZone zone : functionZones) {
             List<Command> commands = new ArrayList<>();
-            String label = zone.asmFunction(commands);
+            String label = zone.asm(commands);
             AsmOptimizer.removeNop(commands);
             asmFunctions.put(label, commands);
         }
@@ -198,6 +198,7 @@ public class Compiler {
             out.println("extern _getchar");
             out.println("extern _malloc");
             out.println("extern _putchar");
+            out.println("extern _free");
 
             {
 
@@ -219,7 +220,7 @@ public class Compiler {
                     if (constVariable.bigData != null) {
                         String location = constVariable.location;
                         out.print("    " + location + ":  dd ");
-                        out.print("(" + location + " + 4), -1, 0");
+                        out.print("(" + location + " + 4), -1, " + constVariable.smallData);
 
                         out.println(constVariable.bigData);
                     }
@@ -245,7 +246,34 @@ public class Compiler {
                     out.println();
                 }
             }
+
         }
+
+        try (PrintWriter out = new PrintWriter(new File(enter + ".bat"))) {
+
+            String asmfile = enter + ".asm";
+            String objfile = enter + ".obj";
+            String exefile = enter + ".exe";
+
+            out.println("@echo off");
+            out.println("del " + objfile);
+            out.println("del " + exefile);
+
+            out.println("echo YASM (from asm to obj):");
+
+            out.println("call yasm\\yasm.exe -f win32 " + asmfile + " -o " + objfile);
+            out.println("echo.%space%");
+            out.println("echo GCC (from obj to exe):");
+            out.println("call E:\\Code\\MinGW\\bin\\gcc.exe " + objfile + " -o " + exefile);
+            out.println("echo.%space%");
+            out.println("echo RUN EXE:");
+            out.println("echo.%space%");
+            out.println("call " + exefile);
+            out.println("echo.%space%");
+            out.println("");
+            out.println("pause");
+        }
+
         return programm;
     }
 

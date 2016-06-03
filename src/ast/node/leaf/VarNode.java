@@ -12,7 +12,7 @@ import code.VisibilityZone;
 import code.act.MoveVar;
 import code.var.GlobalVariable;
 import code.var.LocalVariable;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -27,7 +27,7 @@ public class VarNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public void setLocalVariable(LocalVariable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             if (token.pac == null) {
                 LocalVariable dst = e.localVar(token.toTokenString());
@@ -37,7 +37,7 @@ public class VarNode extends AbstractNode implements LValue, RValue {
                 z.addAction(new MoveVar(dst, src, token.toString()));
             }
         } catch (TypeMismatch | DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), token));
+            log.addException(new SemanticException(exception, token));
         }
     }
 
@@ -53,26 +53,24 @@ public class VarNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        try {
-            if (token.pac == null) {
-                LocalVariable src = e.localVar(token.toTokenString());
-                z.addAction(new MoveVar(dst, src, token.toString()));
-            } else {
-                GlobalVariable src = e.globalVar(token.toTokenString());
-                z.addAction(new MoveVar(dst, src, token.toString()));
-            }
-        } catch (TypeMismatch | DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), token));
-        }
-    }
-
-    @Override
     public Type type(Environment e) throws DeclarationException {
         if (token.pac == null) {
             return e.localVar(token.toTokenString()).type;
         } else {
             return e.globalVar(token.toTokenString()).type;
+        }
+    }
+
+    @Override
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
+        try {
+            if (token.pac == null) {
+                return e.localVar(token.toTokenString());
+            } else {
+                return e.globalVar(token.toTokenString());
+            }
+        } catch (DeclarationException exception) {
+            throw new SemanticException(exception, token);
         }
     }
 

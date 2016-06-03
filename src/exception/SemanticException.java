@@ -10,4 +10,8 @@ public class SemanticException extends ParseException {
         super(message, token);
     }
 
+    public SemanticException(Exception exception, Token token) {
+        super(exception, token);
+    }
+
 }

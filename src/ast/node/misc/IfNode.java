@@ -3,7 +3,6 @@ package ast.node.misc;
 import java.io.PrintWriter;
 
 import lex.token.key_word.IfToken;
-import misc.EnumType;
 import misc.Type;
 import ast.Node;
 import ast.node.AbstractNode;
@@ -14,11 +13,13 @@ import code.Environment;
 import code.VisibilityZone;
 import code.act.IfFalseJump;
 import code.act.Jump;
-import code.var.LocalVariable;
+import code.act.MoveVar;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
 import exception.SemanticException;
+import exception.TypeMismatch;
 import exception.UnexpectedVoidType;
 
 public class IfNode extends AbstractNode implements RValue {
@@ -36,31 +37,30 @@ public class IfNode extends AbstractNode implements RValue {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone iz = z.subZone(false, ifToken.toString());
-        LocalVariable s;
-        try {
-            s = iz.createVariable(new Type(EnumType.BOOL));
-        } catch (UnexpectedVoidType neverHappen) {
-            throw new RuntimeException(neverHappen);
-        }
-
-        state.getLocalVariable(s, iz, e, log);
-        IfFalseJump elseJump = new IfFalseJump(s);
         Jump jump = new Jump();
 
         Action tend = new code.act.Nop();
         Action fend = new code.act.Nop();
 
-        elseJump.target = tend.label;
         jump.target = fend.label;
 
-        iz.addAction(elseJump);
-        x.action(iz, e, log);
+        try {
+            Variable s = state.getVariable(z, e, log);
+            IfFalseJump elseJump = new IfFalseJump(s);
+            elseJump.target = tend.label;
+            z.addAction(elseJump);
+        } catch (ParseException parseException) {
+            log.addException(parseException);
+        }
 
-        iz.addAction(jump);
-        iz.addAction(tend);
-        y.action(iz, e, log);
-        iz.addAction(fend);
+        x.action(z, e, log);
+
+        z.addAction(jump);
+        z.addAction(tend);
+
+        y.action(z, e, log);
+
+        z.addAction(fend);
     }
 
     @Override
@@ -98,43 +98,6 @@ public class IfNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        try {
-            RValue xVal = (RValue) x;
-            RValue yVal = (RValue) y;
-
-            VisibilityZone iz = z.subZone(false, ifToken.toString());
-            LocalVariable s;
-            try {
-                s = iz.createVariable(new Type(EnumType.BOOL));
-            } catch (UnexpectedVoidType neverHappen) {
-                throw new RuntimeException(neverHappen);
-            }
-            state.getLocalVariable(s, iz, e, log);
-            IfFalseJump elseJump = new IfFalseJump(s);
-            Jump jump = new Jump();
-
-            Action tend = new code.act.Nop();
-            Action fend = new code.act.Nop();
-
-            elseJump.target = tend.label;
-            jump.target = fend.label;
-
-            iz.addAction(elseJump);
-            xVal.getLocalVariable(dst, iz, e, log);
-
-            iz.addAction(jump);
-            iz.addAction(tend);
-
-            yVal.getLocalVariable(dst, iz, e, log);
-
-            iz.addAction(fend);
-        } catch (ClassCastException fake) {
-            log.addException(new SemanticException("Unexpected void node", ifToken));
-        }
-    }
-
-    @Override
     public Type type(Environment e) throws DeclarationException {
         try {
             Type xType = ((RValue) x).type(e);
@@ -146,6 +109,54 @@ public class IfNode extends AbstractNode implements RValue {
         } catch (ClassCastException fake) {
         }
         return new Type();
+    }
+
+    @Override
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
+        try {
+            RValue xVal = (RValue) x;
+            RValue yVal = (RValue) y;
+
+            Variable res = z.createVariable(type(e));
+
+            Jump jump = new Jump();
+
+            Action tend = new code.act.Nop();
+            Action fend = new code.act.Nop();
+
+            jump.target = fend.label;
+
+            try {
+                Variable s = state.getVariable(z, e, log);
+                IfFalseJump elseJump = new IfFalseJump(s);
+                elseJump.target = tend.label;
+                z.addAction(elseJump);
+            } catch (ParseException exception) {
+                log.addException(exception);
+            }
+
+            try {
+                Variable tvar = xVal.getVariable(z, e, log);
+                z.addAction(new MoveVar(res, tvar, null));
+            } catch (ParseException exception) {
+                log.addException(exception);
+            }
+
+            z.addAction(jump);
+            z.addAction(tend);
+
+            try {
+                Variable fvar = yVal.getVariable(z, e, log);
+                z.addAction(new MoveVar(res, fvar, null));
+            } catch (ParseException exception) {
+                log.addException(exception);
+            }
+
+            z.addAction(fend);
+            return res;
+        } catch (ClassCastException | UnexpectedVoidType | DeclarationException | TypeMismatch exception) {
+            throw new SemanticException(exception, ifToken);
+        }
     }
 
 }

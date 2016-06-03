@@ -33,6 +33,7 @@ public class InitFunction extends Function {
     public FunctionZone getVisibilityZone(Environment environment, Log log) throws ParseException {
         FunctionZone zone = new InitFunctionZone(globalVariables, this);
         action.action(zone, environment, log);
+        environment.removeAllLocalVariables();
         return zone;
     }
 

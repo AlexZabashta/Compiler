@@ -8,7 +8,7 @@ import asm.Command;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 import code.Action;
-import code.var.LocalVariable;
+import code.var.Variable;
 import code.var.Variable;
 import exception.TypeMismatch;
 
@@ -40,9 +40,9 @@ public class MoveVar extends Action {
             return;
         }
 
-        LocalVariable.subscribe(programText, type, srcMemory);
-        LocalVariable.unsubscribe(programText, type, dstMemory);
-        LocalVariable.moveMem(programText, dstMemory, srcMemory);
+        Variable.subscribe(programText, type, srcMemory);
+        Variable.unsubscribe(programText, type, dstMemory);
+        Variable.moveMem(programText, dstMemory, srcMemory);
 
     }
 

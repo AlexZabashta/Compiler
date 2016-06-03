@@ -8,11 +8,14 @@ public class ParseException extends Exception implements Comparable<ParseExcepti
     private static final long serialVersionUID = 1L;
 
     public final Token token;
-    public final String message;
 
     public ParseException(String message, Token token) {
         super(message);
-        this.message = Objects.requireNonNull(message);
+        this.token = token;
+    }
+
+    public ParseException(Exception exception, Token token) {
+        super(exception);
         this.token = token;
     }
 
@@ -31,17 +34,17 @@ public class ParseException extends Exception implements Comparable<ParseExcepti
             return cmp;
         }
 
-        return message.compareTo(pe.message);
+        return 0;
     }
-    
+
     // Syntaxes
 
     @Override
     public String getMessage() {
         if (token == null) {
-            return message;
+            return super.getMessage();
         } else {
-            return message + " at " + token;
+            return super.getMessage() + " at " + token;
         }
     }
 

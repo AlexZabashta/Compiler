@@ -9,8 +9,7 @@ import asm.Command;
 public abstract class Action {
 
     public String label, comment;
-
-    protected VisibilityZone parent;
+    public FunctionZone parent;
 
     public Action(String label, String comment) {
         if (label == null) {
@@ -22,12 +21,6 @@ public abstract class Action {
     }
 
     public abstract void asm(List<Command> programText);
-
-    public void printIndent(PrintWriter out, int indent) {
-        while (--indent >= 0) {
-            out.print("    ");
-        }
-    }
 
     public void printLabel(PrintWriter out, int indent) {
         if (label == null) {
@@ -45,8 +38,10 @@ public abstract class Action {
         }
     }
 
-    public void printDensely(PrintWriter out, int indent) {
-        println(out, indent);
+    public void printIndent(PrintWriter out, int indent) {
+        while (--indent >= 0) {
+            out.print("    ");
+        }
     }
 
     public abstract void println(PrintWriter out, int indent);

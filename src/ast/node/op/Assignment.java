@@ -9,12 +9,10 @@ import ast.node.LValue;
 import ast.node.RValue;
 import code.Environment;
 import code.VisibilityZone;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
-import exception.SemanticException;
-import exception.UnexpectedVoidType;
 
 public class Assignment extends AbstractNode implements RValue {
 
@@ -35,15 +33,13 @@ public class Assignment extends AbstractNode implements RValue {
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
-            VisibilityZone zone = z.subZone(false, operator.toString());
-            Type type = type(e);
-
-            LocalVariable var = zone.createVariable(type);
-            right.getLocalVariable(var, zone, e, log);
-            left.setLocalVariable(var, zone, e, log);
-        } catch (UnexpectedVoidType | DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), operator));
+            Variable var = right.getVariable(z, e, log);
+            left.setVariable(var, z, e, log);
+        } catch (ParseException exception) {
+            log.addException(exception);
+            left.action(z, e, log);
         }
+
     }
 
     @Override
@@ -74,9 +70,16 @@ public class Assignment extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
-        right.getLocalVariable(dst, z.subZone(false, operator.toString()), e, log);
-        left.setLocalVariable(dst, z.subZone(false, operator.toString()), e, log);
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
+        try {
+            Variable var = right.getVariable(z, e, log);
+            left.setVariable(var, z, e, log);
+            return var;
+        } catch (ParseException exception) {
+            log.addException(exception);
+            left.action(z, e, log);
+            throw exception;
+        }
     }
 
 }

@@ -13,15 +13,15 @@ import asm.mem.RWMemory;
 import ast.node.Values;
 import code.Action;
 import code.var.ConstVariable;
-import code.var.LocalVariable;
+import code.var.Variable;
 import misc.Type;
 
 public class CopyConst extends Action {
-    public final LocalVariable dst;
+    public final Variable dst;
     public final ConstVariable src;
     public final Type type;
 
-    public CopyConst(LocalVariable dst, ConstVariable src, String label, String comment) {
+    public CopyConst(Variable dst, ConstVariable src, String label, String comment) {
         super(label, comment);
         this.dst = dst;
         this.src = src;
@@ -46,15 +46,15 @@ public class CopyConst extends Action {
             return;
         }
         if (type.dim == 0) {
-            LocalVariable.moveMem(programText, dstMemory, srcMemory);
+            Variable.moveMem(programText, dstMemory, srcMemory);
         } else {
-            LocalVariable.unsubscribe(programText, type, dstMemory);
+            Variable.unsubscribe(programText, type, dstMemory);
 
             programText.add(new Push(srcMemory, null, null));
             programText.add(new Call(Values.toString("sys.clone", type), null, null));
             programText.add(new ShiftEsp(1, null, null));
 
-            LocalVariable.moveMem(programText, dstMemory, new CpuRegister());
+            Variable.moveMem(programText, dstMemory, new CpuRegister());
         }
     }
 

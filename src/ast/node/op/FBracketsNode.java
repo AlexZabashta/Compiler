@@ -11,6 +11,7 @@ import code.VisibilityZone;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
+import exception.SemanticException;
 
 public class FBracketsNode extends AbstractNode {
 
@@ -29,12 +30,13 @@ public class FBracketsNode extends AbstractNode {
 
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
-        VisibilityZone zone = z.subZone(true, token.toString());
+        VisibilityZone zone = new VisibilityZone();
         node.action(zone, e, log);
+
         try {
-            zone.removeAll(e);
-        } catch (DeclarationException neverHappen) {
-            throw new RuntimeException(neverHappen);
+            z.addZone(zone, e);
+        } catch (DeclarationException exception) {
+            log.addException(new SemanticException(exception, token));
         }
     }
 

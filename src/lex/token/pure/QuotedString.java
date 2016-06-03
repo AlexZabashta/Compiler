@@ -50,7 +50,7 @@ public class QuotedString extends ConstValueToken {
 
     @Override
     public int intValue() {
-        return 0;
+        return string.length();
     }
 
     // @Override

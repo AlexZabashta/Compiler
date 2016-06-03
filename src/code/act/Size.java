@@ -13,13 +13,13 @@ import asm.mem.Memory;
 import asm.mem.RWMemory;
 import asm.mem.RamRegister;
 import code.Action;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.TypeMismatch;
 
 public class Size extends Action {
-    public final LocalVariable res, val;
+    public final Variable res, val;
 
-    public Size(LocalVariable res, LocalVariable val, String comment) throws TypeMismatch {
+    public Size(Variable res, Variable val, String comment) throws TypeMismatch {
         super(null, comment);
         this.res = res;
         this.val = val;

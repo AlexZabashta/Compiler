@@ -2,22 +2,17 @@ package ast.node;
 
 import java.util.List;
 
-import lex.Token;
-import lex.token.fold.DeclarationToken;
 import misc.Characters;
 import misc.Type;
-import code.var.LocalVariable;
-import exception.Log;
-import exception.ParseException;
-import exception.SemanticException;
+import code.var.Variable;
 
 public class Values {
 
-    public static String toString(String prefix, List<LocalVariable> vars) {
+    public static String toString(String prefix, List<Variable> vars) {
         StringBuilder builder = new StringBuilder();
 
         builder.append(prefix);
-        for (LocalVariable var : vars) {
+        for (Variable var : vars) {
             builder.append(Characters.typeSeparator);
             builder.append(var.type);
         }

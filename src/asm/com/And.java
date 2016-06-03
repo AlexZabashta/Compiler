@@ -2,14 +2,9 @@ package asm.com;
 
 import java.io.Reader;
 import java.io.Writer;
-import java.util.List;
-
-import com.sun.org.apache.regexp.internal.recompile;
 
 import asm.Command;
 import asm.State;
-import asm.mem.ConstInt;
-import asm.mem.CpuRegister;
 import asm.mem.Memory;
 import asm.mem.RWMemory;
 import code.var.ConstVariable;

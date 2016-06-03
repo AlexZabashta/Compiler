@@ -21,18 +21,18 @@ public class Break extends Action {
 
     @Override
     public void asm(List<Command> programText) {
-        programText.add(start());
-        VisibilityZone cur = parent;
-
-        Nop nop = null;
-
-        for (int n = level; n > 0; n--) {
-            // cur.freeVars(programText);
-            nop = cur.end();
-            cur = cur.parent();
-        }
-
-        programText.add(new Jmp(nop.label, null, null));
+//        programText.add(start());
+//        VisibilityZone cur = parent;
+//
+//        Nop nop = null;
+//
+//        for (int n = level; n > 0; n--) {
+//            // cur.freeVars(programText);
+//            nop = cur.end();
+//            cur = cur.parent();
+//        }
+//
+//        programText.add(new Jmp(nop.label, null, null));
     }
 
     @Override

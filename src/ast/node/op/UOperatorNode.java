@@ -1,23 +1,18 @@
 package ast.node.op;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import lex.token.pure.Operator;
 import misc.EnumType;
 import misc.Type;
-import ast.Function;
 import ast.SystemFunction;
 import ast.node.AbstractNode;
 import ast.node.RValue;
-import ast.node.Values;
 import code.Environment;
 import code.VisibilityZone;
-import code.act.CallFunction;
 import code.act.Not;
 import code.act.Size;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -40,9 +35,9 @@ public class UOperatorNode extends AbstractNode implements RValue {
         try {
             type(e);
         } catch (DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), operator));
+            log.addException(new SemanticException(exception, operator));
         }
-        node.action(z.subZone(false, operator.toString()), e, log);
+        node.action(z, e, log);
     }
 
     @Override
@@ -93,26 +88,23 @@ public class UOperatorNode extends AbstractNode implements RValue {
     }
 
     @Override
-    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
 
             Type type = type(e);
             if (operator.string == "~") {
-                VisibilityZone zone = z.subZone(false, null);
-                LocalVariable var = zone.createVariable(type);
-                node.getLocalVariable(var, zone, e, log);
-                z.addAction(new Not(dst, var, operator.toString()));
+                Variable var = node.getVariable(z, e, log);
+                Variable res = z.createVariable(type);
+                z.addAction(new Not(res, var, operator.toString()));
+                return res;
             } else {
-                Type arrayType = node.type(e);
-                VisibilityZone zone = z.subZone(false, null);
-
-                LocalVariable var = zone.createVariable(arrayType);
-                node.getLocalVariable(var, zone, e, log);
-                z.addAction(new Size(dst, var, operator.toString()));
+                Variable var = node.getVariable(z, e, log);
+                Variable res = z.createVariable(type);
+                z.addAction(new Size(res, var, operator.toString()));
+                return res;
             }
         } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
-            log.addException(new SemanticException(exception.getMessage(), operator));
+            throw new SemanticException(exception, operator);
         }
-
     }
 }

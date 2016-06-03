@@ -15,7 +15,7 @@ import ast.node.Values;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.CallFunction;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -38,8 +38,7 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
     @Override
     public void action(VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
-            Type arrayType;
-            arrayType = array.type(e);
+            Type arrayType = array.type(e);
 
             if (arrayType.idVoid()) {
                 log.addException(new SemanticException("Can't cast void to array", token));
@@ -55,10 +54,10 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
 
             String funStr = Values.toString("sys.get", arrayType, indexType);
             e.function(funStr);
-            array.action(z.subZone(false, token.toString()), e, log);
-            index.action(z.subZone(false, token.toString()), e, log);
+            array.action(z, e, log);
+            index.action(z, e, log);
         } catch (DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), token));
+            log.addException(new SemanticException(exception, token));
         }
     }
 
@@ -98,7 +97,7 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
     }
 
     @Override
-    public void setLocalVariable(LocalVariable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Type arrayType = array.type(e);
 
@@ -111,31 +110,38 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
             if (indexType.idVoid()) {
                 throw new UnexpectedVoidType("Can't cast void to index");
             }
+            List<Variable> args = new ArrayList<Variable>();
 
-            VisibilityZone zone = z.subZone(false, null);
-            LocalVariable a = zone.createVariable(arrayType);
-            array.getLocalVariable(a, zone.subZone(false, null), e, log);
-            LocalVariable i = zone.createVariable(indexType);
-            index.getLocalVariable(i, zone.subZone(false, null), e, log);
+            try {
+                Variable a = array.getVariable(z, e, log);
+                args.add(a);
+            } catch (ParseException exception) {
+                log.addException(exception);
+            }
 
-            List<LocalVariable> args = new ArrayList<LocalVariable>();
-            args.add(a);
-            args.add(i);
+            try {
+                Variable i = index.getVariable(z, e, log);
+                args.add(i);
+            } catch (ParseException exception) {
+                log.addException(exception);
+            }
+
             args.add(src);
+
             String funStr = Values.toString("sys.set", args);
 
             Function fun = e.function(funStr);
 
-            zone.addAction(new CallFunction(null, fun, args, null, token.toString()));
+            z.addAction(new CallFunction(null, fun, args, null, token.toString()));
 
         } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
-            log.addException(new SemanticException(exception.getMessage(), token));
+            log.addException(new SemanticException(exception, token));
         }
 
     }
 
     @Override
-    public void getLocalVariable(LocalVariable dst, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public Variable getVariable(VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
             Type arrayType = array.type(e);
 
@@ -148,24 +154,31 @@ public class ArrayNode extends AbstractNode implements LValue, RValue {
             if (indexType.idVoid()) {
                 throw new UnexpectedVoidType("Can't cast void to index");
             }
+            Variable res = z.createVariable(type(e));
+            List<Variable> args = new ArrayList<Variable>();
 
-            VisibilityZone zone = z.subZone(false, null);
-            LocalVariable a = zone.createVariable(arrayType);
-            array.getLocalVariable(a, zone.subZone(false, null), e, log);
-            LocalVariable i = zone.createVariable(indexType);
-            index.getLocalVariable(i, zone.subZone(false, null), e, log);
+            try {
+                Variable a = array.getVariable(z, e, log);
+                args.add(a);
+            } catch (ParseException exception) {
+                log.addException(exception);
+            }
 
-            List<LocalVariable> args = new ArrayList<LocalVariable>();
-            args.add(a);
-            args.add(i);
+            try {
+                Variable i = index.getVariable(z, e, log);
+                args.add(i);
+            } catch (ParseException exception) {
+                log.addException(exception);
+            }
+
             String funStr = Values.toString("sys.get", args);
 
             Function fun = e.function(funStr);
 
-            zone.addAction(new CallFunction(dst, fun, args, null, token.toString()));
-
+            z.addAction(new CallFunction(res, fun, args, null, token.toString()));
+            return res;
         } catch (DeclarationException | UnexpectedVoidType | TypeMismatch exception) {
-            log.addException(new SemanticException(exception.getMessage(), token));
+            throw new SemanticException(exception, token);
         }
     }
 }

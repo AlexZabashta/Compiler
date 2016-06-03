@@ -5,11 +5,10 @@ import java.io.PrintWriter;
 import lex.token.fold.DeclarationToken;
 import ast.node.AbstractNode;
 import ast.node.LValue;
-import ast.node.Values;
 import code.Environment;
 import code.VisibilityZone;
 import code.act.MoveVar;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.DeclarationException;
 import exception.Log;
 import exception.ParseException;
@@ -29,17 +28,17 @@ public class DeclarationNode extends AbstractNode implements LValue {
         try {
             z.createVariable(token, e);
         } catch (UnexpectedVoidType | DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), token));
+            log.addException(new SemanticException(exception, token));
         }
     }
 
     @Override
-    public void setLocalVariable(LocalVariable src, VisibilityZone z, Environment e, Log log) throws ParseException {
+    public void setVariable(Variable src, VisibilityZone z, Environment e, Log log) throws ParseException {
         try {
-            LocalVariable dst = z.createVariable(token, e);
+            Variable dst = z.createVariable(token, e);
             z.addAction(new MoveVar(dst, src, token.toString()));
         } catch (TypeMismatch | UnexpectedVoidType | DeclarationException exception) {
-            log.addException(new SemanticException(exception.getMessage(), token));
+            throw new SemanticException(exception, token);
         }
     }
 

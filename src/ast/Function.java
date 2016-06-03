@@ -50,31 +50,26 @@ public class Function {
 
         for (DeclarationToken var : vars) {
             try {
-                zone.shiftStack(1);
                 LocalVariable variable = zone.createVariable(var, environment);
-                variable.offset = 0;
+                zone.args.add(variable);
             } catch (UnexpectedVoidType | DeclarationException exceptione) {
-                log.addException(new SemanticException(exceptione.getMessage(), name));
+                log.addException(new SemanticException(exceptione, name));
             }
         }
-
-        zone.shiftStack(1);
 
         if (!type.idVoid()) {
             try {
-                zone.shiftStack(1);
                 DeclarationToken f = new DeclarationToken(name.typeToken, new VarToken(null, name.varToken.name));
                 LocalVariable variable = zone.createVariable(f, environment);
-                variable.offset = 0;
                 zone.result = variable;
             } catch (UnexpectedVoidType | DeclarationException exceptione) {
-                log.addException(new SemanticException(exceptione.getMessage(), name));
+                log.addException(new SemanticException(exceptione, name));
             }
         }
+        zone.vars.clear();
 
         action.action(zone, environment, log);
         environment.removeAllLocalVariables();
-
         return zone;
     }
 

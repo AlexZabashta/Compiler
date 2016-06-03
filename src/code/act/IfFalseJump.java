@@ -6,14 +6,14 @@ import java.util.List;
 import asm.Command;
 import asm.mem.ConstInt;
 import code.Action;
-import code.var.LocalVariable;
+import code.var.Variable;
 
 public class IfFalseJump extends Action {
 
-    public final LocalVariable state;
+    public final Variable state;
     public String target;
 
-    public IfFalseJump(LocalVariable state) {
+    public IfFalseJump(Variable state) {
         super(null, null);
         this.state = state;
         state.use(1);

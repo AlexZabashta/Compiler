@@ -4,7 +4,6 @@ import java.util.List;
 
 import asm.Command;
 import ast.Function;
-import code.act.Nop;
 import code.var.GlobalVariable;
 import code.var.Variable;
 
@@ -18,24 +17,17 @@ public class InitFunctionZone extends FunctionZone {
     }
 
     @Override
-    public String asmFunction(List<Command> programText) {
-        asm(programText);
-        programText.add(new asm.com.Ret(null, null));
-        return label;
-    }
-
-    @Override
-    public void asm(List<Command> programText) {
-        Nop end = end();
-        programText.add(start());
-        for (Action action : actions) {
-            action.asm(programText);
-        }
+    public String asm(List<Command> programText) {
+        super.asm(programText);
+        programText.remove(programText.size() - 1);
 
         for (GlobalVariable variable : globalVariables) {
             Variable.unsubscribe(programText, variable.type, variable.memory());
         }
-        programText.add(new asm.com.Nop(end.label, end.comment));
+
+        programText.add(new asm.com.Ret(null, null));
+        return label;
+
     }
 
 }

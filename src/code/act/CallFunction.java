@@ -13,22 +13,22 @@ import asm.mem.CpuRegister;
 import asm.mem.RWMemory;
 import ast.Function;
 import code.Action;
-import code.var.LocalVariable;
+import code.var.Variable;
 import exception.TypeMismatch;
 
 public class CallFunction extends Action {
 
-    public final List<LocalVariable> args;
+    public final List<Variable> args;
     public final Function function;
-    public final LocalVariable res;
+    public final Variable res;
 
-    public CallFunction(LocalVariable res, Function function, List<LocalVariable> args, String label, String comment) throws TypeMismatch {
+    public CallFunction(Variable res, Function function, List<Variable> args, String label, String comment) throws TypeMismatch {
         super(label, comment);
         this.function = function;
         this.args = args;
         this.res = res;
 
-        for (LocalVariable variable : args) {
+        for (Variable variable : args) {
             variable.use(1);
         }
 
@@ -51,7 +51,7 @@ public class CallFunction extends Action {
     public void asm(List<Command> programText) {
         programText.add(start());
 
-        for (LocalVariable var : args) {
+        for (Variable var : args) {
             programText.add(new Push(var.memory(), null, null));
             parent.shiftStack(1); // PUSH
         }
@@ -66,7 +66,7 @@ public class CallFunction extends Action {
             if (res.type.dim != 0) {
                 programText.add(new Push(eax, null, null));
                 parent.shiftStack(1); // PUSH
-                LocalVariable.unsubscribe(programText, res.type, res.rwMemory());
+                Variable.unsubscribe(programText, res.type, res.rwMemory());
                 parent.shiftStack(-1); // POP
                 programText.add(new Pop(eax, null, null));
             }
